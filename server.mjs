@@ -1,0 +1,156 @@
+import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const PORT = process.env.PORT || 3000;
+const TUNEFREE_TARGET = 'https://tunefree.sayqz.com';
+
+const server = http.createServer(async (req, res) => {
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', '*');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  const reqUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  const pathname = reqUrl.pathname;
+
+  // 1. Search API (/api/search)
+  if (pathname === '/api/search') {
+    const keyword = reqUrl.searchParams.get('keyword') || '';
+    const source = reqUrl.searchParams.get('source') || 'qq';
+
+    if (!keyword.trim()) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ success: true, list: [] }));
+      return;
+    }
+
+    try {
+      let list = [];
+      if (source === 'wy') {
+        const url = `https://music.163.com/api/search/get/web?s=${encodeURIComponent(keyword)}&type=1&offset=0&total=true&limit=25`;
+        const resp = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } });
+        const json = await resp.json();
+        const songs = json?.result?.songs || [];
+        list = songs.map(s => ({
+          id: String(s.id),
+          title: s.name,
+          artist: (s.artists || []).map(a => a.name).join(' / '),
+          album: s.album?.name || '',
+          source: 'wy',
+          duration: s.duration ? Math.round(s.duration / 1000) : 0,
+        }));
+      } else {
+        // QQ Music
+        const url = `https://c.y.qq.com/soso/fcgi-bin/client_search_cp?p=1&n=25&w=${encodeURIComponent(keyword)}&format=json`;
+        const resp = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } });
+        const json = await resp.json();
+        const songs = json?.data?.song?.list || [];
+        list = songs.map(s => ({
+          id: s.songmid,
+          title: s.songname,
+          artist: (s.singer || []).map(a => a.name).join(' / '),
+          album: s.albumname || '',
+          source: 'qq',
+          duration: s.interval || 0,
+        }));
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ success: true, list }));
+    } catch (err) {
+      console.error('Search error:', err);
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ success: false, error: err.message }));
+    }
+    return;
+  }
+
+  // 2. Proxy TuneFree V1 APIs (/v1/*)
+  if (pathname.startsWith('/v1/')) {
+    const targetUrl = `${TUNEFREE_TARGET}${pathname}${reqUrl.search}`;
+
+    const headers = { ...req.headers };
+    delete headers.host;
+    delete headers.connection;
+    delete headers['content-length'];
+
+    // Read body for POST/PUT/PATCH
+    let body = null;
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+      const chunks = [];
+      for await (const chunk of req) {
+        chunks.push(chunk);
+      }
+      body = Buffer.concat(chunks);
+    }
+
+    try {
+      const response = await fetch(targetUrl, {
+        method: req.method,
+        headers,
+        body,
+        redirect: 'manual', // preserve 302 redirects for /v1/play/
+      });
+
+      const respHeaders = {};
+      response.headers.forEach((value, key) => {
+        // Exclude problematic headers
+        if (key.toLowerCase() !== 'transfer-encoding' && key.toLowerCase() !== 'content-encoding') {
+          respHeaders[key] = value;
+        }
+      });
+
+      // Special handling for 302 redirects (such as /v1/play/{token})
+      if (response.status === 302) {
+        const location = response.headers.get('location');
+        respHeaders['location'] = location;
+      }
+
+      res.writeHead(response.status, respHeaders);
+      const arrayBuffer = await response.arrayBuffer();
+      res.end(Buffer.from(arrayBuffer));
+    } catch (err) {
+      console.error('Proxy error:', err);
+      res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ success: false, error: { message: `Proxy Failed: ${err.message}` } }));
+    }
+    return;
+  }
+
+  // 3. Static Files (public/index.html)
+  let filePath = path.join(__dirname, 'public', pathname === '/' ? 'index.html' : pathname);
+  if (!fs.existsSync(filePath)) {
+    filePath = path.join(__dirname, 'public', 'index.html');
+  }
+
+  try {
+    const content = fs.readFileSync(filePath);
+    const ext = path.extname(filePath);
+    const contentType = ext === '.html' ? 'text/html; charset=utf-8' :
+                        ext === '.js' ? 'application/javascript; charset=utf-8' :
+                        ext === '.css' ? 'text/css; charset=utf-8' : 'application/octet-stream';
+    res.writeHead(200, { 'Content-Type': contentType });
+    res.end(content);
+  } catch (err) {
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Not Found');
+  }
+});
+
+server.listen(PORT, () => {
+  console.log(`\n========================================`);
+  console.log(`🎵 TuneFree Web 代理服务已启动!`);
+  console.log(`📡 本地访问地址: http://localhost:${PORT}`);
+  console.log(`🔗 代理目标: ${TUNEFREE_TARGET}`);
+  console.log(`========================================\n`);
+});

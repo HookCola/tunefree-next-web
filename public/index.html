@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TuneFree Web - 极简音乐工作台</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Vue 3 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #18181b; }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col font-sans antialiased selection:bg-blue-600 selection:text-white">
+  <div id="app" class="flex-1 flex flex-col max-w-6xl w-full mx-auto p-4 md:p-6 pb-28">
+    
+    <!-- Top Header -->
+    <header class="flex items-center justify-between border-b border-zinc-800 pb-4 mb-6">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <i class="fa-solid fa-compact-disc text-xl text-white animate-spin" style="animation-duration: 8s;"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+            TuneFree Web
+          </h1>
+          <p class="text-xs text-zinc-400 flex items-center gap-2">
+            <span>TuneFreeNext V4 API 客户端</span>
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span class="text-emerald-400">本地代理运行中</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- User status badge / Quick toggle -->
+      <div class="flex items-center gap-3">
+        <div v-if="user" class="flex items-center gap-3 bg-zinc-900 border border-zinc-800 rounded-full py-1.5 px-3">
+          <div class="w-7 h-7 rounded-full bg-blue-600/30 text-blue-400 flex items-center justify-center font-bold text-xs border border-blue-500/40">
+            {{ user.displayName ? user.displayName.slice(0, 1) : 'U' }}
+          </div>
+          <div class="text-xs text-left">
+            <div class="font-medium text-zinc-200">{{ user.displayName }}</div>
+            <div class="text-[10px] text-emerald-400">{{ getMembershipText() }}</div>
+          </div>
+          <button @click="logout" title="退出登录" class="text-zinc-500 hover:text-red-400 transition ml-1 text-xs">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          </button>
+        </div>
+        <div v-else class="flex items-center gap-2">
+          <button @click="activeTab = 'account'" class="text-xs px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-user"></i>
+            <span>登录 / 注册</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="flex border-b border-zinc-800 gap-1 mb-6 text-sm">
+      <button 
+        @click="activeTab = 'search'"
+        :class="activeTab === 'search' ? 'border-blue-500 text-blue-400 font-semibold' : 'border-transparent text-zinc-400 hover:text-zinc-200'"
+        class="py-2.5 px-4 border-b-2 transition flex items-center gap-2">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <span>音乐搜索与解析</span>
+      </button>
+
+      <button 
+        @click="activeTab = 'account'"
+        :class="activeTab === 'account' ? 'border-blue-500 text-blue-400 font-semibold' : 'border-transparent text-zinc-400 hover:text-zinc-200'"
+        class="py-2.5 px-4 border-b-2 transition flex items-center gap-2">
+        <i class="fa-solid fa-id-card"></i>
+        <span>账号与会员权益</span>
+        <span v-if="!user" class="w-2 h-2 rounded-full bg-amber-500"></span>
+      </button>
+
+      <button 
+        @click="activeTab = 'products'"
+        :class="activeTab === 'products' ? 'border-blue-500 text-blue-400 font-semibold' : 'border-transparent text-zinc-400 hover:text-zinc-200'"
+        class="py-2.5 px-4 border-b-2 transition flex items-center gap-2">
+        <i class="fa-solid fa-gem"></i>
+        <span>订阅套餐</span>
+      </button>
+
+      <button 
+        @click="activeTab = 'logs'"
+        :class="activeTab === 'logs' ? 'border-blue-500 text-blue-400 font-semibold' : 'border-transparent text-zinc-400 hover:text-zinc-200'"
+        class="py-2.5 px-4 border-b-2 transition flex items-center gap-2">
+        <i class="fa-solid fa-terminal"></i>
+        <span>API 实时日志</span>
+        <span v-if="logs.length" class="text-[10px] bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded-full">{{ logs.length }}</span>
+      </button>
+    </nav>
+
+    <!-- TAB 1: 音乐搜索与解析 -->
+    <main v-show="activeTab === 'search'" class="flex-1 flex flex-col">
+      <!-- Search Bar -->
+      <div class="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl shadow-sm mb-6">
+        <div class="flex flex-col md:flex-row gap-3">
+          <!-- Search Source Picker -->
+          <div class="flex rounded-xl bg-zinc-950 p-1 border border-zinc-800 shrink-0">
+            <button 
+              type="button"
+              @click="searchSource = 'qq'"
+              :class="searchSource === 'qq' ? 'bg-blue-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-200'"
+              class="px-3.5 py-2 rounded-lg text-xs transition flex items-center gap-1.5">
+              <i class="fa-solid fa-music"></i>
+              <span>QQ 音乐</span>
+            </button>
+            <button 
+              type="button"
+              @click="searchSource = 'wy'"
+              :class="searchSource === 'wy' ? 'bg-red-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-200'"
+              class="px-3.5 py-2 rounded-lg text-xs transition flex items-center gap-1.5">
+              <i class="fa-brands fa-cloudsmith"></i>
+              <span>网易云音乐</span>
+            </button>
+          </div>
+
+          <!-- Input -->
+          <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 text-sm"></i>
+            <input 
+              v-model="keyword"
+              @keyup.enter="handleSearch"
+              type="text" 
+              placeholder="搜索歌曲名、歌手、专辑 (如：晴天、七里香、周杰伦)..."
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-10 pr-10 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition">
+            <button 
+              v-if="keyword" 
+              @click="keyword = ''" 
+              class="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-sm">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <!-- Search Button -->
+          <button 
+            @click="handleSearch" 
+            :disabled="searching"
+            class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-sm font-medium transition flex items-center justify-center gap-2 shrink-0">
+            <i v-if="searching" class="fa-solid fa-spinner animate-spin"></i>
+            <i v-else class="fa-solid fa-search"></i>
+            <span>搜索歌曲</span>
+          </button>
+        </div>
+
+        <!-- Quick Tags -->
+        <div class="flex items-center gap-2 mt-3 text-xs text-zinc-400 flex-wrap">
+          <span class="text-zinc-500">热搜推荐:</span>
+          <button v-for="tag in ['晴天', '七里香', '孤勇者', '爱如火', '稻香', '夜曲']" 
+                  :key="tag"
+                  @click="quickSearch(tag)" 
+                  class="px-2.5 py-1 bg-zinc-800/60 hover:bg-zinc-800 hover:text-zinc-200 rounded-md transition">
+            {{ tag }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Notice when not logged in -->
+      <div v-if="!user" class="bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs p-3.5 rounded-xl mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
+          <span>温馨提示：TuneFree 后端解析需要<b>已验证邮箱且有会员/体验权益</b>的账号。请先前往“账号”标签页注册并登录。</span>
+        </div>
+        <button @click="activeTab = 'account'" class="underline hover:text-amber-200">前往登录</button>
+      </div>
+
+      <!-- Search Results Table -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm flex-1 flex flex-col">
+        <div class="px-5 py-3.5 border-b border-zinc-800 flex items-center justify-between text-xs text-zinc-400">
+          <span>搜索结果 <span v-if="songList.length">({{ songList.length }} 首)</span></span>
+          <span class="flex items-center gap-1">
+            <span>默认解析音质:</span>
+            <select v-model="defaultQuality" class="bg-zinc-800 border border-zinc-700 rounded px-2 py-0.5 text-zinc-200 focus:outline-none">
+              <option value="128k">128k (标准)</option>
+              <option value="320k">320k (高品质)</option>
+              <option value="flac">FLAC (无损)</option>
+              <option value="flac24bit">Hi-Res 24bit</option>
+            </select>
+          </span>
+        </div>
+
+        <!-- Empty state -->
+        <div v-if="!songList.length && !searching" class="py-20 text-center text-zinc-500 flex-1 flex flex-col items-center justify-center">
+          <i class="fa-solid fa-music text-4xl mb-3 text-zinc-700"></i>
+          <p class="text-sm">输入歌名或歌手，开启无损音乐探索之旅</p>
+        </div>
+
+        <!-- Loading state -->
+        <div v-if="searching" class="py-20 text-center text-zinc-400 flex-1 flex flex-col items-center justify-center">
+          <i class="fa-solid fa-spinner animate-spin text-3xl mb-3 text-blue-500"></i>
+          <p class="text-sm">正在检索音源数据...</p>
+        </div>
+
+        <!-- Song list -->
+        <div v-if="songList.length && !searching" class="divide-y divide-zinc-800/60 overflow-y-auto max-h-[550px]">
+          <div 
+            v-for="(song, idx) in songList" 
+            :key="song.id"
+            :class="currentTrack && currentTrack.id === song.id ? 'bg-blue-950/20' : 'hover:bg-zinc-800/40'"
+            class="px-5 py-3 flex items-center justify-between gap-4 transition group">
+            
+            <div class="flex items-center gap-3.5 min-w-0">
+              <span class="text-xs text-zinc-600 w-5 text-right font-mono">{{ idx + 1 }}</span>
+              <div class="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-400 shrink-0 group-hover:bg-blue-600/20 group-hover:text-blue-400 transition">
+                <i class="fa-solid fa-play text-xs"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="text-sm font-medium text-zinc-200 truncate flex items-center gap-2">
+                  <span class="truncate">{{ song.title }}</span>
+                  <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400">{{ song.source.toUpperCase() }}</span>
+                </div>
+                <div class="text-xs text-zinc-400 truncate flex items-center gap-2 mt-0.5">
+                  <span class="truncate">{{ song.artist }}</span>
+                  <span v-if="song.album" class="text-zinc-600">•</span>
+                  <span v-if="song.album" class="text-zinc-500 truncate">{{ song.album }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-xs text-zinc-500 font-mono hidden md:inline mr-2">
+                {{ formatTime(song.duration) }}
+              </span>
+
+              <!-- Individual Quality Pick -->
+              <select v-model="song.selectedQuality" class="bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-xs px-2 py-1.5 text-zinc-300 focus:outline-none">
+                <option value="128k">128k</option>
+                <option value="320k">320k</option>
+                <option value="flac">FLAC</option>
+                <option value="flac24bit">Hi-Res</option>
+              </select>
+
+              <!-- Parse & Play Button -->
+              <button 
+                @click="parseAndPlay(song)" 
+                :disabled="parsingId === song.id"
+                class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
+                <i v-if="parsingId === song.id" class="fa-solid fa-spinner animate-spin"></i>
+                <i v-else class="fa-solid fa-play"></i>
+                <span>解析播放</span>
+              </button>
+
+              <!-- Direct Download (if already parsed) -->
+              <button 
+                v-if="song.playUrl"
+                @click="downloadTrack(song)" 
+                title="下载音频"
+                class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium transition flex items-center gap-1">
+                <i class="fa-solid fa-download"></i>
+                <span>下载</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- TAB 2: 账号与会员权益 -->
+    <main v-show="activeTab === 'account'" class="flex-1 max-w-2xl mx-auto w-full">
+      <!-- Logged In State -->
+      <div v-if="user" class="space-y-6">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-sm">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-md shadow-blue-500/20">
+              {{ user.displayName ? user.displayName.slice(0, 1) : 'U' }}
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-zinc-100">{{ user.displayName }}</h2>
+              <p class="text-xs text-zinc-400">{{ user.email }}</p>
+              <div class="mt-2 flex items-center gap-2">
+                <span class="text-xs px-2.5 py-0.5 rounded-full font-medium" :class="user.membership?.isActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800 text-zinc-400'">
+                  <i class="fa-solid fa-crown text-[10px] mr-1"></i>
+                  {{ getMembershipText() }}
+                </span>
+                <span v-if="user.emailVerified" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30">
+                  <i class="fa-solid fa-circle-check text-[9px] mr-1"></i>邮箱已验证
+                </span>
+                <span v-else class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                  <i class="fa-solid fa-circle-exclamation text-[9px] mr-1"></i>邮箱未验证
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="grid grid-cols-2 gap-4 border-t border-zinc-800 pt-4">
+            <div class="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800/80">
+              <div class="text-xs text-zinc-500">累计解析/听歌</div>
+              <div class="text-lg font-bold text-zinc-200 mt-1 font-mono">{{ listeningStats.totalTracks || 0 }} 首</div>
+            </div>
+            <div class="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800/80">
+              <div class="text-xs text-zinc-500">设备 ID (UUID)</div>
+              <div class="text-xs text-zinc-400 mt-1.5 font-mono truncate" :title="deviceId">{{ deviceId }}</div>
+            </div>
+          </div>
+
+          <div class="mt-6 flex justify-between items-center pt-4 border-t border-zinc-800">
+            <button @click="refreshProfile" class="text-xs text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-rotate"></i>
+              <span>刷新会员与状态</span>
+            </button>
+            <button @click="logout" class="px-4 py-2 bg-red-600/10 hover:bg-red-600/20 text-red-400 text-xs font-medium rounded-xl transition">
+              退出当前设备登录
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auth Form (Not logged in) -->
+      <div v-else class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-sm">
+        <!-- Sub tabs: Login / Register / Verify -->
+        <div class="flex border-b border-zinc-800 gap-4 mb-6 text-sm">
+          <button 
+            @click="authMode = 'login'" 
+            :class="authMode === 'login' ? 'border-blue-500 text-blue-400 font-semibold' : 'border-transparent text-zinc-400'"
+            class="pb-2.5 border-b-2 transition">
+            账号登录
+          </button>
+          <button 
+            @click="authMode = 'register'" 
+            :class="authMode === 'register' ? 'border-blue-500 text-blue-400 font-semibold' : 'border-transparent text-zinc-400'"
+            class="pb-2.5 border-b-2 transition">
+            新用户注册
+          </button>
+          <button 
+            @click="authMode = 'verify'" 
+            :class="authMode === 'verify' ? 'border-blue-500 text-blue-400 font-semibold' : 'border-transparent text-zinc-400'"
+            class="pb-2.5 border-b-2 transition">
+            验证邮箱 Token
+          </button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form v-if="authMode === 'login'" @submit.prevent="handleLogin" class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1.5">电子邮箱</label>
+            <input 
+              v-model="loginForm.email" 
+              type="email" 
+              required
+              placeholder="name@example.com"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-blue-500 transition">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1.5">登录密码</label>
+            <input 
+              v-model="loginForm.password" 
+              type="password" 
+              required
+              placeholder="••••••••••••"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-blue-500 transition">
+          </div>
+
+          <div class="bg-zinc-950 p-3 rounded-xl border border-zinc-800/80 text-[11px] text-zinc-500 space-y-1">
+            <div class="flex justify-between">
+              <span>分配设备标识 (UUID):</span>
+              <span class="font-mono text-zinc-400 truncate max-w-[200px]">{{ deviceId }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>设备名称:</span>
+              <span class="text-zinc-400">Web Client (Chrome/Windows)</span>
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            :disabled="authLoading"
+            class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-sm font-medium transition flex items-center justify-center gap-2 shadow-sm">
+            <i v-if="authLoading" class="fa-solid fa-spinner animate-spin"></i>
+            <span v-else>立即登录</span>
+          </button>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form v-if="authMode === 'register'" @submit.prevent="handleRegister" class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1.5">用户昵称</label>
+            <input 
+              v-model="registerForm.displayName" 
+              type="text" 
+              required
+              placeholder="你的专属昵称"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-blue-500 transition">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1.5">电子邮箱</label>
+            <input 
+              v-model="registerForm.email" 
+              type="email" 
+              required
+              placeholder="接收验证邮件的真实邮箱"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-blue-500 transition">
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="text-xs font-medium text-zinc-400">账户密码</label>
+              <span class="text-[10px] text-amber-400">必须至少 12 个字符</span>
+            </div>
+            <input 
+              v-model="registerForm.password" 
+              type="password" 
+              minlength="12"
+              required
+              placeholder="至少 12 位安全密码"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-blue-500 transition">
+          </div>
+
+          <button 
+            type="submit" 
+            :disabled="authLoading"
+            class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-sm font-medium transition flex items-center justify-center gap-2 shadow-sm">
+            <i v-if="authLoading" class="fa-solid fa-spinner animate-spin"></i>
+            <span v-else>注册并发送验证邮件</span>
+          </button>
+        </form>
+
+        <!-- VERIFY EMAIL FORM -->
+        <form v-if="authMode === 'verify'" @submit.prevent="handleVerifyEmail" class="space-y-4">
+          <div class="text-xs text-zinc-400 bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 leading-relaxed">
+            注册后，TuneFree 会向你的邮箱发送一封包含验证链接的邮件。你可以直接点击邮件内的链接完成验证，或者把邮件 URL 里的 <code class="text-blue-400 font-mono">token</code> 粘贴在下方。
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1.5">验证 Token</label>
+            <input 
+              v-model="verifyToken" 
+              type="text" 
+              required
+              placeholder="粘贴邮件中的验证 Token"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-blue-500 transition">
+          </div>
+
+          <button 
+            type="submit" 
+            :disabled="authLoading"
+            class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-sm font-medium transition flex items-center justify-center gap-2 shadow-sm">
+            <i v-if="authLoading" class="fa-solid fa-spinner animate-spin"></i>
+            <span v-else>验证邮箱并领取体验特权</span>
+          </button>
+        </form>
+
+        <!-- Alert messages -->
+        <div v-if="authMessage" class="mt-4 p-3 rounded-xl text-xs flex items-center gap-2" :class="authSuccess ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'">
+          <i class="fa-solid" :class="authSuccess ? 'fa-circle-check' : 'fa-circle-xmark'"></i>
+          <span>{{ authMessage }}</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- TAB 3: 订阅套餐 (Products) -->
+    <main v-show="activeTab === 'products'" class="flex-1 max-w-4xl mx-auto w-full">
+      <div class="text-center mb-8">
+        <h2 class="text-xl font-bold text-zinc-100">TuneFree 会员订阅计划</h2>
+        <p class="text-xs text-zinc-400 mt-1">解锁无损音质（FLAC / Hi-Res）解析与全平台云同步特权</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div 
+          v-for="p in products" 
+          :key="p.id" 
+          class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col justify-between hover:border-blue-500/50 transition relative overflow-hidden group">
+          
+          <div class="absolute -top-12 -right-12 w-28 h-28 bg-blue-600/10 rounded-full blur-2xl group-hover:bg-blue-600/20 transition"></div>
+
+          <div>
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h3 class="text-base font-bold text-zinc-100">{{ p.name }}</h3>
+                <span class="text-[10px] font-mono text-blue-400 px-2 py-0.5 rounded bg-blue-950/40 border border-blue-800/40 mt-1 inline-block">
+                  SKU: {{ p.sku }}
+                </span>
+              </div>
+              <div class="text-right">
+                <div class="text-2xl font-bold font-mono text-zinc-100">
+                  <span class="text-xs text-zinc-400">¥</span>{{ (p.priceCents / 100).toFixed(2) }}
+                </div>
+                <div v-if="p.durationDays" class="text-[10px] text-zinc-500">时长 {{ p.durationDays }} 天</div>
+              </div>
+            </div>
+
+            <p class="text-xs text-zinc-400 mb-6 leading-relaxed">{{ p.description || '官方正版会员特权，即买即用' }}</p>
+
+            <ul class="text-xs text-zinc-300 space-y-2 mb-6">
+              <li class="flex items-center gap-2">
+                <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                <span>解锁 320k / FLAC / Hi-Res 24bit 超高清音质</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                <span>全平台歌曲收藏与歌单双向云同步</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
+                <span>独立设备会话与专属高速解析通道</span>
+              </li>
+            </ul>
+          </div>
+
+          <button 
+            @click="createOrder(p)" 
+            :disabled="orderLoading"
+            class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/20">
+            <i class="fa-solid fa-qrcode"></i>
+            <span>立即购买 (微信扫码)</span>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- TAB 4: API 实时日志 -->
+    <main v-show="activeTab === 'logs'" class="flex-1 flex flex-col">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">最近 API 调用轨迹 (调试诊断)</h3>
+        <button @click="logs = []" class="text-xs text-zinc-500 hover:text-zinc-300 transition">清空日志</button>
+      </div>
+
+      <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex-1 overflow-y-auto max-h-[600px] font-mono text-xs space-y-3">
+        <div v-if="!logs.length" class="text-zinc-600 text-center py-12">暂无 API 调用记录</div>
+        <div 
+          v-for="(log, idx) in logs" 
+          :key="idx" 
+          class="bg-zinc-950 p-3 rounded-xl border border-zinc-800/80 space-y-1">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold" 
+                    :class="log.status >= 200 && log.status < 300 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'">
+                {{ log.status }}
+              </span>
+              <span class="font-bold text-zinc-200">{{ log.method }}</span>
+              <span class="text-zinc-400">{{ log.url }}</span>
+            </div>
+            <span class="text-[10px] text-zinc-500">{{ log.time }}</span>
+          </div>
+          <div v-if="log.requestId" class="text-[10px] text-zinc-500">requestId: {{ log.requestId }}</div>
+          <div v-if="log.response" class="bg-zinc-900 p-2 rounded text-[11px] text-zinc-400 overflow-x-auto max-h-40">
+            <pre>{{ JSON.stringify(log.response, null, 2) }}</pre>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Floating Audio Player Bar -->
+    <footer v-if="currentTrack" class="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-md border-t border-zinc-800 p-3 z-50">
+      <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        <!-- Track Info -->
+        <div class="flex items-center gap-3 w-full md:w-1/4">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-md">
+            <i class="fa-solid fa-music text-lg"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="text-sm font-semibold text-zinc-100 truncate">{{ currentTrack.title }}</div>
+            <div class="text-xs text-zinc-400 truncate">{{ currentTrack.artist }}</div>
+            <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-blue-900/40 text-blue-300 border border-blue-700/40">
+              {{ currentTrack.actualQuality || currentTrack.quality || '标准' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Audio Player Native Element -->
+        <div class="flex-1 w-full max-w-xl">
+          <audio 
+            ref="audioPlayer" 
+            :src="currentTrack.playUrl" 
+            controls 
+            autoplay
+            class="w-full h-9 rounded-lg filter invert brightness-90"></audio>
+        </div>
+
+        <!-- Download & Close Actions -->
+        <div class="flex items-center gap-3 shrink-0">
+          <button 
+            @click="downloadTrack(currentTrack)" 
+            class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-download"></i>
+            <span>下载音频</span>
+          </button>
+          <button @click="currentTrack = null" class="text-zinc-500 hover:text-zinc-300 text-sm p-1">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        const activeTab = ref('search');
+        const searchSource = ref('qq');
+        const keyword = ref('晴天');
+        const searching = ref(false);
+        const songList = ref([]);
+        const defaultQuality = ref('320k');
+        const parsingId = ref(null);
+        const currentTrack = ref(null);
+        const audioPlayer = ref(null);
+
+        // Account / Auth
+        const authMode = ref('login');
+        const authLoading = ref(false);
+        const authMessage = ref('');
+        const authSuccess = ref(false);
+        const user = ref(null);
+        const listeningStats = ref({});
+        const deviceId = ref('');
+        const loginForm = ref({ email: '', password: '' });
+        const registerForm = ref({ email: '', password: '', displayName: '' });
+        const verifyToken = ref('');
+
+        // Products & Orders
+        const products = ref([]);
+        const orderLoading = ref(false);
+
+        // Diagnostic Logs
+        const logs = ref([]);
+
+        function addLog(method, url, status, data, requestId) {
+          logs.value.unshift({
+            method,
+            url,
+            status,
+            time: new Date().toLocaleTimeString(),
+            response: data,
+            requestId
+          });
+          if (logs.value.length > 50) logs.value.pop();
+        }
+
+        // Initialize deviceId
+        onMounted(async () => {
+          let savedId = localStorage.getItem('tunefree_device_id');
+          if (!savedId) {
+            savedId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
+            localStorage.setItem('tunefree_device_id', savedId);
+          }
+          deviceId.value = savedId;
+
+          // Check if token exists
+          const token = localStorage.getItem('tunefree_access_token');
+          if (token) {
+            await fetchProfile();
+          }
+
+          // Fetch products
+          fetchProducts();
+        });
+
+        // 1. Search Logic
+        async function handleSearch() {
+          if (!keyword.value.trim()) return;
+          searching.value = true;
+          try {
+            const res = await fetch(`/api/search?keyword=${encodeURIComponent(keyword.value)}&source=${searchSource.value}`);
+            const data = await res.json();
+            if (data.success) {
+              songList.value = data.list.map(s => ({
+                ...s,
+                selectedQuality: defaultQuality.value
+              }));
+            }
+          } catch (e) {
+            console.error('Search error', e);
+          } finally {
+            searching.value = false;
+          }
+        }
+
+        function quickSearch(tag) {
+          keyword.value = tag;
+          handleSearch();
+        }
+
+        // 2. Parse & Play Logic (/v1/parse)
+        async function parseAndPlay(song) {
+          parsingId.value = song.id;
+          const token = localStorage.getItem('tunefree_access_token');
+
+          const payload = {
+            source: song.source,
+            quality: song.selectedQuality || defaultQuality.value,
+            trackId: song.id
+          };
+
+          try {
+            const resp = await fetch('/v1/parse', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+              },
+              body: JSON.stringify(payload)
+            });
+
+            const data = await resp.json();
+            addLog('POST', '/v1/parse', resp.status, data, data.requestId);
+
+            if (data.success && data.data && data.data.playUrl) {
+              song.playUrl = data.data.playUrl;
+              song.actualQuality = data.data.actualQuality;
+              currentTrack.value = {
+                ...song,
+                playUrl: data.data.playUrl,
+                actualQuality: data.data.actualQuality
+              };
+            } else {
+              const msg = data.error?.message || '解析失败，可能需要先登录或开通会员权益';
+              alert(`[解析失败] ${msg}`);
+            }
+          } catch (err) {
+            alert(`请求异常: ${err.message}`);
+          } finally {
+            parsingId.value = null;
+          }
+        }
+
+        function downloadTrack(song) {
+          if (!song.playUrl) return;
+          const a = document.createElement('a');
+          a.href = song.playUrl;
+          a.download = `${song.artist} - ${song.title}.mp3`;
+          a.target = '_blank';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+
+        // 3. Auth APIs
+        async function handleLogin() {
+          authLoading.value = true;
+          authMessage.value = '';
+          try {
+            const resp = await fetch('/v1/auth/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: loginForm.value.email,
+                password: loginForm.value.password,
+                platform: 'windows',
+                deviceId: deviceId.value,
+                deviceName: 'Web-Browser-Windows'
+              })
+            });
+            const data = await resp.json();
+            addLog('POST', '/v1/auth/login', resp.status, data, data.requestId);
+
+            if (data.success && data.data) {
+              localStorage.setItem('tunefree_access_token', data.data.accessToken);
+              if (data.data.refreshToken) {
+                localStorage.setItem('tunefree_refresh_token', data.data.refreshToken);
+              }
+              authSuccess.value = true;
+              authMessage.value = '登录成功！';
+              await fetchProfile();
+              setTimeout(() => { activeTab.value = 'search'; }, 800);
+            } else {
+              authSuccess.value = false;
+              authMessage.value = data.error?.message || '登录失败，请检查账号密码';
+            }
+          } catch (e) {
+            authSuccess.value = false;
+            authMessage.value = `网络异常: ${e.message}`;
+          } finally {
+            authLoading.value = false;
+          }
+        }
+
+        async function handleRegister() {
+          authLoading.value = true;
+          authMessage.value = '';
+          try {
+            const resp = await fetch('/v1/auth/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: registerForm.value.email,
+                password: registerForm.value.password,
+                displayName: registerForm.value.displayName
+              })
+            });
+            const data = await resp.json();
+            addLog('POST', '/v1/auth/register', resp.status, data, data.requestId);
+
+            if (data.success) {
+              authSuccess.value = true;
+              authMessage.value = '注册成功！请前往您的邮箱点击验证链接，或将 Token 填入验证标签页。';
+              authMode.value = 'verify';
+            } else {
+              authSuccess.value = false;
+              authMessage.value = data.error?.message || '注册失败';
+            }
+          } catch (e) {
+            authSuccess.value = false;
+            authMessage.value = `网络异常: ${e.message}`;
+          } finally {
+            authLoading.value = false;
+          }
+        }
+
+        async function handleVerifyEmail() {
+          authLoading.value = true;
+          authMessage.value = '';
+          try {
+            const resp = await fetch('/v1/auth/verify-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ token: verifyToken.value.trim() })
+            });
+            const data = await resp.json();
+            addLog('POST', '/v1/auth/verify-email', resp.status, data, data.requestId);
+
+            if (data.success) {
+              authSuccess.value = true;
+              authMessage.value = '邮箱验证成功！您已获得体验会员特权，请前往登录。';
+              authMode.value = 'login';
+            } else {
+              authSuccess.value = false;
+              authMessage.value = data.error?.message || '验证失败，Token 无效或已过期';
+            }
+          } catch (e) {
+            authSuccess.value = false;
+            authMessage.value = `网络异常: ${e.message}`;
+          } finally {
+            authLoading.value = false;
+          }
+        }
+
+        async function fetchProfile() {
+          const token = localStorage.getItem('tunefree_access_token');
+          if (!token) return;
+          try {
+            const resp = await fetch('/v1/me', {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await resp.json();
+            addLog('GET', '/v1/me', resp.status, data, data.requestId);
+
+            if (data.success && data.data) {
+              user.value = data.data;
+              fetchListeningStats();
+            } else if (resp.status === 401) {
+              logout();
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }
+
+        async function fetchListeningStats() {
+          const token = localStorage.getItem('tunefree_access_token');
+          if (!token) return;
+          try {
+            const resp = await fetch('/v1/me/listening-stats', {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await resp.json();
+            if (data.success && data.data) {
+              listeningStats.value = data.data;
+            }
+          } catch (e) {}
+        }
+
+        function logout() {
+          localStorage.removeItem('tunefree_access_token');
+          localStorage.removeItem('tunefree_refresh_token');
+          user.value = null;
+          authMessage.value = '';
+        }
+
+        function refreshProfile() {
+          fetchProfile();
+        }
+
+        function getMembershipText() {
+          if (!user.value?.membership) return '普通用户 (未激活)';
+          const m = user.value.membership;
+          if (m.type === 'permanent') return '永久尊贵会员';
+          if (m.isActive) return `会员中 (${m.remainingDays || 0} 天剩余)`;
+          return '会员已过期';
+        }
+
+        // 4. Products & Order Logic
+        async function fetchProducts() {
+          try {
+            const resp = await fetch('/v1/products');
+            const data = await resp.json();
+            if (data.success && data.data) {
+              products.value = data.data;
+            }
+          } catch (e) {}
+        }
+
+        async function createOrder(product) {
+          const token = localStorage.getItem('tunefree_access_token');
+          if (!token) {
+            alert('请先登录账号后再购买会员！');
+            activeTab.value = 'account';
+            return;
+          }
+          orderLoading.value = true;
+          try {
+            const idempotencyKey = `order-${crypto.randomUUID()}`;
+            const resp = await fetch('/v1/orders', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'Idempotency-Key': idempotencyKey
+              },
+              body: JSON.stringify({ productId: product.id })
+            });
+            const data = await resp.json();
+            addLog('POST', '/v1/orders', resp.status, data, data.requestId);
+
+            if (data.success && data.data) {
+              const orderId = data.data.id;
+              // Request payment QR
+              const payResp = await fetch('/v1/payments/epay/wechat', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ orderId })
+              });
+              const payData = await payResp.json();
+              addLog('POST', '/v1/payments/epay/wechat', payResp.status, payData, payData.requestId);
+
+              if (payData.success && payData.data) {
+                const qrUrl = payData.data.qrCode || payData.data.paymentUrl;
+                if (qrUrl) {
+                  window.open(qrUrl, '_blank');
+                  alert(`订单创建成功！正在打开支付二维码页面：${orderId}`);
+                }
+              }
+            } else {
+              alert(`下单失败: ${data.error?.message || '未知错误'}`);
+            }
+          } catch (e) {
+            alert(`异常: ${e.message}`);
+          } finally {
+            orderLoading.value = false;
+          }
+        }
+
+        function formatTime(seconds) {
+          if (!seconds) return '00:00';
+          const m = Math.floor(seconds / 60);
+          const s = Math.floor(seconds % 60);
+          return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        return {
+          activeTab,
+          searchSource,
+          keyword,
+          searching,
+          songList,
+          defaultQuality,
+          parsingId,
+          currentTrack,
+          audioPlayer,
+          handleSearch,
+          quickSearch,
+          parseAndPlay,
+          downloadTrack,
+          authMode,
+          authLoading,
+          authMessage,
+          authSuccess,
+          user,
+          listeningStats,
+          deviceId,
+          loginForm,
+          registerForm,
+          verifyToken,
+          handleLogin,
+          handleRegister,
+          handleVerifyEmail,
+          logout,
+          refreshProfile,
+          getMembershipText,
+          products,
+          orderLoading,
+          createOrder,
+          logs,
+          formatTime
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

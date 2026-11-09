@@ -1,0 +1,21 @@
+{
+  "name": "tunefree-next-web",
+  "version": "1.0.0",
+  "description": "基于 TuneFreeNext V4 API 的轻量级在线音乐工作台与无损解析播放器 (Vue 3 + Tailwind CSS + Node.js 零依赖原生代理)",
+  "main": "server.mjs",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node server.mjs"
+  },
+  "keywords": [
+    "tunefree",
+    "music-player",
+    "vue3",
+    "tailwind",
+    "lossless-audio",
+    "api-proxy"
+  ],
+  "author": "HookCola",
+  "license": "MIT"
+}
