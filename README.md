@@ -1,5 +1,8 @@
 # TuneFree Next Web 🎵
 
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/HookCola/tunefree-next-web)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 基于 **TuneFreeNext V4 API 规范** 打造的轻量级 Web 网页端音乐客户端与无损解析播放器。
 
 采用 **极简单 HTML 前端 + Node.js 原生零依赖轻量反代** 架构，无需复杂的构建打包或 `npm install`，开箱即跑！
@@ -65,14 +68,20 @@
 
 本项目完美支持全球分布式的 **Cloudflare Workers** 与 **Cloudflare Pages** 零服务器部署：
 
-#### 途径 A：通过 Wrangler 命令行一键部署
+#### 途径 A：点击官方一键部署按钮 (Deploy to Cloudflare)
+
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/HookCola/tunefree-next-web)
+
+点击上方按钮，Cloudflare 会自动引导你将本项目一键克隆并完成自动化 Workers 边缘部署，无需在本地配置任何环境！
+
+#### 途径 B：通过 Wrangler 命令行一键部署
 确保已登录 Cloudflare (`npx wrangler login`)，然后在项目根目录下直接执行：
 ```bash
 npx wrangler deploy
 ```
 发布成功后将直接获得一个全球可用的 `https://tunefree-next-web.<your-subdomain>.workers.dev` 访问地址！
 
-#### 途径 B：Cloudflare Pages 绑定 GitHub 自动构建
+#### 途径 C：Cloudflare Pages 绑定 GitHub 自动构建
 1. 打开 [Cloudflare 控制台](https://dash.cloudflare.com/) -> **Compute (Workers & Pages)** -> **Create Application** -> **Pages**。
 2. 选择 **Connect to Git**，关联你的 `tunefree-next-web` 仓库。
 3. 构建设置：
@@ -103,7 +112,8 @@ npx wrangler deploy
 ├── public/
 │   ├── index.html                # 单页面前端 (Vue 3 + Tailwind CSS + 播放器)
 │   └── _worker.js                # Cloudflare Pages 边缘路由入口
-├── wrangler.json                 # Cloudflare 配置文件
+├── wrangler.json                 # Cloudflare 配置文件 (JSON)
+├── wrangler.toml                 # Cloudflare 配置文件 (TOML，兼容一键部署)
 ├── .github/workflows/deploy.yml  # GitHub Actions 自动化部署流水线
 ├── package.json                  # 项目配置与脚本
 ├── .gitignore                    # Git 忽略配置
