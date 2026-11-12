@@ -1,6 +1,6 @@
 {
   "name": "tunefree-next-web",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "description": "基于 TuneFreeNext V4 API 的轻量级在线音乐工作台与无损解析播放器 (Vue 3 + Tailwind CSS + Node.js 零依赖原生代理)",
   "main": "server.mjs",
   "type": "module",
