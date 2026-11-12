@@ -381,7 +381,7 @@
         </div>
 
         <!-- LOGIN FORM -->
-        <form v-if="authMode === 'login'" @submit.prevent="handleLogin" class="space-y-4">
+        <form v-if="authMode === 'login'" @submit.prevent="handleLogin(false)" class="space-y-4">
           <div>
             <label class="block text-xs font-medium text-zinc-400 mb-1.5">电子邮箱</label>
             <input 
@@ -400,6 +400,19 @@
               required
               placeholder="••••••••••••"
               class="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-blue-500 transition">
+          </div>
+
+          <div class="flex items-center justify-between py-1 text-xs">
+            <label class="flex items-center gap-2 cursor-pointer text-zinc-300 select-none">
+              <input 
+                v-model="loginForm.rememberMe" 
+                type="checkbox" 
+                class="w-4 h-4 rounded bg-zinc-950 border-zinc-800 text-blue-600 focus:ring-0 focus:ring-offset-0 cursor-pointer">
+              <span>记住账号密码（自动保活与永不过期）</span>
+            </label>
+            <span class="text-[11px] text-zinc-500 flex items-center gap-1">
+              <i class="fa-solid fa-shield-halved text-emerald-400"></i> 双重无感续期
+            </span>
           </div>
 
           <div class="bg-zinc-950 p-3 rounded-xl border border-zinc-800/80 text-[11px] text-zinc-500 space-y-1">
@@ -1064,7 +1077,7 @@
         const user = ref(null);
         const listeningStats = ref({});
         const deviceId = ref('');
-        const loginForm = ref({ email: '', password: '' });
+        const loginForm = ref({ email: '', password: '', rememberMe: true });
         const registerForm = ref({ email: '', password: '', displayName: '' });
         const verifyToken = ref('');
 
@@ -1087,6 +1100,96 @@
           if (logs.value.length > 50) logs.value.pop();
         }
 
+        // Silent Token Refresh & Dual-layer Session Keeper
+        let isRefreshing = false;
+        let refreshPromise = null;
+
+        async function silentRefreshToken() {
+          if (isRefreshing) return refreshPromise;
+          isRefreshing = true;
+          refreshPromise = (async () => {
+            try {
+              // 1. Try Refresh Token rotation
+              const rfToken = localStorage.getItem('tunefree_refresh_token');
+              if (rfToken) {
+                const resp = await fetch('/v1/auth/refresh', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ refreshToken: rfToken })
+                });
+                const data = await resp.json();
+                addLog('POST (Silent Refresh)', '/v1/auth/refresh', resp.status, data, data.requestId);
+                if (data.success && data.data?.accessToken) {
+                  localStorage.setItem('tunefree_access_token', data.data.accessToken);
+                  if (data.data.refreshToken) {
+                    localStorage.setItem('tunefree_refresh_token', data.data.refreshToken);
+                  }
+                  return data.data.accessToken;
+                }
+              }
+
+              // 2. If refresh token expired or absent, try saved credentials auto-relogin
+              const savedCredsRaw = localStorage.getItem('tunefree_saved_creds');
+              if (savedCredsRaw) {
+                try {
+                  const creds = JSON.parse(savedCredsRaw);
+                  if (creds.email && creds.password) {
+                    const pwd = atob(creds.password);
+                    const loginResp = await fetch('/v1/auth/login', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        email: creds.email,
+                        password: pwd,
+                        platform: 'windows',
+                        deviceId: deviceId.value || 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+                        deviceName: 'Web-Browser-Windows'
+                      })
+                    });
+                    const loginData = await loginResp.json();
+                    addLog('POST (Auto Re-login)', '/v1/auth/login', loginResp.status, loginData, loginData.requestId);
+                    if (loginData.success && loginData.data?.accessToken) {
+                      localStorage.setItem('tunefree_access_token', loginData.data.accessToken);
+                      if (loginData.data.refreshToken) {
+                        localStorage.setItem('tunefree_refresh_token', loginData.data.refreshToken);
+                      }
+                      return loginData.data.accessToken;
+                    }
+                  }
+                } catch (err) {
+                  console.warn('Auto re-login failed', err);
+                }
+              }
+              return null;
+            } finally {
+              isRefreshing = false;
+              refreshPromise = null;
+            }
+          })();
+          return refreshPromise;
+        }
+
+        async function authFetch(url, options = {}) {
+          options.headers = options.headers || {};
+          let token = localStorage.getItem('tunefree_access_token');
+          if (token) {
+            options.headers['Authorization'] = `Bearer ${token}`;
+          }
+
+          let resp = await fetch(url, options);
+
+          if (resp.status === 401) {
+            const newToken = await silentRefreshToken();
+            if (newToken) {
+              options.headers['Authorization'] = `Bearer ${newToken}`;
+              resp = await fetch(url, options);
+            } else {
+              logout();
+            }
+          }
+          return resp;
+        }
+
         // Keyboard navigation
         window.addEventListener('keydown', (e) => {
           if (e.key === 'Escape' && showVisualizer.value) {
@@ -1094,7 +1197,7 @@
           }
         });
 
-        // Initialize deviceId
+        // Initialize deviceId & Persistent Session
         onMounted(async () => {
           let savedId = localStorage.getItem('tunefree_device_id');
           if (!savedId) {
@@ -1103,10 +1206,26 @@
           }
           deviceId.value = savedId;
 
-          // Check if token exists
+          // Check if saved credentials exist
+          const savedCredsRaw = localStorage.getItem('tunefree_saved_creds');
+          if (savedCredsRaw) {
+            try {
+              const creds = JSON.parse(savedCredsRaw);
+              if (creds.email && creds.password) {
+                loginForm.value.email = creds.email;
+                loginForm.value.password = atob(creds.password);
+                loginForm.value.rememberMe = true;
+              }
+            } catch (e) {}
+          }
+
+          // Check if token exists or attempt auto-login
           const token = localStorage.getItem('tunefree_access_token');
           if (token) {
             await fetchProfile();
+          } else if (loginForm.value.email && loginForm.value.password && loginForm.value.rememberMe) {
+            // Silently login in background
+            await handleLogin(true);
           }
 
           // Fetch products
@@ -1144,7 +1263,6 @@
         // 2. Parse & Play Logic (/v1/parse)
         async function parseAndPlay(song) {
           parsingId.value = song.id;
-          const token = localStorage.getItem('tunefree_access_token');
 
           const payload = {
             source: song.source,
@@ -1153,12 +1271,9 @@
           };
 
           try {
-            const resp = await fetch('/v1/parse', {
+            const resp = await authFetch('/v1/parse', {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-              },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload)
             });
 
@@ -1200,9 +1315,11 @@
         }
 
         // 3. Auth APIs
-        async function handleLogin() {
-          authLoading.value = true;
-          authMessage.value = '';
+        async function handleLogin(isSilent = false) {
+          if (!isSilent) {
+            authLoading.value = true;
+            authMessage.value = '';
+          }
           try {
             const resp = await fetch('/v1/auth/login', {
               method: 'POST',
@@ -1216,26 +1333,48 @@
               })
             });
             const data = await resp.json();
-            addLog('POST', '/v1/auth/login', resp.status, data, data.requestId);
+            addLog(isSilent ? 'POST (Background Login)' : 'POST', '/v1/auth/login', resp.status, data, data.requestId);
 
             if (data.success && data.data) {
               localStorage.setItem('tunefree_access_token', data.data.accessToken);
               if (data.data.refreshToken) {
                 localStorage.setItem('tunefree_refresh_token', data.data.refreshToken);
               }
-              authSuccess.value = true;
-              authMessage.value = '登录成功！';
-              await fetchProfile();
-              setTimeout(() => { activeTab.value = 'search'; }, 800);
+
+              // Save or clear credentials for persistent session
+              if (loginForm.value.rememberMe) {
+                localStorage.setItem('tunefree_saved_creds', JSON.stringify({
+                  email: loginForm.value.email,
+                  password: btoa(loginForm.value.password),
+                  rememberMe: true
+                }));
+              } else {
+                localStorage.removeItem('tunefree_saved_creds');
+              }
+
+              if (!isSilent) {
+                authSuccess.value = true;
+                authMessage.value = '登录成功！';
+                await fetchProfile();
+                setTimeout(() => { activeTab.value = 'search'; }, 800);
+              } else {
+                await fetchProfile();
+              }
             } else {
-              authSuccess.value = false;
-              authMessage.value = data.error?.message || '登录失败，请检查账号密码';
+              if (!isSilent) {
+                authSuccess.value = false;
+                authMessage.value = data.error?.message || '登录失败，请检查账号密码';
+              }
             }
           } catch (e) {
-            authSuccess.value = false;
-            authMessage.value = `网络异常: ${e.message}`;
+            if (!isSilent) {
+              authSuccess.value = false;
+              authMessage.value = `网络异常: ${e.message}`;
+            }
           } finally {
-            authLoading.value = false;
+            if (!isSilent) {
+              authLoading.value = false;
+            }
           }
         }
 
@@ -1300,12 +1439,8 @@
         }
 
         async function fetchProfile() {
-          const token = localStorage.getItem('tunefree_access_token');
-          if (!token) return;
           try {
-            const resp = await fetch('/v1/me', {
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const resp = await authFetch('/v1/me');
             const data = await resp.json();
             addLog('GET', '/v1/me', resp.status, data, data.requestId);
 
@@ -1314,9 +1449,7 @@
 
               // Also fetch official /v1/membership for verified status
               try {
-                const memResp = await fetch('/v1/membership', {
-                  headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const memResp = await authFetch('/v1/membership');
                 const memData = await memResp.json();
                 if (memData.success && memData.data) {
                   user.value.membershipState = memData.data;
@@ -1324,8 +1457,6 @@
               } catch (e) {}
 
               fetchListeningStats();
-            } else if (resp.status === 401) {
-              logout();
             }
           } catch (e) {
             console.error(e);
@@ -1333,12 +1464,8 @@
         }
 
         async function fetchListeningStats() {
-          const token = localStorage.getItem('tunefree_access_token');
-          if (!token) return;
           try {
-            const resp = await fetch('/v1/me/listening-stats', {
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const resp = await authFetch('/v1/me/listening-stats');
             const data = await resp.json();
             if (data.success && data.data) {
               listeningStats.value = data.data;
@@ -1349,6 +1476,7 @@
         function logout() {
           localStorage.removeItem('tunefree_access_token');
           localStorage.removeItem('tunefree_refresh_token');
+          localStorage.removeItem('tunefree_saved_creds');
           user.value = null;
           authMessage.value = '';
         }
@@ -1392,20 +1520,13 @@
         }
 
         async function createOrder(product) {
-          const token = localStorage.getItem('tunefree_access_token');
-          if (!token) {
-            alert('请先登录账号后再购买会员！');
-            activeTab.value = 'account';
-            return;
-          }
           orderLoading.value = true;
           try {
             const idempotencyKey = `order-${crypto.randomUUID()}`;
-            const resp = await fetch('/v1/orders', {
+            const resp = await authFetch('/v1/orders', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
                 'Idempotency-Key': idempotencyKey
               },
               body: JSON.stringify({ productId: product.id })
@@ -1416,12 +1537,9 @@
             if (data.success && data.data) {
               const orderId = data.data.id;
               // Request payment QR
-              const payResp = await fetch('/v1/payments/epay/wechat', {
+              const payResp = await authFetch('/v1/payments/epay/wechat', {
                 method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ orderId })
               });
               const payData = await payResp.json();
