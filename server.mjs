@@ -47,6 +47,7 @@ const server = http.createServer(async (req, res) => {
           artist: (s.artists || []).map(a => a.name).join(' / '),
           album: s.album?.name || '',
           source: 'wy',
+          cover: s.album?.artist?.img1v1Url || (s.artists && s.artists[0]?.img1v1Url) || '/assets/branding/app_icon.png',
           duration: s.duration ? Math.round(s.duration / 1000) : 0,
         }));
       } else {
@@ -61,6 +62,7 @@ const server = http.createServer(async (req, res) => {
           artist: (s.singer || []).map(a => a.name).join(' / '),
           album: s.albumname || '',
           source: 'qq',
+          cover: s.albummid ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${s.albummid}.jpg` : '/assets/branding/app_icon.png',
           duration: s.interval || 0,
         }));
       }
@@ -71,6 +73,41 @@ const server = http.createServer(async (req, res) => {
       console.error('Search error:', err);
       res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ success: false, error: err.message }));
+    }
+    return;
+  }
+
+  // 1.5. Lyric API (/api/lyric)
+  if (pathname === '/api/lyric') {
+    const id = reqUrl.searchParams.get('id') || '';
+    const source = reqUrl.searchParams.get('source') || 'qq';
+
+    if (!id) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ success: true, lyric: '' }));
+      return;
+    }
+
+    try {
+      let lyric = '';
+      if (source === 'wy') {
+        const resp = await fetch(`https://music.163.com/api/song/lyric?os=pc&id=${id}&lv=-1&kv=-1&tv=-1`, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+        });
+        const json = await resp.json();
+        lyric = json?.lrc?.lyric || '';
+      } else {
+        const resp = await fetch(`https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg?songmid=${id}&format=json&nobase64=1`, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Referer': 'https://y.qq.com/' }
+        });
+        const json = await resp.json();
+        lyric = json?.lyric || '';
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ success: true, lyric }));
+    } catch (e) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ success: false, lyric: '', error: e.message }));
     }
     return;
   }

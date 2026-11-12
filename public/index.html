@@ -64,7 +64,7 @@
           <p class="text-xs text-zinc-400 flex items-center gap-2">
             <span>TuneFreeNext V4 协议客户端</span>
             <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            <span class="text-emerald-400">WebGL 动效引擎已挂载</span>
+            <span class="text-emerald-400">歌词/封面/视效已就绪</span>
           </p>
         </div>
       </div>
@@ -78,7 +78,7 @@
           <div class="text-xs text-left">
             <div class="font-medium text-zinc-200 flex items-center gap-1.5">
               <span>{{ user.displayName }}</span>
-              <img v-if="user.membership?.isActive" src="/assets/profile/vip_diamond.png" alt="VIP" class="w-3.5 h-3.5 inline">
+              <img v-if="isMember" src="/assets/profile/vip_diamond.png" alt="VIP" class="w-3.5 h-3.5 inline">
             </div>
             <div class="text-[10px] text-emerald-400">{{ getMembershipText() }}</div>
           </div>
@@ -243,8 +243,12 @@
             
             <div class="flex items-center gap-3.5 min-w-0">
               <span class="text-xs text-zinc-600 w-5 text-right font-mono">{{ idx + 1 }}</span>
-              <div class="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-400 shrink-0 group-hover:bg-blue-600/20 group-hover:text-blue-400 transition">
-                <i class="fa-solid fa-play text-xs"></i>
+              <!-- Real Album Cover Thumbnail -->
+              <div class="w-10 h-10 rounded-lg bg-zinc-800 shrink-0 overflow-hidden relative shadow-sm group/img">
+                <img :src="song.cover || '/assets/branding/app_icon.png'" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                  <i class="fa-solid fa-play text-xs text-white"></i>
+                </div>
               </div>
               <div class="min-w-0">
                 <div class="text-sm font-medium text-zinc-200 truncate flex items-center gap-2">
@@ -310,15 +314,15 @@
             <div>
               <h2 class="text-lg font-bold text-zinc-100 flex items-center gap-2">
                 <span>{{ user.displayName }}</span>
-                <img v-if="user.membership?.isActive" src="/assets/profile/vip_diamond.png" alt="VIP" class="w-5 h-5">
+                <img v-if="isMember" src="/assets/profile/vip_diamond.png" alt="VIP" class="w-5 h-5">
               </h2>
               <p class="text-xs text-zinc-400">{{ user.email }}</p>
               <div class="mt-2 flex items-center gap-2">
-                <span class="text-xs px-2.5 py-0.5 rounded-full font-medium" :class="user.membership?.isActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800 text-zinc-400'">
+                <span class="text-xs px-2.5 py-0.5 rounded-full font-medium" :class="isMember ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800 text-zinc-400'">
                   <i class="fa-solid fa-crown text-[10px] mr-1"></i>
                   {{ getMembershipText() }}
                 </span>
-                <span v-if="user.emailVerified" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30">
+                <span v-if="user.emailVerifiedAt || user.emailVerified" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30">
                   <i class="fa-solid fa-circle-check text-[9px] mr-1"></i>邮箱已验证
                 </span>
                 <span v-else class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
@@ -592,10 +596,10 @@
     <footer v-if="currentTrack" class="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-md border-t border-zinc-800 p-3 z-40">
       <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         <!-- Track Info -->
-        <div class="flex items-center gap-3 w-full md:w-1/3 cursor-pointer group" @click="showVisualizer = true" title="点击展开全屏动效播放器">
-          <!-- Spinning Disc Thumbnail -->
+        <div class="flex items-center gap-3 w-full md:w-1/3 cursor-pointer group" @click="showVisualizer = true" title="点击展开全屏动效与歌词">
+          <!-- Album Cover Thumbnail with vinyl groove reflection -->
           <div class="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-700/80 flex items-center justify-center shrink-0 shadow-md relative overflow-hidden group-hover:border-blue-500 transition">
-            <img src="/assets/branding/app_icon.png" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition animate-spin-slow">
+            <img :src="currentTrack.cover || '/assets/branding/app_icon.png'" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
             <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
               <i class="fa-solid fa-expand text-white text-xs"></i>
             </div>
@@ -624,6 +628,7 @@
             autoplay
             @play="onAudioPlay"
             @pause="onAudioPause"
+            @timeupdate="onAudioTimeUpdate"
             class="w-full h-9 rounded-lg filter invert brightness-90"></audio>
         </div>
 
@@ -632,9 +637,9 @@
           <button 
             @click="showVisualizer = true"
             class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium transition flex items-center gap-1.5 border border-zinc-700 shadow-sm"
-            title="沉浸式原版动效">
+            title="沉浸式原版动效与歌词">
             <i class="fa-solid fa-wand-magic-sparkles text-blue-400"></i>
-            <span>视效大碟</span>
+            <span>视效歌词</span>
           </button>
           <button 
             @click="downloadTrack(currentTrack)" 
@@ -654,28 +659,44 @@
       v-if="showVisualizer && currentTrack"
       class="fixed inset-0 z-50 bg-black flex flex-col justify-between overflow-hidden animate-fade-in">
       
+      <!-- Blurred Background Cover Atmosphere -->
+      <div 
+        class="absolute inset-0 bg-cover bg-center filter blur-3xl opacity-20 pointer-events-none scale-125 transition-all duration-1000"
+        :style="{ backgroundImage: `url(${currentTrack.cover || '/assets/branding/app_icon.png'})` }"></div>
+
       <!-- Top Action Bar -->
-      <div class="relative z-20 flex items-center justify-between p-4 md:p-6 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
+      <div class="relative z-20 flex items-center justify-between p-4 md:p-6 bg-gradient-to-b from-black/90 via-black/50 to-transparent">
         <div class="flex items-center gap-3">
-          <img src="/assets/branding/app_icon.png" class="w-8 h-8 rounded-lg shadow">
+          <img :src="currentTrack.cover || '/assets/branding/app_icon.png'" class="w-10 h-10 rounded-xl object-cover shadow border border-zinc-700/60">
           <div>
             <div class="text-sm md:text-base font-bold text-white flex items-center gap-2">
               <span>{{ currentTrack.title }}</span>
               <img v-if="isHiResQuality" src="/assets/player/lossless_mark.png" class="h-4 object-contain">
             </div>
-            <div class="text-xs text-zinc-400">{{ currentTrack.artist }}</div>
+            <div class="text-xs text-zinc-400">{{ currentTrack.artist }} <span v-if="currentTrack.album">• {{ currentTrack.album }}</span></div>
           </div>
         </div>
 
-        <button 
-          @click="showVisualizer = false" 
-          class="w-10 h-10 rounded-full bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-zinc-300 hover:text-white transition shadow-lg">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
+        <div class="flex items-center gap-3">
+          <button 
+            v-if="currentSkin !== 'classic'"
+            @click="showLyricOverlay = !showLyricOverlay"
+            :class="showLyricOverlay ? 'bg-blue-600 text-white' : 'bg-zinc-900/80 text-zinc-400'"
+            class="px-3 py-1.5 rounded-full text-xs border border-zinc-700/80 transition flex items-center gap-1.5 shadow">
+            <i class="fa-solid fa-align-center"></i>
+            <span>歌词字幕</span>
+          </button>
+
+          <button 
+            @click="showVisualizer = false" 
+            class="w-10 h-10 rounded-full bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-zinc-300 hover:text-white transition shadow-lg">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Main Visualizer Area -->
-      <div class="flex-1 relative flex items-center justify-center overflow-hidden">
+      <div class="flex-1 relative flex items-center justify-center overflow-hidden z-10 w-full">
         <!-- 1. WebGL Folia / Nebbia Engine Iframe -->
         <iframe 
           v-if="currentSkin !== 'classic'"
@@ -684,35 +705,71 @@
           class="absolute inset-0 w-full h-full border-0 pointer-events-none"
           allow="autoplay"></iframe>
 
-        <!-- 2. Classic Vinyl Disc Mode -->
-        <div v-else class="relative flex flex-col items-center justify-center select-none">
-          <!-- Tone arm (唱针) -->
-          <div class="absolute -top-16 right-1/4 z-30 transition-transform duration-700 origin-top-right pointer-events-none"
-               :class="isPlaying ? 'rotate-0' : '-rotate-24'">
-            <div class="w-32 h-2.5 bg-gradient-to-r from-zinc-300 to-zinc-500 rounded-full shadow-2xl"></div>
-            <div class="w-6 h-6 rounded-full bg-zinc-400 border-2 border-zinc-200 -mt-1.5 ml-28 shadow-lg"></div>
+        <!-- 2. Overlay Lyrics for WebGL skins (if toggled) -->
+        <div 
+          v-if="currentSkin !== 'classic' && showLyricOverlay"
+          class="absolute inset-0 z-20 flex items-center justify-center pointer-events-auto bg-black/30 backdrop-blur-[2px]">
+          <div class="w-full max-w-xl h-96 overflow-y-auto px-6 text-center space-y-5 scroll-smooth" ref="overlayLyricContainer">
+            <div v-if="!parsedLyrics.length" class="text-zinc-400 text-sm py-36">暂无歌词</div>
+            <div 
+              v-for="(line, idx) in parsedLyrics" 
+              :key="idx"
+              :class="currentLyricIndex === idx ? 'text-white text-lg font-bold scale-110 drop-shadow-lg text-blue-400' : 'text-zinc-400/80 text-sm hover:text-zinc-200'"
+              class="transition-all duration-300 py-1.5 cursor-pointer select-none"
+              @click="seekTo(line.startTime)">
+              {{ line.fullText }}
+            </div>
           </div>
+        </div>
 
-          <!-- Vinyl Record Disc (黑胶大碟) -->
-          <div 
-            :class="isPlaying ? 'animate-spin-slow' : ''"
-            class="w-72 h-72 md:w-96 md:h-96 rounded-full vinyl-grooves p-4 shadow-2xl shadow-blue-500/10 border-4 border-zinc-900 flex items-center justify-center relative">
-            <!-- Outer groove ring -->
-            <div class="w-full h-full rounded-full border border-zinc-700/30 flex items-center justify-center">
-              <!-- Center Album Label -->
-              <div class="w-28 h-28 md:w-36 md:h-36 rounded-full bg-gradient-to-tr from-blue-700 to-indigo-600 p-1.5 shadow-inner border-2 border-zinc-800 flex items-center justify-center relative">
-                <img src="/assets/branding/app_icon.png" class="w-full h-full rounded-full object-cover">
-                <!-- Center Spindle Hole -->
-                <div class="absolute w-5 h-5 rounded-full bg-black border-2 border-zinc-500 shadow-inner"></div>
+        <!-- 3. Classic Vinyl Disc + Smooth Scrolling Lyrics Mode -->
+        <div v-if="currentSkin === 'classic'" class="w-full max-w-5xl h-full flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 px-6 select-none">
+          <!-- Left: Vinyl Record Disc (黑胶大碟) -->
+          <div class="relative flex flex-col items-center justify-center shrink-0">
+            <!-- Tone arm (唱针) -->
+            <div class="absolute -top-14 right-4 z-30 transition-transform duration-700 origin-top-right pointer-events-none"
+                 :class="isPlaying ? 'rotate-0' : '-rotate-24'">
+              <div class="w-28 h-2 bg-gradient-to-r from-zinc-300 to-zinc-500 rounded-full shadow-2xl"></div>
+              <div class="w-5 h-5 rounded-full bg-zinc-400 border-2 border-zinc-200 -mt-1.5 ml-24 shadow-lg"></div>
+            </div>
+
+            <!-- Vinyl Record Disc (黑胶唱片) -->
+            <div 
+              :class="isPlaying ? 'animate-spin-slow' : ''"
+              class="w-64 h-64 md:w-80 md:h-80 rounded-full vinyl-grooves p-3.5 shadow-2xl shadow-blue-500/10 border-4 border-zinc-900 flex items-center justify-center relative">
+              <!-- Outer groove ring -->
+              <div class="w-full h-full rounded-full border border-zinc-700/30 flex items-center justify-center">
+                <!-- Center Album Label with Real Cover Art -->
+                <div class="w-24 h-24 md:w-32 md:h-32 rounded-full p-1 shadow-inner border-2 border-zinc-800 flex items-center justify-center relative overflow-hidden bg-zinc-950">
+                  <img :src="currentTrack.cover || '/assets/branding/app_icon.png'" class="w-full h-full rounded-full object-cover">
+                  <!-- Center Spindle Hole -->
+                  <div class="absolute w-4 h-4 rounded-full bg-black border-2 border-zinc-500 shadow-inner"></div>
+                </div>
               </div>
+            </div>
+
+            <!-- Pulsing Audio Reactive Waves -->
+            <div v-if="isPlaying" class="mt-6 flex items-center gap-2">
+              <img src="/assets/player/quality_wave_1.png" class="h-5 animate-pulse">
+              <span class="text-[11px] font-mono text-zinc-400 uppercase tracking-widest">{{ currentTrack.actualQuality || '320K' }} Hi-Fi STREAM</span>
+              <img src="/assets/player/quality_wave_2.png" class="h-5 animate-pulse">
             </div>
           </div>
 
-          <!-- Pulsing Audio Reactive Waves -->
-          <div v-if="isPlaying" class="mt-8 flex items-center gap-2">
-            <img src="/assets/player/quality_wave_1.png" class="h-6 animate-pulse">
-            <span class="text-xs font-mono text-zinc-400 uppercase tracking-widest">{{ currentTrack.actualQuality || '320K' }} Hi-Fi STREAM</span>
-            <img src="/assets/player/quality_wave_2.png" class="h-6 animate-pulse">
+          <!-- Right: Real-time Synchronized Scrolling Lyrics -->
+          <div class="flex-1 w-full max-w-lg h-72 md:h-96 overflow-y-auto px-4 space-y-5 text-center scroll-smooth" ref="classicLyricContainer">
+            <div v-if="!parsedLyrics.length" class="text-zinc-500 text-sm py-32 flex flex-col items-center gap-2">
+              <i class="fa-solid fa-music text-2xl text-zinc-700"></i>
+              <span>纯音乐，暂无滚动歌词</span>
+            </div>
+            <div 
+              v-for="(line, idx) in parsedLyrics" 
+              :key="idx"
+              :class="currentLyricIndex === idx ? 'text-white text-base md:text-lg font-bold scale-105 text-blue-400 drop-shadow' : 'text-zinc-500 text-xs md:text-sm hover:text-zinc-300'"
+              class="transition-all duration-300 py-1.5 cursor-pointer select-none"
+              @click="seekTo(line.startTime)">
+              {{ line.fullText }}
+            </div>
           </div>
         </div>
       </div>
@@ -728,7 +785,7 @@
             :class="currentSkin === 'classic' ? 'ring-2 ring-blue-500 bg-zinc-800 font-bold text-white' : 'opacity-70 hover:opacity-100 text-zinc-400'"
             class="flex items-center gap-2 px-3 py-1.5 rounded-xl transition text-xs shrink-0">
             <img src="/assets/player/previews/classic.webp" class="w-6 h-6 rounded-lg object-cover">
-            <span>经典黑胶</span>
+            <span>经典黑胶与歌词</span>
           </button>
 
           <!-- Nebbia (水雾雨滴) Skin -->
@@ -759,8 +816,10 @@
           </button>
         </div>
 
-        <div class="text-[11px] text-zinc-500">
-          按 <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 font-mono text-[10px]">ESC</kbd> 退出全屏视效
+        <div class="text-[11px] text-zinc-500 flex items-center gap-3">
+          <span>按 <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 font-mono text-[10px]">ESC</kbd> 退出全屏</span>
+          <span>•</span>
+          <span>点击任意歌词可直接跳转进度</span>
         </div>
       </div>
     </div>
@@ -768,7 +827,7 @@
   </div>
 
   <script>
-    const { createApp, ref, computed, onMounted, watch } = Vue;
+    const { createApp, ref, computed, onMounted, nextTick } = Vue;
 
     createApp({
       setup() {
@@ -783,10 +842,18 @@
         const audioPlayer = ref(null);
         const isPlaying = ref(false);
 
-        // Visualizer State
+        // Visualizer & Lyrics State
         const showVisualizer = ref(false);
+        const showLyricOverlay = ref(true);
         const currentSkin = ref('classic');
         const visualizerIframe = ref(null);
+        const classicLyricContainer = ref(null);
+        const overlayLyricContainer = ref(null);
+
+        const rawLrc = ref('');
+        const parsedLyrics = ref([]);
+        const currentLyricIndex = ref(0);
+
         let audioCtx = null;
         let analyser = null;
         let dataArray = null;
@@ -796,6 +863,12 @@
         const isHiResQuality = computed(() => {
           const q = (currentTrack.value?.actualQuality || currentTrack.value?.quality || '').toLowerCase();
           return q.includes('flac') || q.includes('24bit') || q.includes('hires');
+        });
+
+        const isMember = computed(() => {
+          const m = user.value?.membershipState || user.value?.membership;
+          const status = m?.status || m?.type;
+          return status === 'permanent' || status === 'active' || status === 'trial' || !!m?.isActive;
         });
 
         const visualizerIframeUrl = computed(() => {
@@ -808,11 +881,115 @@
           return '';
         });
 
+        // LRC Parser
+        function parseLrc(lrcText) {
+          if (!lrcText) return [];
+          const items = [];
+          for (const line of lrcText.split('\n')) {
+            const m = /\[(\d{2}):(\d{2})\.(\d{2,3})\](.*)/.exec(line);
+            if (m) {
+              const min = parseInt(m[1], 10);
+              const sec = parseInt(m[2], 10);
+              const ms = m[3].length === 2 ? parseInt(m[3], 10) * 10 : parseInt(m[3], 10);
+              const time = min * 60 + sec + ms / 1000;
+              const text = m[4].trim();
+              if (text && !text.startsWith('ti:') && !text.startsWith('ar:') && !text.startsWith('al:')) {
+                items.push({ time, text });
+              }
+            }
+          }
+          const lines = [];
+          for (let i = 0; i < items.length; i++) {
+            const cur = items[i];
+            const next = items[i + 1];
+            const startTime = cur.time;
+            const endTime = next ? next.time : startTime + 5.0;
+            lines.push({
+              startTime,
+              endTime,
+              fullText: cur.text,
+              words: [{ text: cur.text, startTime, endTime }]
+            });
+          }
+          return lines;
+        }
+
+        async function fetchLyrics(song) {
+          parsedLyrics.value = [];
+          rawLrc.value = '';
+          currentLyricIndex.value = 0;
+          try {
+            const resp = await fetch(`/api/lyric?id=${encodeURIComponent(song.id)}&source=${song.source}`);
+            const data = await resp.json();
+            if (data.success && data.lyric) {
+              rawLrc.value = data.lyric;
+              parsedLyrics.value = parseLrc(data.lyric);
+              // Send updated lyrics to active WebGL iframe
+              setTimeout(() => {
+                sendVisualizerPacket();
+              }, 400);
+            }
+          } catch (e) {
+            console.warn('Fetch lyrics error:', e);
+          }
+        }
+
+        function onAudioTimeUpdate() {
+          if (!audioPlayer.value || !parsedLyrics.value.length) return;
+          const curTime = audioPlayer.value.currentTime;
+          let idx = -1;
+          for (let i = 0; i < parsedLyrics.value.length; i++) {
+            if (curTime >= parsedLyrics.value[i].startTime) {
+              idx = i;
+            } else {
+              break;
+            }
+          }
+          if (idx !== -1 && idx !== currentLyricIndex.value) {
+            currentLyricIndex.value = idx;
+            scrollLyricIntoView();
+          }
+        }
+
+        function scrollLyricIntoView() {
+          nextTick(() => {
+            const cContainer = classicLyricContainer.value;
+            if (cContainer) {
+              const activeEl = cContainer.children[currentLyricIndex.value + 1]; // +1 accounting for placeholder
+              if (activeEl) {
+                cContainer.scrollTo({
+                  top: activeEl.offsetTop - cContainer.clientHeight / 2 + activeEl.clientHeight / 2,
+                  behavior: 'smooth'
+                });
+              }
+            }
+            const oContainer = overlayLyricContainer.value;
+            if (oContainer) {
+              const activeEl = oContainer.children[currentLyricIndex.value + 1];
+              if (activeEl) {
+                oContainer.scrollTo({
+                  top: activeEl.offsetTop - oContainer.clientHeight / 2 + activeEl.clientHeight / 2,
+                  behavior: 'smooth'
+                });
+              }
+            }
+          });
+        }
+
+        function seekTo(time) {
+          if (audioPlayer.value) {
+            audioPlayer.value.currentTime = time;
+            if (audioPlayer.value.paused) {
+              audioPlayer.value.play();
+            }
+          }
+        }
+
         function switchSkin(skin) {
           currentSkin.value = skin;
           setTimeout(() => {
             sendVisualizerPacket();
-          }, 300);
+          }, 400);
         }
 
         function onAudioPlay() {
@@ -836,7 +1013,7 @@
             source.connect(analyser);
             analyser.connect(audioCtx.destination);
           } catch (e) {
-            console.warn('Web Audio API not supported or already connected:', e);
+            console.warn('Web Audio API initialized:', e);
           }
         }
 
@@ -862,9 +1039,11 @@
               sequence: ++frameSeq,
               content: {
                 skin: currentSkin.value === 'hanabi' ? 'hanabi' : 'lumiere',
+                songKey: currentTrack.value?.id || 'song',
                 song: {
                   title: currentTrack.value?.title || 'Unknown',
-                  artist: currentTrack.value?.artist || 'Unknown'
+                  artist: currentTrack.value?.artist || 'Unknown',
+                  lines: parsedLyrics.value || []
                 },
                 theme: { backgroundColor: '#10121a' },
                 scale: 1,
@@ -1008,8 +1187,12 @@
               currentTrack.value = {
                 ...song,
                 playUrl: data.data.playUrl,
-                actualQuality: data.data.actualQuality
+                actualQuality: data.data.actualQuality,
+                cover: song.cover || '/assets/branding/app_icon.png'
               };
+
+              // Fetch Lyrics in background
+              fetchLyrics(song);
             } else {
               const msg = data.error?.message || '解析失败，可能需要先登录或开通会员权益';
               alert(`[解析失败] ${msg}`);
@@ -1144,6 +1327,18 @@
 
             if (data.success && data.data) {
               user.value = data.data;
+
+              // Also fetch official /v1/membership for verified status
+              try {
+                const memResp = await fetch('/v1/membership', {
+                  headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const memData = await memResp.json();
+                if (memData.success && memData.data) {
+                  user.value.membershipState = memData.data;
+                }
+              } catch (e) {}
+
               fetchListeningStats();
             } else if (resp.status === 401) {
               logout();
@@ -1179,11 +1374,26 @@
         }
 
         function getMembershipText() {
-          if (!user.value?.membership) return '普通用户 (未激活)';
-          const m = user.value.membership;
-          if (m.type === 'permanent') return '永久尊贵会员';
-          if (m.isActive) return `会员中 (${m.remainingDays || 0} 天剩余)`;
-          return '会员已过期';
+          const m = user.value?.membershipState || user.value?.membership;
+          if (!m) return '普通用户 (未激活)';
+          const status = m.status || m.type;
+          if (status === 'permanent') return '永久尊贵会员';
+          if (status === 'active') {
+            if (m.expiresAt) {
+              const days = Math.ceil((new Date(m.expiresAt) - new Date()) / (1000 * 60 * 60 * 24));
+              return days > 0 ? `正式会员 (${days}天剩余)` : '正式会员 (已到期)';
+            }
+            return '正式会员 (有效)';
+          }
+          if (status === 'trial') {
+            if (m.expiresAt) {
+              const days = Math.ceil((new Date(m.expiresAt) - new Date()) / (1000 * 60 * 60 * 24));
+              return days > 0 ? `体验会员 (${days}天剩余)` : '体验会员 (已到期)';
+            }
+            return '体验会员 (有效)';
+          }
+          if (m.isActive) return '会员中 (有效)';
+          return '未激活会员';
         }
 
         // 4. Products & Order Logic
@@ -1269,13 +1479,21 @@
           audioPlayer,
           isPlaying,
           isHiResQuality,
+          isMember,
           showVisualizer,
+          showLyricOverlay,
           currentSkin,
           visualizerIframe,
           visualizerIframeUrl,
+          classicLyricContainer,
+          overlayLyricContainer,
+          parsedLyrics,
+          currentLyricIndex,
+          seekTo,
           switchSkin,
           onAudioPlay,
           onAudioPause,
+          onAudioTimeUpdate,
           handleSearch,
           quickSearch,
           parseAndPlay,
