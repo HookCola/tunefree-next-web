@@ -135,10 +135,26 @@ const server = http.createServer(async (req, res) => {
 
   try {
     const content = fs.readFileSync(filePath);
-    const ext = path.extname(filePath);
-    const contentType = ext === '.html' ? 'text/html; charset=utf-8' :
-                        ext === '.js' ? 'application/javascript; charset=utf-8' :
-                        ext === '.css' ? 'text/css; charset=utf-8' : 'application/octet-stream';
+    const ext = path.extname(filePath).toLowerCase();
+    const mimeTypes = {
+      '.html': 'text/html; charset=utf-8',
+      '.js': 'application/javascript; charset=utf-8',
+      '.css': 'text/css; charset=utf-8',
+      '.json': 'application/json; charset=utf-8',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.webp': 'image/webp',
+      '.svg': 'image/svg+xml',
+      '.frag': 'text/plain; charset=utf-8',
+      '.vert': 'text/plain; charset=utf-8',
+      '.glsl': 'text/plain; charset=utf-8',
+      '.woff': 'font/woff',
+      '.woff2': 'font/woff2',
+      '.ttf': 'font/ttf',
+      '.otf': 'font/otf',
+    };
+    const contentType = mimeTypes[ext] || 'application/octet-stream';
     res.writeHead(200, { 'Content-Type': contentType });
     res.end(content);
   } catch (err) {

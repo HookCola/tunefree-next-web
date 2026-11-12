@@ -18,6 +18,10 @@
               600: '#2563eb',
               700: '#1d4ed8',
             }
+          },
+          animation: {
+            'spin-slow': 'spin 20s linear infinite',
+            'pulse-fast': 'pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
           }
         }
       }
@@ -32,6 +36,17 @@
     ::-webkit-scrollbar-track { background: #18181b; }
     ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+
+    /* Vinyl disc reflection */
+    .vinyl-grooves {
+      background: repeating-radial-gradient(
+        circle at center,
+        #111 0px,
+        #18181b 2px,
+        #09090b 4px,
+        #18181b 6px
+      );
+    }
   </style>
 </head>
 <body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col font-sans antialiased selection:bg-blue-600 selection:text-white">
@@ -40,17 +55,16 @@
     <!-- Top Header -->
     <header class="flex items-center justify-between border-b border-zinc-800 pb-4 mb-6">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-          <i class="fa-solid fa-compact-disc text-xl text-white animate-spin" style="animation-duration: 8s;"></i>
-        </div>
+        <img src="/assets/branding/app_icon.png" alt="TuneFree" class="w-10 h-10 rounded-xl shadow-lg shadow-blue-500/20 object-cover border border-zinc-700/50">
         <div>
-          <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-            TuneFree Web
+          <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent flex items-center gap-2">
+            <span>TuneFree Next Web</span>
+            <span class="text-[10px] font-mono font-normal px-2 py-0.5 rounded-full bg-blue-600/20 text-blue-400 border border-blue-500/30">v1.0.0-beta.1</span>
           </h1>
           <p class="text-xs text-zinc-400 flex items-center gap-2">
-            <span>TuneFreeNext V4 API 客户端</span>
+            <span>TuneFreeNext V4 协议客户端</span>
             <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            <span class="text-emerald-400">本地代理运行中</span>
+            <span class="text-emerald-400">WebGL 动效引擎已挂载</span>
           </p>
         </div>
       </div>
@@ -62,7 +76,10 @@
             {{ user.displayName ? user.displayName.slice(0, 1) : 'U' }}
           </div>
           <div class="text-xs text-left">
-            <div class="font-medium text-zinc-200">{{ user.displayName }}</div>
+            <div class="font-medium text-zinc-200 flex items-center gap-1.5">
+              <span>{{ user.displayName }}</span>
+              <img v-if="user.membership?.isActive" src="/assets/profile/vip_diamond.png" alt="VIP" class="w-3.5 h-3.5 inline">
+            </div>
             <div class="text-[10px] text-emerald-400">{{ getMembershipText() }}</div>
           </div>
           <button @click="logout" title="退出登录" class="text-zinc-500 hover:text-red-400 transition ml-1 text-xs">
@@ -291,7 +308,10 @@
               {{ user.displayName ? user.displayName.slice(0, 1) : 'U' }}
             </div>
             <div>
-              <h2 class="text-lg font-bold text-zinc-100">{{ user.displayName }}</h2>
+              <h2 class="text-lg font-bold text-zinc-100 flex items-center gap-2">
+                <span>{{ user.displayName }}</span>
+                <img v-if="user.membership?.isActive" src="/assets/profile/vip_diamond.png" alt="VIP" class="w-5 h-5">
+              </h2>
               <p class="text-xs text-zinc-400">{{ user.email }}</p>
               <div class="mt-2 flex items-center gap-2">
                 <span class="text-xs px-2.5 py-0.5 rounded-full font-medium" :class="user.membership?.isActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-zinc-800 text-zinc-400'">
@@ -569,51 +589,186 @@
     </main>
 
     <!-- Floating Audio Player Bar -->
-    <footer v-if="currentTrack" class="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-md border-t border-zinc-800 p-3 z-50">
+    <footer v-if="currentTrack" class="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-md border-t border-zinc-800 p-3 z-40">
       <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         <!-- Track Info -->
-        <div class="flex items-center gap-3 w-full md:w-1/4">
-          <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-md">
-            <i class="fa-solid fa-music text-lg"></i>
+        <div class="flex items-center gap-3 w-full md:w-1/3 cursor-pointer group" @click="showVisualizer = true" title="点击展开全屏动效播放器">
+          <!-- Spinning Disc Thumbnail -->
+          <div class="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-700/80 flex items-center justify-center shrink-0 shadow-md relative overflow-hidden group-hover:border-blue-500 transition">
+            <img src="/assets/branding/app_icon.png" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition animate-spin-slow">
+            <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+              <i class="fa-solid fa-expand text-white text-xs"></i>
+            </div>
           </div>
           <div class="min-w-0">
-            <div class="text-sm font-semibold text-zinc-100 truncate">{{ currentTrack.title }}</div>
+            <div class="text-sm font-semibold text-zinc-100 truncate group-hover:text-blue-400 transition">{{ currentTrack.title }}</div>
             <div class="text-xs text-zinc-400 truncate">{{ currentTrack.artist }}</div>
-            <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-blue-900/40 text-blue-300 border border-blue-700/40">
-              {{ currentTrack.actualQuality || currentTrack.quality || '标准' }}
-            </span>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-blue-900/40 text-blue-300 border border-blue-700/40">
+                {{ currentTrack.actualQuality || currentTrack.quality || '标准' }}
+              </span>
+              <!-- Hi-Res Mark -->
+              <img v-if="isHiResQuality" src="/assets/player/lossless_mark.png" alt="Hi-Res" class="h-3.5 object-contain">
+              <!-- Audio Wave Indicator -->
+              <img v-if="isPlaying" src="/assets/player/quality_wave_1.png" alt="Playing" class="h-3 animate-pulse">
+            </div>
           </div>
         </div>
 
         <!-- Audio Player Native Element -->
-        <div class="flex-1 w-full max-w-xl">
+        <div class="flex-1 w-full max-w-lg">
           <audio 
             ref="audioPlayer" 
             :src="currentTrack.playUrl" 
             controls 
             autoplay
+            @play="onAudioPlay"
+            @pause="onAudioPause"
             class="w-full h-9 rounded-lg filter invert brightness-90"></audio>
         </div>
 
-        <!-- Download & Close Actions -->
-        <div class="flex items-center gap-3 shrink-0">
+        <!-- Visualizer & Download & Close Actions -->
+        <div class="flex items-center gap-2 shrink-0">
+          <button 
+            @click="showVisualizer = true"
+            class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium transition flex items-center gap-1.5 border border-zinc-700 shadow-sm"
+            title="沉浸式原版动效">
+            <i class="fa-solid fa-wand-magic-sparkles text-blue-400"></i>
+            <span>视效大碟</span>
+          </button>
           <button 
             @click="downloadTrack(currentTrack)" 
-            class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
+            class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
             <i class="fa-solid fa-download"></i>
-            <span>下载音频</span>
+            <span class="hidden sm:inline">下载音频</span>
           </button>
-          <button @click="currentTrack = null" class="text-zinc-500 hover:text-zinc-300 text-sm p-1">
+          <button @click="currentTrack = null" class="text-zinc-500 hover:text-zinc-300 text-sm p-1 ml-1">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
       </div>
     </footer>
 
+    <!-- Fullscreen Immersive Visualizer Modal -->
+    <div 
+      v-if="showVisualizer && currentTrack"
+      class="fixed inset-0 z-50 bg-black flex flex-col justify-between overflow-hidden animate-fade-in">
+      
+      <!-- Top Action Bar -->
+      <div class="relative z-20 flex items-center justify-between p-4 md:p-6 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
+        <div class="flex items-center gap-3">
+          <img src="/assets/branding/app_icon.png" class="w-8 h-8 rounded-lg shadow">
+          <div>
+            <div class="text-sm md:text-base font-bold text-white flex items-center gap-2">
+              <span>{{ currentTrack.title }}</span>
+              <img v-if="isHiResQuality" src="/assets/player/lossless_mark.png" class="h-4 object-contain">
+            </div>
+            <div class="text-xs text-zinc-400">{{ currentTrack.artist }}</div>
+          </div>
+        </div>
+
+        <button 
+          @click="showVisualizer = false" 
+          class="w-10 h-10 rounded-full bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/80 flex items-center justify-center text-zinc-300 hover:text-white transition shadow-lg">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Main Visualizer Area -->
+      <div class="flex-1 relative flex items-center justify-center overflow-hidden">
+        <!-- 1. WebGL Folia / Nebbia Engine Iframe -->
+        <iframe 
+          v-if="currentSkin !== 'classic'"
+          ref="visualizerIframe"
+          :src="visualizerIframeUrl"
+          class="absolute inset-0 w-full h-full border-0 pointer-events-none"
+          allow="autoplay"></iframe>
+
+        <!-- 2. Classic Vinyl Disc Mode -->
+        <div v-else class="relative flex flex-col items-center justify-center select-none">
+          <!-- Tone arm (唱针) -->
+          <div class="absolute -top-16 right-1/4 z-30 transition-transform duration-700 origin-top-right pointer-events-none"
+               :class="isPlaying ? 'rotate-0' : '-rotate-24'">
+            <div class="w-32 h-2.5 bg-gradient-to-r from-zinc-300 to-zinc-500 rounded-full shadow-2xl"></div>
+            <div class="w-6 h-6 rounded-full bg-zinc-400 border-2 border-zinc-200 -mt-1.5 ml-28 shadow-lg"></div>
+          </div>
+
+          <!-- Vinyl Record Disc (黑胶大碟) -->
+          <div 
+            :class="isPlaying ? 'animate-spin-slow' : ''"
+            class="w-72 h-72 md:w-96 md:h-96 rounded-full vinyl-grooves p-4 shadow-2xl shadow-blue-500/10 border-4 border-zinc-900 flex items-center justify-center relative">
+            <!-- Outer groove ring -->
+            <div class="w-full h-full rounded-full border border-zinc-700/30 flex items-center justify-center">
+              <!-- Center Album Label -->
+              <div class="w-28 h-28 md:w-36 md:h-36 rounded-full bg-gradient-to-tr from-blue-700 to-indigo-600 p-1.5 shadow-inner border-2 border-zinc-800 flex items-center justify-center relative">
+                <img src="/assets/branding/app_icon.png" class="w-full h-full rounded-full object-cover">
+                <!-- Center Spindle Hole -->
+                <div class="absolute w-5 h-5 rounded-full bg-black border-2 border-zinc-500 shadow-inner"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pulsing Audio Reactive Waves -->
+          <div v-if="isPlaying" class="mt-8 flex items-center gap-2">
+            <img src="/assets/player/quality_wave_1.png" class="h-6 animate-pulse">
+            <span class="text-xs font-mono text-zinc-400 uppercase tracking-widest">{{ currentTrack.actualQuality || '320K' }} Hi-Fi STREAM</span>
+            <img src="/assets/player/quality_wave_2.png" class="h-6 animate-pulse">
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Visualizer Skin Switcher & Controls -->
+      <div class="relative z-20 p-4 md:p-6 bg-gradient-to-t from-black/95 via-black/80 to-transparent flex flex-col items-center gap-4">
+        
+        <!-- Skin Selector Dock with Original Thumbnails -->
+        <div class="flex items-center gap-3 bg-zinc-900/90 backdrop-blur-md p-1.5 rounded-2xl border border-zinc-800 shadow-2xl overflow-x-auto max-w-full">
+          <!-- Classic Skin -->
+          <button 
+            @click="switchSkin('classic')"
+            :class="currentSkin === 'classic' ? 'ring-2 ring-blue-500 bg-zinc-800 font-bold text-white' : 'opacity-70 hover:opacity-100 text-zinc-400'"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-xl transition text-xs shrink-0">
+            <img src="/assets/player/previews/classic.webp" class="w-6 h-6 rounded-lg object-cover">
+            <span>经典黑胶</span>
+          </button>
+
+          <!-- Nebbia (水雾雨滴) Skin -->
+          <button 
+            @click="switchSkin('nebbia')"
+            :class="currentSkin === 'nebbia' ? 'ring-2 ring-blue-500 bg-zinc-800 font-bold text-white' : 'opacity-70 hover:opacity-100 text-zinc-400'"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-xl transition text-xs shrink-0">
+            <img src="/assets/player/previews/nebbia.webp" class="w-6 h-6 rounded-lg object-cover">
+            <span>水雾雨滴 (Nebbia)</span>
+          </button>
+
+          <!-- Lumiere (流光) Skin -->
+          <button 
+            @click="switchSkin('lumiere')"
+            :class="currentSkin === 'lumiere' ? 'ring-2 ring-blue-500 bg-zinc-800 font-bold text-white' : 'opacity-70 hover:opacity-100 text-zinc-400'"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-xl transition text-xs shrink-0">
+            <img src="/assets/player/previews/lumiere.webp" class="w-6 h-6 rounded-lg object-cover">
+            <span>极光流影 (Lumiere)</span>
+          </button>
+
+          <!-- Hanabi (花火) Skin -->
+          <button 
+            @click="switchSkin('hanabi')"
+            :class="currentSkin === 'hanabi' ? 'ring-2 ring-blue-500 bg-zinc-800 font-bold text-white' : 'opacity-70 hover:opacity-100 text-zinc-400'"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-xl transition text-xs shrink-0">
+            <img src="/assets/player/previews/hanabi.webp" class="w-6 h-6 rounded-lg object-cover">
+            <span>花火粒子 (Hanabi)</span>
+          </button>
+        </div>
+
+        <div class="text-[11px] text-zinc-500">
+          按 <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 font-mono text-[10px]">ESC</kbd> 退出全屏视效
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
-    const { createApp, ref, onMounted } = Vue;
+    const { createApp, ref, computed, onMounted, watch } = Vue;
 
     createApp({
       setup() {
@@ -626,6 +781,117 @@
         const parsingId = ref(null);
         const currentTrack = ref(null);
         const audioPlayer = ref(null);
+        const isPlaying = ref(false);
+
+        // Visualizer State
+        const showVisualizer = ref(false);
+        const currentSkin = ref('classic');
+        const visualizerIframe = ref(null);
+        let audioCtx = null;
+        let analyser = null;
+        let dataArray = null;
+        let animFrameId = null;
+        let frameSeq = 0;
+
+        const isHiResQuality = computed(() => {
+          const q = (currentTrack.value?.actualQuality || currentTrack.value?.quality || '').toLowerCase();
+          return q.includes('flac') || q.includes('24bit') || q.includes('hires');
+        });
+
+        const visualizerIframeUrl = computed(() => {
+          if (currentSkin.value === 'nebbia') {
+            return '/assets/player/nebbia/index.html';
+          }
+          if (currentSkin.value === 'lumiere' || currentSkin.value === 'hanabi') {
+            return '/assets/player/folia/index.html';
+          }
+          return '';
+        });
+
+        function switchSkin(skin) {
+          currentSkin.value = skin;
+          setTimeout(() => {
+            sendVisualizerPacket();
+          }, 300);
+        }
+
+        function onAudioPlay() {
+          isPlaying.value = true;
+          initWebAudio();
+        }
+
+        function onAudioPause() {
+          isPlaying.value = false;
+        }
+
+        // Web Audio API Frequency Analyser
+        function initWebAudio() {
+          if (audioCtx || !audioPlayer.value) return;
+          try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 64; // 32 frequency buckets
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
+            const source = audioCtx.createMediaElementSource(audioPlayer.value);
+            source.connect(analyser);
+            analyser.connect(audioCtx.destination);
+          } catch (e) {
+            console.warn('Web Audio API not supported or already connected:', e);
+          }
+        }
+
+        function sendVisualizerPacket() {
+          if (!visualizerIframe.value?.contentWindow?.TfnNebbia) return;
+          
+          let bands = [];
+          let bass = 0;
+          let vocal = 0;
+          if (analyser && dataArray && isPlaying.value) {
+            analyser.getByteFrequencyData(dataArray);
+            for (let i = 0; i < 16; i++) {
+              bands.push((dataArray[i] || 0) / 255);
+            }
+            bass = (bands[0] + bands[1] + bands[2]) / 3;
+            vocal = (bands[4] + bands[5] + bands[6]) / 3;
+          } else {
+            bands = Array.from({ length: 16 }, () => isPlaying.value ? Math.random() * 0.4 : 0);
+          }
+
+          try {
+            visualizerIframe.value.contentWindow.TfnNebbia.receive({
+              sequence: ++frameSeq,
+              content: {
+                skin: currentSkin.value === 'hanabi' ? 'hanabi' : 'lumiere',
+                song: {
+                  title: currentTrack.value?.title || 'Unknown',
+                  artist: currentTrack.value?.artist || 'Unknown'
+                },
+                theme: { backgroundColor: '#10121a' },
+                scale: 1,
+                insets: { top: 0, bottom: 0 }
+              },
+              clock: {
+                playing: isPlaying.value,
+                position: (audioPlayer.value?.currentTime || 0) * 1000,
+                duration: (audioPlayer.value?.duration || 180) * 1000,
+                active: true,
+                bands,
+                bass,
+                vocal
+              }
+            });
+          } catch (e) {}
+        }
+
+        function startVisualizerLoop() {
+          function loop() {
+            if (showVisualizer.value && currentSkin.value !== 'classic') {
+              sendVisualizerPacket();
+            }
+            animFrameId = requestAnimationFrame(loop);
+          }
+          animFrameId = requestAnimationFrame(loop);
+        }
 
         // Account / Auth
         const authMode = ref('login');
@@ -658,6 +924,13 @@
           if (logs.value.length > 50) logs.value.pop();
         }
 
+        // Keyboard navigation
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && showVisualizer.value) {
+            showVisualizer.value = false;
+          }
+        });
+
         // Initialize deviceId
         onMounted(async () => {
           let savedId = localStorage.getItem('tunefree_device_id');
@@ -675,6 +948,9 @@
 
           // Fetch products
           fetchProducts();
+
+          // Start visualizer sync loop
+          startVisualizerLoop();
         });
 
         // 1. Search Logic
@@ -991,6 +1267,15 @@
           parsingId,
           currentTrack,
           audioPlayer,
+          isPlaying,
+          isHiResQuality,
+          showVisualizer,
+          currentSkin,
+          visualizerIframe,
+          visualizerIframeUrl,
+          switchSkin,
+          onAudioPlay,
+          onAudioPause,
           handleSearch,
           quickSearch,
           parseAndPlay,
