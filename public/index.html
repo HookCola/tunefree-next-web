@@ -713,6 +713,7 @@
         <!-- 1. WebGL Folia / Nebbia Engine Iframe -->
         <iframe 
           v-if="currentSkin !== 'classic'"
+          :key="currentSkin"
           ref="visualizerIframe"
           :src="visualizerIframeUrl"
           class="absolute inset-0 w-full h-full border-0 pointer-events-none"
@@ -888,8 +889,11 @@
           if (currentSkin.value === 'nebbia') {
             return '/assets/player/nebbia/index.html';
           }
-          if (currentSkin.value === 'lumiere' || currentSkin.value === 'hanabi') {
-            return '/assets/player/folia/index.html';
+          if (currentSkin.value === 'lumiere') {
+            return '/assets/player/folia/index.html?skin=lumiere';
+          }
+          if (currentSkin.value === 'hanabi') {
+            return '/assets/player/folia/index.html?skin=hanabi';
           }
           return '';
         });

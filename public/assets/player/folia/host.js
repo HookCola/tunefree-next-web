@@ -66,6 +66,18 @@ async function apply() {
   window.tfnPerformance = c.performance;
   if(!runtime)window.tfnLyricScale=c.lyricScale??1;
   document.documentElement.style.setProperty('--accent',c.theme.backgroundColor);
+  if (runtime && applied && applied.skin !== c.skin) {
+    try {
+      runtime.destroy();
+    } catch (e) {
+      console.warn('Runtime destroy error:', e);
+    }
+    runtime = null;
+    applied = null;
+    appliedPlayback = '';
+    appliedSeek = -1;
+    host.innerHTML = '';
+  }
   if (!runtime) {
     const token = ++generation;
     controller?.abort(); controller = new AbortController();
