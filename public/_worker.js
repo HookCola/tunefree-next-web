@@ -36,21 +36,29 @@ export default {
       try {
         let list = [];
         if (source === 'wy') {
-          const target = `https://music.163.com/api/search/get/web?s=${encodeURIComponent(keyword)}&type=1&offset=0&total=true&limit=25`;
+          const target = `https://music.163.com/api/cloudsearch/pc?s=${encodeURIComponent(keyword)}&type=1&offset=0&limit=25`;
           const resp = await fetch(target, {
             headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
           });
           const json = await resp.json();
           const songs = json?.result?.songs || [];
-          list = songs.map(s => ({
-            id: String(s.id),
-            title: s.name,
-            artist: (s.artists || []).map(a => a.name).join(' / '),
-            album: s.album?.name || '',
-            source: 'wy',
-            cover: s.album?.artist?.img1v1Url || (s.artists && s.artists[0]?.img1v1Url) || '/assets/branding/app_icon.png',
-            duration: s.duration ? Math.round(s.duration / 1000) : 0,
-          }));
+          list = songs.map(s => {
+            const album = s.al || s.album || {};
+            const artists = s.ar || s.artists || [];
+            let cover = album.picUrl || '/assets/branding/app_icon.png';
+            if (cover.startsWith('http://')) {
+              cover = cover.replace('http://', 'https://');
+            }
+            return {
+              id: String(s.id),
+              title: s.name,
+              artist: artists.map(a => a.name).join(' / '),
+              album: album.name || '',
+              source: 'wy',
+              cover,
+              duration: s.dt ? Math.round(s.dt / 1000) : (s.duration ? Math.round(s.duration / 1000) : 0),
+            };
+          });
         } else if (source === 'kw') {
           const target = `https://search.kuwo.cn/r.s?client=kt&all=${encodeURIComponent(keyword)}&pn=0&rn=25&uid=794761770&ver=kwplayer_ar_9.2.2.1&vipver=1&show_copyright_off=1&newsearch=1&ft=music&cluster=0&strategy=2012&encoding=utf8&rformat=json&vermerge=1&mobi=1`;
           const resp = await fetch(target, {
@@ -62,9 +70,11 @@ export default {
             const trackId = s.DC_TARGETID || (s.MUSICRID ? s.MUSICRID.replace('MUSIC_', '') : '');
             let cover = '/assets/branding/app_icon.png';
             if (s.web_albumpic_short) {
-              cover = `https://img1.kuwo.cn/star/albumcover/500/${s.web_albumpic_short}`;
+              cover = `https://img1.kuwo.cn/star/albumcover/` + s.web_albumpic_short.replace(/^120\//, '500/');
             } else if (s.web_artistpic_short) {
-              cover = `https://img1.kuwo.cn/star/starheads/500/${s.web_artistpic_short}`;
+              cover = `https://img1.kuwo.cn/star/starheads/` + s.web_artistpic_short.replace(/^120\//, '500/');
+            } else if (s.hts_MVPIC) {
+              cover = s.hts_MVPIC;
             }
             return {
               id: trackId,
