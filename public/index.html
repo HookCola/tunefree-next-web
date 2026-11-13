@@ -752,11 +752,42 @@
         <div v-if="currentSkin === 'classic'" class="w-full max-w-5xl h-full flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 px-6 select-none">
           <!-- Left: Vinyl Record Disc (黑胶大碟) -->
           <div class="relative flex flex-col items-center justify-center shrink-0">
-            <!-- Tone arm (唱针) -->
-            <div class="absolute -top-14 right-4 z-30 transition-transform duration-700 origin-top-right pointer-events-none"
-                 :class="isPlaying ? 'rotate-0' : '-rotate-24'">
-              <div class="w-28 h-2 bg-gradient-to-r from-zinc-300 to-zinc-500 rounded-full shadow-2xl"></div>
-              <div class="w-5 h-5 rounded-full bg-zinc-400 border-2 border-zinc-200 -mt-1.5 ml-24 shadow-lg"></div>
+            <!-- Tone arm (拟真高保真黑胶唱针臂) -->
+            <div class="absolute -top-14 right-2 z-30 transition-transform duration-700 ease-out pointer-events-none"
+                 style="transform-origin: 75px 20px;"
+                 :class="isPlaying ? 'rotate-0' : '-rotate-28'">
+              <svg width="100" height="170" viewBox="0 0 100 170" fill="none" xmlns="http://www.w3.org/2000/svg" class="drop-shadow-2xl">
+                <!-- Pivot Axis / Base Mount (金属轴承底座) -->
+                <circle cx="75" cy="20" r="16" fill="url(#pivotGrad)" stroke="#52525b" stroke-width="2"/>
+                <circle cx="75" cy="20" r="9" fill="#18181b" stroke="#71717a" stroke-width="1.5"/>
+                <circle cx="75" cy="20" r="4" fill="#a1a1aa"/>
+
+                <!-- Tonearm Shaft (高光金属唱臂杆) -->
+                <path d="M 75 20 L 70 70 L 52 120 L 44 140" stroke="url(#metalArmGrad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                
+                <!-- Counterweight / Joint Ring (重锤关节环) -->
+                <circle cx="52" cy="120" r="3.5" fill="#52525b" stroke="#d4d4d8" stroke-width="1"/>
+
+                <!-- Cartridge / Headshell (黑胶唱头盖与拾音器) -->
+                <rect x="34" y="136" width="16" height="26" rx="3" fill="#18181b" stroke="#71717a" stroke-width="1.5" transform="rotate(-15 42 149)"/>
+                <!-- Stylus Needle (高亮红宝石唱针头) -->
+                <rect x="39" y="152" width="6" height="7" rx="1" fill="#e4e4e7" transform="rotate(-15 42 149)"/>
+                <circle cx="42" cy="162" r="1.5" fill="#f43f5e" transform="rotate(-15 42 149)"/>
+
+                <defs>
+                  <radialGradient id="pivotGrad" cx="0.3" cy="0.3" r="0.8">
+                    <stop offset="0%" stop-color="#a1a1aa"/>
+                    <stop offset="60%" stop-color="#3f3f46"/>
+                    <stop offset="100%" stop-color="#18181b"/>
+                  </radialGradient>
+                  <linearGradient id="metalArmGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#f4f4f5"/>
+                    <stop offset="40%" stop-color="#a1a1aa"/>
+                    <stop offset="75%" stop-color="#e4e4e7"/>
+                    <stop offset="100%" stop-color="#52525b"/>
+                  </linearGradient>
+                </defs>
+              </svg>
             </div>
 
             <!-- Vinyl Record Disc (黑胶唱片) -->
