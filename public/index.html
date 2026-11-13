@@ -143,17 +143,25 @@
               type="button"
               @click="searchSource = 'qq'"
               :class="searchSource === 'qq' ? 'bg-blue-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-200'"
-              class="px-3.5 py-2 rounded-lg text-xs transition flex items-center gap-1.5">
+              class="px-3 py-2 rounded-lg text-xs transition flex items-center gap-1.5">
               <i class="fa-solid fa-music"></i>
-              <span>QQ 音乐</span>
+              <span>绿源 (QQ)</span>
             </button>
             <button 
               type="button"
               @click="searchSource = 'wy'"
               :class="searchSource === 'wy' ? 'bg-red-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-200'"
-              class="px-3.5 py-2 rounded-lg text-xs transition flex items-center gap-1.5">
+              class="px-3 py-2 rounded-lg text-xs transition flex items-center gap-1.5">
               <i class="fa-brands fa-cloudsmith"></i>
-              <span>网易云音乐</span>
+              <span>红源 (网易)</span>
+            </button>
+            <button 
+              type="button"
+              @click="searchSource = 'kw'"
+              :class="searchSource === 'kw' ? 'bg-amber-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-200'"
+              class="px-3 py-2 rounded-lg text-xs transition flex items-center gap-1.5">
+              <i class="fa-solid fa-bolt"></i>
+              <span>橙源 (酷我)</span>
             </button>
           </div>
 
@@ -253,7 +261,11 @@
               <div class="min-w-0">
                 <div class="text-sm font-medium text-zinc-200 truncate flex items-center gap-2">
                   <span class="truncate">{{ song.title }}</span>
-                  <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400">{{ song.source.toUpperCase() }}</span>
+                  <span 
+                    class="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                    :class="song.source === 'wy' ? 'bg-red-950/60 text-red-400 border border-red-800/40' : (song.source === 'kw' ? 'bg-amber-950/60 text-amber-400 border border-amber-800/40' : 'bg-blue-950/60 text-blue-400 border border-blue-800/40')">
+                    {{ song.source === 'kw' ? '橙源 · 酷我' : (song.source === 'wy' ? '红源 · 网易' : '绿源 · QQ') }}
+                  </span>
                 </div>
                 <div class="text-xs text-zinc-400 truncate flex items-center gap-2 mt-0.5">
                   <span class="truncate">{{ song.artist }}</span>
@@ -936,7 +948,7 @@
           rawLrc.value = '';
           currentLyricIndex.value = 0;
           try {
-            const resp = await fetch(`/api/lyric?id=${encodeURIComponent(song.id)}&source=${song.source}`);
+            const resp = await fetch(`/api/lyric?id=${encodeURIComponent(song.id)}&source=${song.source}&title=${encodeURIComponent(song.title + ' ' + song.artist)}`);
             const data = await resp.json();
             if (data.success && data.lyric) {
               rawLrc.value = data.lyric;

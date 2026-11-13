@@ -51,6 +51,31 @@ export default {
             cover: s.album?.artist?.img1v1Url || (s.artists && s.artists[0]?.img1v1Url) || '/assets/branding/app_icon.png',
             duration: s.duration ? Math.round(s.duration / 1000) : 0,
           }));
+        } else if (source === 'kw') {
+          const target = `https://search.kuwo.cn/r.s?client=kt&all=${encodeURIComponent(keyword)}&pn=0&rn=25&uid=794761770&ver=kwplayer_ar_9.2.2.1&vipver=1&show_copyright_off=1&newsearch=1&ft=music&cluster=0&strategy=2012&encoding=utf8&rformat=json&vermerge=1&mobi=1`;
+          const resp = await fetch(target, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+          });
+          const json = await resp.json();
+          const songs = json?.abslist || [];
+          list = songs.map(s => {
+            const trackId = s.DC_TARGETID || (s.MUSICRID ? s.MUSICRID.replace('MUSIC_', '') : '');
+            let cover = '/assets/branding/app_icon.png';
+            if (s.web_albumpic_short) {
+              cover = `https://img1.kuwo.cn/star/albumcover/500/${s.web_albumpic_short}`;
+            } else if (s.web_artistpic_short) {
+              cover = `https://img1.kuwo.cn/star/starheads/500/${s.web_artistpic_short}`;
+            }
+            return {
+              id: trackId,
+              title: s.SONGNAME || s.FSONGNAME || '未知曲目',
+              artist: s.ARTIST || s.FARTIST || '未知歌手',
+              album: s.ALBUM || '',
+              source: 'kw',
+              cover,
+              duration: parseInt(s.DURATION, 10) || 0,
+            };
+          });
         } else {
           // QQ 音乐
           const target = `https://c.y.qq.com/soso/fcgi-bin/client_search_cp?p=1&n=25&w=${encodeURIComponent(keyword)}&format=json`;
@@ -100,6 +125,18 @@ export default {
           });
           const json = await resp.json();
           lyric = json?.lrc?.lyric || '';
+        } else if (source === 'kw') {
+          const title = url.searchParams.get('title') || '';
+          const searchResp = await fetch(`https://c.y.qq.com/soso/fcgi-bin/client_search_cp?p=1&n=1&w=${encodeURIComponent(title || id)}&format=json`);
+          const searchJson = await searchResp.json();
+          const firstMid = searchJson?.data?.song?.list?.[0]?.songmid;
+          if (firstMid) {
+            const resp = await fetch(`https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg?songmid=${firstMid}&format=json&nobase64=1`, {
+              headers: { 'User-Agent': 'Mozilla/5.0', 'Referer': 'https://y.qq.com/' }
+            });
+            const json = await resp.json();
+            lyric = json?.lyric || '';
+          }
         } else {
           const resp = await fetch(`https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg?songmid=${id}&format=json&nobase64=1`, {
             headers: { 'User-Agent': 'Mozilla/5.0', 'Referer': 'https://y.qq.com/' }
