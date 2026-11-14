@@ -93,10 +93,10 @@ const server = http.createServer(async (req, res) => {
           };
         });
       } else {
-        // QQ Music (绿源) - Modern musicu RPC
+        // QQ Music (绿源) - Modern musicu RPC (Desktop PC Client ct: 26)
         const body = {
-          comm: { ct: '19', cv: '1873', uin: '0' },
-          'music.search.SearchCgiService': {
+          comm: { ct: '26', cv: '2010101', uin: '0' },
+          search: {
             method: 'DoSearchForQQMusicDesktop',
             module: 'music.search.SearchCgiService',
             param: {
@@ -109,22 +109,33 @@ const server = http.createServer(async (req, res) => {
         };
         const resp = await fetch('https://u.y.qq.com/cgi-bin/musicu.fcg', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
         });
         const json = await resp.json();
-        const searchData = json?.['music.search.SearchCgiService']?.data;
-        total = searchData?.meta?.estimate_sum || searchData?.meta?.sum || 0;
-        const songs = searchData?.body?.song?.list || [];
-        list = songs.map(s => ({
-          id: s.mid || s.songmid,
-          title: s.title || s.songname,
-          artist: (s.singer || []).map(a => a.name).join(' / '),
-          album: s.album?.name || s.albumname || '',
-          source: 'qq',
-          cover: s.album?.mid ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${s.album.mid}.jpg` : '/assets/branding/app_icon.png',
-          duration: s.interval || 0,
-        }));
+        const searchCgi = json?.search || json?.['music.search.SearchCgiService'];
+        const searchData = searchCgi?.data;
+        // Check search return code: 0 = success, 2001 or others = error/empty
+        if (searchCgi?.code === 0 && searchData) {
+          total = searchData?.meta?.estimate_sum || searchData?.meta?.sum || 0;
+          // Guard against uninitialized memory address garbage numbers
+          if (total > 10000000) {
+            total = searchData?.meta?.sum || 0;
+          }
+          const songs = searchData?.body?.song?.list || [];
+          list = songs.map(s => ({
+            id: s.mid || s.songmid,
+            title: s.title || s.songname,
+            artist: (s.singer || []).map(a => a.name).join(' / '),
+            album: s.album?.name || s.albumname || '',
+            source: 'qq',
+            cover: s.album?.mid ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${s.album.mid}.jpg` : '/assets/branding/app_icon.png',
+            duration: s.interval || 0,
+          }));
+        } else {
+          total = 0;
+          list = [];
+        }
       }
 
       const totalPages = Math.ceil(total / limit) || 1;
