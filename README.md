@@ -44,9 +44,70 @@
 
 ---
 
+## 📋 环境要求
+
+| 部署形态 | 环境要求 | 说明 |
+| :--- | :--- | :--- |
+| **本地 / VPS 运行** | **Node.js ≥ 18.0.0** (推荐 Node 20 / 22) | **无需 `npm install`**，0 第三方依赖，原生 HTTP + Fetch 驱动 |
+| **Docker 容器运行** | **仅需安装 Docker / Docker Compose** | **无需在宿主机安装 Node.js**，镜像内置极简 Alpine 运行环境 |
+| **Cloudflare Pages / Workers** | **无任何本地环境要求** | 全球边缘无服务器部署，GitHub 提交全自动构建 |
+
+---
+
 ## 🚀 部署与运行方式
 
-### 方式一：本地极速运行 (免 npm install)
+### 方式一：Docker 一键部署 (最推荐，免配环境)
+
+Docker 镜像已内置所有运行环境，宿主机无需安装 Node.js。
+
+#### 1. 单行命令启动
+```bash
+docker run -d \
+  --name tunefree-web \
+  --restart always \
+  -p 3000:3000 \
+  ghcr.io/hookcola/tunefree-next-web:latest
+```
+
+#### 2. 自定义环境变量（如个人私有部署添加赞赏码 / 公告）
+公开拉取的镜像**默认 100% 纯净**，无任何赞赏或推广信息。若您自行部署需要展示赞赏码：
+```bash
+docker run -d \
+  --name tunefree-web \
+  --restart always \
+  -p 3000:3000 \
+  -e SPONSOR_QR_URL="https://your-domain.com/my-pay-qr.png" \
+  -e SPONSOR_TITLE="支持作者喝杯咖啡 ☕" \
+  ghcr.io/hookcola/tunefree-next-web:latest
+```
+
+#### 3. 使用 Docker Compose
+创建 `docker-compose.yml`：
+```yaml
+version: '3.8'
+
+services:
+  tunefree-web:
+    image: ghcr.io/hookcola/tunefree-next-web:latest
+    container_name: tunefree-web
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      # 可选：自定义赞赏码（留空则为纯净版）
+      # - SPONSOR_QR_URL=https://your-domain.com/my-pay-qr.png
+      # - SPONSOR_TITLE=支持作者喝杯咖啡 ☕
+```
+启动：
+```bash
+docker compose up -d
+```
+启动后浏览器直接访问：`http://你的服务器IP:3000`
+
+---
+
+### 方式二：本地极速运行 (需要 Node.js >= 18)
 
 1. 克隆本仓库：
    ```bash
@@ -63,7 +124,7 @@
 
 ---
 
-### 方式二：Cloudflare Workers / Pages 一键部署 (免费无服务器)
+### 方式三：Cloudflare Workers / Pages 一键部署 (免费无服务器)
 
 本项目完美支持全球分布式的 **Cloudflare Workers** 与 **Cloudflare Pages** 零服务器部署：
 
