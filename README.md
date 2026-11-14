@@ -65,7 +65,7 @@ Docker 镜像已内置所有运行环境，宿主机无需安装 Node.js。
 docker run -d \
   --name tunefree-web \
   --restart always \
-  -p 3000:3000 \
+  -p 7101:7101 \
   ghcr.io/hookcola/tunefree-next-web:latest
 ```
 
@@ -80,15 +80,15 @@ services:
     container_name: tunefree-web
     restart: always
     ports:
-      - "3000:3000"
+      - "7101:7101"
     environment:
-      - PORT=3000
+      - PORT=7101
 ```
 启动：
 ```bash
 docker compose up -d
 ```
-启动后浏览器直接访问：`http://你的服务器IP:3000`
+启动后浏览器直接访问：`http://你的服务器IP:7101`
 
 ---
 
@@ -105,7 +105,7 @@ docker compose up -d
    node server.mjs
    ```
 
-3. 浏览器访问：`http://localhost:3000`
+3. 浏览器访问：`http://localhost:7101`
 
 ---
 
