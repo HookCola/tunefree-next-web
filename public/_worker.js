@@ -26,21 +26,27 @@ export default {
     if (pathname === '/api/search') {
       const keyword = url.searchParams.get('keyword') || '';
       const source = url.searchParams.get('source') || 'qq';
+      const page = Math.max(1, parseInt(url.searchParams.get('page'), 10) || 1);
+      const limit = Math.min(100, Math.max(10, parseInt(url.searchParams.get('limit'), 10) || 50));
 
       if (!keyword.trim()) {
-        return Response.json({ success: true, list: [] }, {
+        return Response.json({ success: true, total: 0, page: 1, pageSize: limit, totalPages: 0, list: [] }, {
           headers: { 'Access-Control-Allow-Origin': '*' }
         });
       }
 
       try {
         let list = [];
+        let total = 0;
+
         if (source === 'wy') {
-          const target = `https://music.163.com/api/cloudsearch/pc?s=${encodeURIComponent(keyword)}&type=1&offset=0&limit=25`;
+          const offset = (page - 1) * limit;
+          const target = `https://music.163.com/api/cloudsearch/pc?s=${encodeURIComponent(keyword)}&type=1&offset=${offset}&limit=${limit}`;
           const resp = await fetch(target, {
             headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
           });
           const json = await resp.json();
+          total = json?.result?.songCount || 0;
           const songs = json?.result?.songs || [];
           list = songs.map(s => {
             const album = s.al || s.album || {};
@@ -60,11 +66,13 @@ export default {
             };
           });
         } else if (source === 'kw') {
-          const target = `https://search.kuwo.cn/r.s?client=kt&all=${encodeURIComponent(keyword)}&pn=0&rn=25&uid=794761770&ver=kwplayer_ar_9.2.2.1&vipver=1&show_copyright_off=1&newsearch=1&ft=music&cluster=0&strategy=2012&encoding=utf8&rformat=json&vermerge=1&mobi=1`;
+          const pn = page - 1;
+          const target = `https://search.kuwo.cn/r.s?client=kt&all=${encodeURIComponent(keyword)}&pn=${pn}&rn=${limit}&uid=794761770&ver=kwplayer_ar_9.2.2.1&vipver=1&show_copyright_off=1&newsearch=1&ft=music&cluster=0&strategy=2012&encoding=utf8&rformat=json&vermerge=1&mobi=1`;
           const resp = await fetch(target, {
             headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
           });
           const json = await resp.json();
+          total = parseInt(json?.TOTAL, 10) || 0;
           const songs = json?.abslist || [];
           list = songs.map(s => {
             const trackId = s.DC_TARGETID || (s.MUSICRID ? s.MUSICRID.replace('MUSIC_', '') : '');
@@ -87,25 +95,42 @@ export default {
             };
           });
         } else {
-          // QQ 音乐
-          const target = `https://c.y.qq.com/soso/fcgi-bin/client_search_cp?p=1&n=25&w=${encodeURIComponent(keyword)}&format=json`;
-          const resp = await fetch(target, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+          // QQ Music (绿源) - musicu RPC
+          const body = {
+            comm: { ct: '19', cv: '1873', uin: '0' },
+            'music.search.SearchCgiService': {
+              module: 'music.search.SearchCgiService',
+              method: 'DoSearchForQQMusicDesktop',
+              param: {
+                search_type: 0,
+                query: keyword,
+                page_num: page,
+                num_per_page: limit
+              }
+            }
+          };
+          const resp = await fetch('https://u.y.qq.com/cgi-bin/musicu.fcg', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+            body: JSON.stringify(body)
           });
           const json = await resp.json();
-          const songs = json?.data?.song?.list || [];
+          const searchData = json?.['music.search.SearchCgiService']?.data;
+          total = searchData?.meta?.estimate_sum || searchData?.meta?.sum || 0;
+          const songs = searchData?.body?.song?.list || [];
           list = songs.map(s => ({
-            id: s.songmid,
-            title: s.songname,
+            id: s.mid || s.songmid,
+            title: s.title || s.songname,
             artist: (s.singer || []).map(a => a.name).join(' / '),
-            album: s.albumname || '',
+            album: s.album?.name || s.albumname || '',
             source: 'qq',
-            cover: s.albummid ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${s.albummid}.jpg` : '/assets/branding/app_icon.png',
+            cover: s.album?.mid ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${s.album.mid}.jpg` : '/assets/branding/app_icon.png',
             duration: s.interval || 0,
           }));
         }
 
-        return Response.json({ success: true, list }, {
+        const totalPages = Math.ceil(total / limit) || 1;
+        return Response.json({ success: true, total, page, pageSize: limit, totalPages, list }, {
           headers: { 'Access-Control-Allow-Origin': '*' }
         });
       } catch (err) {
