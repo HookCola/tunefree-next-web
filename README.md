@@ -69,19 +69,7 @@ docker run -d \
   ghcr.io/hookcola/tunefree-next-web:latest
 ```
 
-#### 2. 自定义环境变量（如个人私有部署添加赞赏码 / 公告）
-公开拉取的镜像**默认 100% 纯净**，无任何赞赏或推广信息。若您自行部署需要展示赞赏码：
-```bash
-docker run -d \
-  --name tunefree-web \
-  --restart always \
-  -p 3000:3000 \
-  -e SPONSOR_QR_URL="https://your-domain.com/my-pay-qr.png" \
-  -e SPONSOR_TITLE="支持作者喝杯咖啡 ☕" \
-  ghcr.io/hookcola/tunefree-next-web:latest
-```
-
-#### 3. 使用 Docker Compose
+#### 2. 使用 Docker Compose
 创建 `docker-compose.yml`：
 ```yaml
 version: '3.8'
@@ -95,9 +83,6 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
-      # 可选：自定义赞赏码（留空则为纯净版）
-      # - SPONSOR_QR_URL=https://your-domain.com/my-pay-qr.png
-      # - SPONSOR_TITLE=支持作者喝杯咖啡 ☕
 ```
 启动：
 ```bash
