@@ -392,6 +392,36 @@
 
     <!-- TAB 1.5: 我的音乐库 (Library: 收藏与歌单) -->
     <main v-show="activeTab === 'library'" class="flex-1 flex flex-col">
+      <!-- Unauthenticated Banner -->
+      <div v-if="!user" class="mb-5 p-4 rounded-2xl bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-purple-950/20 border border-blue-800/40 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 text-lg shrink-0">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-zinc-200">登录 TuneFree 账号以同步云端歌单与收藏</div>
+            <div class="text-[11px] text-zinc-400 mt-0.5">当前使用浏览器本地存储。登录后可一键与 Android 客户端实现云端双向同步。</div>
+          </div>
+        </div>
+        <button @click="activeTab = 'account'" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition shadow-md whitespace-nowrap">
+          前往登录 / 注册
+        </button>
+      </div>
+
+      <!-- Authenticated Sync Status Badge -->
+      <div v-else class="mb-5 px-4 py-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs text-zinc-400">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+          <span>已连接 TuneFree 账号：<strong class="text-zinc-200">{{ user.username || user.email }}</strong></span>
+          <span class="text-zinc-600">|</span>
+          <span class="text-zinc-500">云端与本地同步通道就绪</span>
+        </div>
+        <button @click="syncLibrary(true)" :disabled="syncing" class="text-blue-400 hover:text-blue-300 transition flex items-center gap-1 font-medium">
+          <i class="fa-solid fa-arrows-rotate" :class="{ 'fa-spin': syncing }"></i>
+          <span>{{ syncing ? '正在同步...' : '立即同步云端' }}</span>
+        </button>
+      </div>
+
       <!-- Library Top Subtabs & Actions -->
       <div class="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl shadow-sm mb-6 flex flex-wrap items-center justify-between gap-4">
         <!-- Sub Tabs -->
@@ -435,7 +465,7 @@
 
           <!-- Sync with Cloud Button -->
           <button 
-            @click="syncLibrary" 
+            @click="syncLibrary(true)" 
             :disabled="syncing"
             class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium transition flex items-center gap-1.5 border border-zinc-700 shadow-sm"
             title="与 TuneFree 云端同步">
@@ -479,10 +509,19 @@
             <i class="fa-solid fa-heart text-3xl"></i>
           </div>
           <p class="text-sm font-medium text-zinc-400">暂无收藏的歌曲</p>
-          <p class="text-xs text-zinc-600 mt-1">在搜索结果或播放栏中点击红心 ❤️ 即可永久珍藏好歌</p>
-          <button @click="activeTab = 'search'" class="mt-4 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-xl transition">
-            前往搜歌
-          </button>
+          <p class="text-xs text-zinc-600 mt-1 max-w-sm">如果您在手机 App 拥有收藏，请登录账号后点击同步；或在搜索列表中点击红心 ❤️ 收藏。</p>
+          <div class="mt-4 flex items-center gap-2">
+            <button v-if="!user" @click="activeTab = 'account'" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-xl transition shadow">
+              前往登录账号
+            </button>
+            <button v-else @click="syncLibrary(true)" :disabled="syncing" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-medium rounded-xl transition shadow flex items-center gap-1.5">
+              <i class="fa-solid fa-cloud-arrow-up" :class="{ 'fa-spin': syncing }"></i>
+              <span>{{ syncing ? '正在同步...' : '立即同步云端收藏' }}</span>
+            </button>
+            <button @click="activeTab = 'search'" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-xl transition">
+              前往搜歌
+            </button>
+          </div>
         </div>
 
         <!-- Song list -->
@@ -566,10 +605,16 @@
           <div v-if="!customPlaylists.length" class="py-20 text-center text-zinc-500 flex flex-col items-center justify-center">
             <i class="fa-solid fa-folder-plus text-4xl mb-3 text-zinc-700"></i>
             <p class="text-sm">暂无自建歌单</p>
-            <p class="text-xs text-zinc-600 mt-1">创建属于你的音乐分类集合，如“轻音乐”、“驾驶专用”</p>
-            <button @click="showCreatePlaylistModal = true" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-xl transition">
-              立即创建歌单
-            </button>
+            <p class="text-xs text-zinc-600 mt-1 max-w-sm">如果您在手机 App 拥有自定义歌单，请登录账号后点击同步；或创建专属您的分类歌单。</p>
+            <div class="mt-4 flex items-center gap-2">
+              <button @click="showCreatePlaylistModal = true" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-xl transition shadow">
+                立即创建歌单
+              </button>
+              <button v-if="user" @click="syncLibrary(true)" :disabled="syncing" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-xl transition border border-zinc-700 flex items-center gap-1.5">
+                <i class="fa-solid fa-cloud-arrow-up text-blue-400" :class="{ 'fa-spin': syncing }"></i>
+                <span>{{ syncing ? '正在同步...' : '同步云端歌单' }}</span>
+              </button>
+            </div>
           </div>
 
           <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -2270,37 +2315,232 @@
           }
         }
 
-        async function syncLibrary() {
+        async function syncLibrary(manual = false) {
           const token = localStorage.getItem('tunefree_access_token');
-          if (!token) return;
+          if (!token) {
+            if (manual) {
+              alert('【尚未登录】\n请先切换至「账号」页面登录您的 TuneFree 账号，登录后方可与云端同步收藏歌曲与自定义歌单。');
+              activeTab.value = 'account';
+            }
+            return;
+          }
           syncing.value = true;
           try {
             // Attempt to fetch cloud bootstrap
             const resp = await authFetch('/v1/sync/bootstrap', {
               method: 'GET'
             });
-            if (resp.status === 200) {
-              const data = await resp.json();
-              addLog('GET (Cloud Sync)', '/v1/sync/bootstrap', resp.status, data, data?.requestId);
-              if (data.success && data.data) {
-                // If cloud has resources, merge them into local
-                const cloudResources = data.data.resources || [];
-                cloudResources.forEach(res => {
-                  if (res.resourceType === 'favorite_track' || res.resourceType === 'favoriteTrack') {
-                    const payload = res.payload || {};
-                    if (payload.id && !favoriteTracks.value.some(t => t.id === payload.id)) {
-                      favoriteTracks.value.push(payload);
+            const data = await resp.json().catch(() => null);
+            addLog('GET (Cloud Sync)', '/v1/sync/bootstrap', resp.status, data, data?.requestId);
+
+            if (resp.status === 200 && data) {
+              let addedFavs = 0;
+              let addedPlaylists = 0;
+
+              // 1. Gather all resources from various backend response envelope formats
+              const rawResources = [
+                ...(Array.isArray(data?.data?.resources) ? data.data.resources : []),
+                ...(Array.isArray(data?.data?.snapshot?.resources) ? data.data.snapshot.resources : []),
+                ...(Array.isArray(data?.data?.changes) ? data.data.changes : []),
+                ...(Array.isArray(data?.data?.items) ? data.data.items : []),
+                ...(Array.isArray(data?.data) ? data.data : []),
+                ...(Array.isArray(data?.resources) ? data.resources : [])
+              ];
+
+              // Helper function to extract and parse payload/dataJson
+              const parsePayload = (r) => {
+                let p = r.payload || r.dataJson || r.data_json || r.data || r;
+                if (typeof p === 'string') {
+                  try {
+                    p = JSON.parse(p);
+                  } catch (e) {
+                    console.warn('Failed to parse resource dataJson string:', p);
+                    p = {};
+                  }
+                }
+                return p || {};
+              };
+
+              // Process all resources
+              rawResources.forEach(res => {
+                const payload = parsePayload(res);
+                const rType = String(res.resourceType || res.resource_type || res.type || '').toLowerCase();
+                const parentId = res.parentId || res.parent_id || payload.parentId || payload.parent_id || null;
+                const isDeleted = !!(res.deletedAt || res.deleted_at || res.isDeleted);
+
+                // Case 1: Custom Playlist Definition
+                if (rType === 'playlist' || rType === 'customplaylist') {
+                  const plId = res.resourceId || res.resource_id || payload.id || payload.playlistId;
+                  if (plId) {
+                    if (isDeleted) {
+                      customPlaylists.value = customPlaylists.value.filter(p => p.id !== plId);
+                    } else {
+                      let existing = customPlaylists.value.find(p => p.id === plId);
+                      if (existing) {
+                        existing.name = payload.name || payload.title || existing.name;
+                        existing.description = payload.description || existing.description;
+                        if (payload.cover) existing.cover = payload.cover;
+                      } else {
+                        customPlaylists.value.push({
+                          id: plId,
+                          name: payload.name || payload.title || '我的歌单',
+                          cover: payload.cover || payload.picUrl || '/assets/branding/app_icon.png',
+                          description: payload.description || '',
+                          tracks: Array.isArray(payload.tracks) ? payload.tracks : []
+                        });
+                        addedPlaylists++;
+                      }
+                    }
+                  }
+                }
+                // Case 2: Playlist Item (Songs in a playlist OR favorites)
+                else if (rType === 'playlistitem') {
+                  const trackId = payload.id || payload.mid || payload.trackId;
+                  if (trackId) {
+                    const track = {
+                      id: String(trackId),
+                      title: payload.title || payload.name || payload.songname || '未知曲目',
+                      artist: payload.artist || payload.singer || '未知歌手',
+                      album: payload.album || payload.albumName || '',
+                      cover: payload.cover || payload.picUrl || payload.artwork || '/assets/branding/app_icon.png',
+                      source: payload.source || 'qq',
+                      duration: parseInt(payload.duration, 10) || 0
+                    };
+
+                    // If parentId represents favorites or is empty/null, treat as Favorite Track
+                    if (!parentId || parentId === 'favorites' || parentId === 'favorite' || parentId === 'fav' || parentId === '0') {
+                      if (isDeleted) {
+                        favoriteTracks.value = favoriteTracks.value.filter(t => t.id !== track.id);
+                      } else if (!favoriteTracks.value.some(t => t.id === track.id)) {
+                        favoriteTracks.value.push(track);
+                        addedFavs++;
+                      }
+                    } else {
+                      // Belongs to custom playlist
+                      let pl = customPlaylists.value.find(p => p.id === parentId);
+                      if (!pl) {
+                        pl = {
+                          id: parentId,
+                          name: payload.playlistName || `云端歌单 #${parentId.slice(-4)}`,
+                          cover: track.cover,
+                          tracks: []
+                        };
+                        customPlaylists.value.push(pl);
+                        addedPlaylists++;
+                      }
+                      if (isDeleted) {
+                        pl.tracks = pl.tracks.filter(t => t.id !== track.id);
+                      } else if (!pl.tracks.some(t => t.id === track.id)) {
+                        pl.tracks.push(track);
+                        if (!pl.cover || pl.cover.includes('app_icon')) {
+                          pl.cover = track.cover;
+                        }
+                      }
+                    }
+                  }
+                }
+                // Case 3: Dedicated Favorite Track Resource
+                else if (rType === 'favorite_track' || rType === 'favoritetrack' || rType === 'favorite' || rType === 'fav') {
+                  const trackId = payload.id || payload.mid || payload.trackId;
+                  if (trackId) {
+                    if (isDeleted) {
+                      favoriteTracks.value = favoriteTracks.value.filter(t => t.id !== String(trackId));
+                    } else if (!favoriteTracks.value.some(t => t.id === String(trackId))) {
+                      favoriteTracks.value.push({
+                        id: String(trackId),
+                        title: payload.title || payload.name || payload.songname || '未知曲目',
+                        artist: payload.artist || payload.singer || '未知歌手',
+                        album: payload.album || payload.albumName || '',
+                        cover: payload.cover || payload.picUrl || payload.artwork || '/assets/branding/app_icon.png',
+                        source: payload.source || 'qq',
+                        duration: parseInt(payload.duration, 10) || 0
+                      });
+                      addedFavs++;
+                    }
+                  }
+                }
+                // Case 4: Play History Resource
+                else if (rType === 'playhistory') {
+                  const trackId = payload.id || payload.mid || payload.trackId;
+                  if (trackId && !isDeleted) {
+                    if (!playHistory.value.some(t => t.id === String(trackId))) {
+                      playHistory.value.push({
+                        id: String(trackId),
+                        title: payload.title || payload.name || '未知曲目',
+                        artist: payload.artist || payload.singer || '未知歌手',
+                        album: payload.album || '',
+                        cover: payload.cover || '/assets/branding/app_icon.png',
+                        source: payload.source || 'qq',
+                        duration: parseInt(payload.duration, 10) || 0,
+                        playedAt: res.eventAt || res.event_at || payload.playedAt || Date.now()
+                      });
+                    }
+                  }
+                }
+              });
+
+              // Also check direct arrays if returned by backend
+              if (Array.isArray(data?.data?.favorites)) {
+                data.data.favorites.forEach(f => {
+                  const item = parsePayload(f);
+                  if (item.id && !favoriteTracks.value.some(t => t.id === String(item.id))) {
+                    favoriteTracks.value.push({
+                      id: String(item.id),
+                      title: item.title || item.name || '未知曲目',
+                      artist: item.artist || item.singer || '未知歌手',
+                      album: item.album || '',
+                      cover: item.cover || '/assets/branding/app_icon.png',
+                      source: item.source || 'qq',
+                      duration: item.duration || 0
+                    });
+                    addedFavs++;
+                  }
+                });
+              }
+
+              if (Array.isArray(data?.data?.playlists)) {
+                data.data.playlists.forEach(pl => {
+                  const p = parsePayload(pl);
+                  if (p.id) {
+                    let existing = customPlaylists.value.find(c => c.id === p.id);
+                    if (!existing) {
+                      customPlaylists.value.push({
+                        id: p.id,
+                        name: p.name || p.title || '我的歌单',
+                        cover: p.cover || '/assets/branding/app_icon.png',
+                        description: p.description || '',
+                        tracks: Array.isArray(p.tracks) ? p.tracks : []
+                      });
+                      addedPlaylists++;
                     }
                   }
                 });
-                saveLocalFavorites();
+              }
+
+              // Persist locally
+              saveLocalFavorites();
+              saveLocalPlaylists();
+              saveLocalHistory();
+
+              if (manual) {
+                alert(`云端同步成功！\n已同步 ${favoriteTracks.value.length} 首收藏曲目，${customPlaylists.value.length} 个自定义歌单。`);
+              }
+            } else if (resp.status === 401) {
+              if (manual) {
+                alert('云端同步失败：登录凭据已过期，请前往「账号」页面重新登录。');
+                activeTab.value = 'account';
               }
             } else {
-              // Endpoint might be reserved or offline; local-first persists reliably
-              addLog('GET (Sync Fallback)', '/v1/sync/bootstrap', resp.status, { message: 'Local storage state saved' });
+              if (manual) {
+                const errMsg = data?.error?.message || `服务器响应错误 (HTTP ${resp.status})`;
+                alert(`云端同步失败：${errMsg}`);
+              }
             }
           } catch(e) {
             console.warn('Sync error', e);
+            if (manual) {
+              alert(`云端同步异常：${e.message || '网络连接超时'}`);
+            }
           } finally {
             syncing.value = false;
           }

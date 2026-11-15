@@ -1,4 +1,5 @@
 import http from 'node:http';
+import https from 'node:https';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -198,8 +199,7 @@ const server = http.createServer(async (req, res) => {
 
   // 2. Proxy TuneFree V1 APIs (/v1/*)
   if (pathname.startsWith('/v1/')) {
-    const targetUrl = `${TUNEFREE_TARGET}${pathname}${reqUrl.search}`;
-
+    const targetUrl = new URL(TUNEFREE_TARGET);
     const headers = { ...req.headers };
     delete headers.host;
     delete headers.connection;
@@ -213,38 +213,50 @@ const server = http.createServer(async (req, res) => {
         chunks.push(chunk);
       }
       body = Buffer.concat(chunks);
+      if (body.length > 0) {
+        headers['content-length'] = body.length;
+      }
     }
 
-    try {
-      const response = await fetch(targetUrl, {
-        method: req.method,
-        headers,
-        body,
-        redirect: 'manual', // preserve 302 redirects for /v1/play/
-      });
+    const options = {
+      hostname: targetUrl.hostname,
+      port: 443,
+      path: `${pathname}${reqUrl.search}`,
+      method: req.method,
+      ciphers: 'DEFAULT@SECLEVEL=1',
+      headers: {
+        ...headers,
+        host: targetUrl.hostname,
+        'user-agent': headers['user-agent'] || 'TuneFree/4.3.6 (Android)',
+      }
+    };
 
+    const proxyReq = https.request(options, (proxyRes) => {
       const respHeaders = {};
-      response.headers.forEach((value, key) => {
-        // Exclude problematic headers
+      for (const [key, val] of Object.entries(proxyRes.headers)) {
         if (key.toLowerCase() !== 'transfer-encoding' && key.toLowerCase() !== 'content-encoding') {
-          respHeaders[key] = value;
+          respHeaders[key] = val;
         }
-      });
-
+      }
       // Special handling for 302 redirects (such as /v1/play/{token})
-      if (response.status === 302) {
-        const location = response.headers.get('location');
-        respHeaders['location'] = location;
+      if (proxyRes.statusCode === 302 && proxyRes.headers.location) {
+        respHeaders['location'] = proxyRes.headers.location;
       }
 
-      res.writeHead(response.status, respHeaders);
-      const arrayBuffer = await response.arrayBuffer();
-      res.end(Buffer.from(arrayBuffer));
-    } catch (err) {
-      console.error('Proxy error:', err);
+      res.writeHead(proxyRes.statusCode, respHeaders);
+      proxyRes.pipe(res);
+    });
+
+    proxyReq.on('error', (err) => {
+      console.error(`Proxy error for ${pathname}:`, err);
       res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ success: false, error: { message: `Proxy Failed: ${err.message}` } }));
+    });
+
+    if (body && body.length > 0) {
+      proxyReq.write(body);
     }
+    proxyReq.end();
     return;
   }
 
