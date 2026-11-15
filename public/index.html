@@ -436,15 +436,23 @@
           </button>
           <button 
             type="button"
-            @click="libraryTab = 'playlists'"
+            @click="libraryTab = 'playlists'; selectedPlaylist = null"
             :class="libraryTab === 'playlists' ? 'bg-blue-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-200'"
             class="px-3.5 py-2 rounded-lg text-xs transition flex items-center gap-2">
             <i class="fa-solid fa-list-ul"></i>
-            <span>我的自定义歌单 ({{ customPlaylists.length }})</span>
+            <span>自建歌单 ({{ customPlaylists.length }})</span>
           </button>
           <button 
             type="button"
-            @click="libraryTab = 'history'"
+            @click="libraryTab = 'followed'; selectedPlaylist = null"
+            :class="libraryTab === 'followed' ? 'bg-amber-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-200'"
+            class="px-3.5 py-2 rounded-lg text-xs transition flex items-center gap-2">
+            <i class="fa-solid fa-bookmark"></i>
+            <span>收藏的歌单 ({{ followedPlaylists.length }})</span>
+          </button>
+          <button 
+            type="button"
+            @click="libraryTab = 'history'; selectedPlaylist = null"
             :class="libraryTab === 'history' ? 'bg-indigo-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-200'"
             class="px-3.5 py-2 rounded-lg text-xs transition flex items-center gap-2">
             <i class="fa-solid fa-clock-rotate-left"></i>
@@ -716,7 +724,139 @@
         </div>
       </div>
 
-      <!-- SUBTAB 3: 最近播放记录 (History) -->
+      <!-- SUBTAB 3: 我收藏的歌单 (Followed Playlists) -->
+      <div v-show="libraryTab === 'followed'" class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm flex-1 flex flex-col p-6">
+        <!-- Followed Playlists Grid -->
+        <div v-if="!selectedPlaylist">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-zinc-200">云端收藏歌单列表</h3>
+            <span class="text-xs text-zinc-500">共 {{ followedPlaylists.length }} 个收藏歌单</span>
+          </div>
+
+          <div v-if="!followedPlaylists.length" class="py-20 text-center text-zinc-500 flex flex-col items-center justify-center">
+            <i class="fa-solid fa-bookmark text-4xl mb-3 text-zinc-700"></i>
+            <p class="text-sm">暂无收藏歌单</p>
+            <p class="text-xs text-zinc-600 mt-1 max-w-sm">如果您在 TuneFree App 收藏了外部歌单，点击右上角「同步云端」即可完整呈现。</p>
+            <div class="mt-4 flex items-center gap-2">
+              <button v-if="user" @click="syncLibrary(true)" :disabled="syncing" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-xl transition border border-zinc-700 flex items-center gap-1.5">
+                <i class="fa-solid fa-cloud-arrow-up text-amber-400" :class="{ 'fa-spin': syncing }"></i>
+                <span>{{ syncing ? '正在同步...' : '立即同步收藏歌单' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div 
+              v-for="pl in followedPlaylists" 
+              :key="pl.id"
+              @click="openFollowedPlaylist(pl)"
+              class="bg-zinc-950 border border-zinc-800/80 hover:border-amber-500/50 rounded-2xl p-4 cursor-pointer transition group flex flex-col justify-between">
+              <div>
+                <div class="w-full aspect-square rounded-xl bg-gradient-to-tr from-zinc-800 to-zinc-700 flex items-center justify-center mb-3 relative overflow-hidden shadow-md">
+                  <img :src="pl.cover || '/assets/branding/app_icon.png'" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                  <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-white text-lg"></i>
+                  </div>
+                  <span class="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-black/70 backdrop-blur-sm text-zinc-200 uppercase tracking-wider">
+                    {{ pl.source === 'wy' ? '网易云' : (pl.source === 'qq' ? 'QQ音乐' : pl.source) }}
+                  </span>
+                </div>
+                <div class="font-bold text-sm text-zinc-200 truncate group-hover:text-amber-400 transition">{{ pl.name }}</div>
+                <div class="text-xs text-zinc-500 mt-1 flex items-center justify-between">
+                  <span class="truncate">创建者: {{ pl.creator || '云端同步' }}</span>
+                  <span class="text-zinc-600 font-mono shrink-0 ml-1">{{ pl.tracks?.length ? pl.tracks.length + ' 首' : '点击载入' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Followed Playlist Detail View -->
+        <div v-else class="flex flex-col flex-1">
+          <div class="flex items-center justify-between mb-4 pb-4 border-b border-zinc-800">
+            <div class="flex items-center gap-3">
+              <button @click="selectedPlaylist = null" class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center transition">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+              </button>
+              <img :src="selectedPlaylist.cover || '/assets/branding/app_icon.png'" class="w-12 h-12 rounded-xl object-cover shrink-0">
+              <div>
+                <h3 class="text-base font-bold text-zinc-100">{{ selectedPlaylist.name }}</h3>
+                <div class="flex items-center gap-2 text-xs text-zinc-400 mt-0.5">
+                  <span v-if="selectedPlaylist.creator">创建者：{{ selectedPlaylist.creator }}</span>
+                  <span class="text-zinc-600">·</span>
+                  <span>{{ loadingPlaylistTracks ? '正在从云端拉取完整曲目...' : (selectedPlaylist.tracks?.length || 0) + ' 首歌曲' }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button 
+                v-if="selectedPlaylist.tracks?.length"
+                @click="playAllInPlaylist(selectedPlaylist)"
+                class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-play text-xs"></i>
+                <span>播放全部</span>
+              </button>
+              <button 
+                v-if="selectedPlaylist.sourceResourceId"
+                @click="reloadFollowedPlaylist(selectedPlaylist)"
+                :disabled="loadingPlaylistTracks"
+                class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium transition flex items-center gap-1 border border-zinc-700">
+                <i class="fa-solid fa-arrows-rotate text-xs" :class="{ 'fa-spin': loadingPlaylistTracks }"></i>
+                <span>刷新曲目</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Loading Indicator -->
+          <div v-if="loadingPlaylistTracks" class="py-20 text-center text-zinc-400 flex-1 flex flex-col items-center justify-center">
+            <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3 text-amber-500"></i>
+            <p class="text-sm">正在从官方云端抓取完整曲目列表...</p>
+            <p class="text-xs text-zinc-600 mt-1">请稍候片刻</p>
+          </div>
+
+          <!-- Empty tracks in playlist -->
+          <div v-else-if="!selectedPlaylist.tracks || !selectedPlaylist.tracks.length" class="py-20 text-center text-zinc-500 flex-1 flex flex-col items-center justify-center">
+            <i class="fa-solid fa-music text-3xl mb-2 text-zinc-700"></i>
+            <p class="text-sm">该歌单暂无曲目或加载失败</p>
+            <button @click="reloadFollowedPlaylist(selectedPlaylist)" class="mt-3 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-300">
+              重新加载
+            </button>
+          </div>
+
+          <!-- Tracks List -->
+          <div v-else class="divide-y divide-zinc-800/60 overflow-y-auto max-h-[500px]">
+            <div 
+              v-for="(song, idx) in selectedPlaylist.tracks" 
+              :key="song.id"
+              class="px-4 py-3 flex items-center justify-between gap-4 transition hover:bg-zinc-800/40">
+              <div class="flex items-center gap-3.5 min-w-0">
+                <span class="text-xs text-zinc-600 w-5 text-right font-mono">{{ idx + 1 }}</span>
+                <img :src="song.cover || '/assets/branding/app_icon.png'" class="w-10 h-10 rounded-lg object-cover shrink-0">
+                <div class="min-w-0">
+                  <div class="text-sm font-medium text-zinc-200 truncate">{{ song.title }}</div>
+                  <div class="text-xs text-zinc-400 truncate">{{ song.artist }} · {{ song.album || '单曲' }}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button 
+                  @click="toggleFavorite(song)" 
+                  class="p-1.5 text-xs transition" 
+                  :class="isFavorite(song) ? 'text-rose-500' : 'text-zinc-600 hover:text-zinc-400'">
+                  <i class="fa-solid fa-heart"></i>
+                </button>
+                <button 
+                  @click="parseAndPlay(song)" 
+                  class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition flex items-center gap-1 shadow-sm">
+                  <i class="fa-solid fa-play"></i>
+                  <span>播放</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBTAB 4: 最近播放记录 (History) -->
       <div v-show="libraryTab === 'history'" class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm flex-1 flex flex-col">
         <div class="px-5 py-3.5 border-b border-zinc-800 flex items-center justify-between text-xs text-zinc-400">
           <span>最近成功解析与播放的曲目 (最多保存 100 首)</span>
@@ -1443,12 +1583,14 @@
         const classicLyricContainer = ref(null);
         const overlayLyricContainer = ref(null);
 
-        // Library State (Favorites, Playlists, History)
+        // Library State (Favorites, Playlists, Followed, History)
         const libraryTab = ref('favorites');
         const favoriteTracks = ref([]);
         const customPlaylists = ref([]);
+        const followedPlaylists = ref([]);
         const playHistory = ref([]);
         const selectedPlaylist = ref(null);
+        const loadingPlaylistTracks = ref(false);
         const showCreatePlaylistModal = ref(false);
         const newPlaylistName = ref('');
         const syncing = ref(false);
@@ -2205,6 +2347,11 @@
           } catch(e) {}
 
           try {
+            const flRaw = localStorage.getItem('tunefree_followed_playlists');
+            if (flRaw) followedPlaylists.value = JSON.parse(flRaw);
+          } catch(e) {}
+
+          try {
             const histRaw = localStorage.getItem('tunefree_play_history');
             if (histRaw) playHistory.value = JSON.parse(histRaw);
           } catch(e) {}
@@ -2216,6 +2363,10 @@
 
         function saveLocalPlaylists() {
           localStorage.setItem('tunefree_custom_playlists', JSON.stringify(customPlaylists.value));
+        }
+
+        function saveLocalFollowedPlaylists() {
+          localStorage.setItem('tunefree_followed_playlists', JSON.stringify(followedPlaylists.value));
         }
 
         function saveLocalHistory() {
@@ -2442,15 +2593,16 @@
         function parseAndLoadResources(data) {
           let addedFavs = 0;
           let addedPlaylists = 0;
+          let addedFollowed = 0;
           let addedHistory = 0;
-          if (!data) return { addedFavs, addedPlaylists, addedHistory };
+          if (!data) return { addedFavs, addedPlaylists, addedFollowed, addedHistory };
 
           console.log('[Sync Engine] Parsing raw data envelope:', data);
           const root = (data.data && typeof data.data === 'object') ? data.data : data;
           const resources = (root.resources && typeof root.resources === 'object') ? root.resources : {};
 
           // Check if TuneFree V4 native dictionary schema
-          if (resources.favorites || resources.playlists || resources.playlistItems || resources.playHistory) {
+          if (resources.favorites || resources.playlists || resources.playlistItems || resources.follows || resources.playHistory) {
             console.log('[Sync Engine] Processing TuneFree V4 native collections');
 
             // 1. Playlists
@@ -2530,6 +2682,40 @@
                 if (!playHistory.value.some(t => t.id === track.id)) {
                   playHistory.value.push(track);
                   addedHistory++;
+                }
+              });
+            }
+
+            // 5. Followed Playlists (resources.follows)
+            if (Array.isArray(resources.follows)) {
+              resources.follows.forEach(fItem => {
+                if (fItem.deletedAt) {
+                  followedPlaylists.value = followedPlaylists.value.filter(p => p.id !== fItem.id);
+                  return;
+                }
+                const d = fItem.data || fItem;
+                if (d.kind === 'playlist') {
+                  const meta = d.metadataSnapshot || {};
+                  const plId = fItem.id;
+                  const sourceResId = d.sourceResourceId || meta.id || '';
+                  let existing = followedPlaylists.value.find(p => p.id === plId || (sourceResId && p.sourceResourceId === sourceResId));
+                  if (existing) {
+                    existing.name = meta.title || d.name || existing.name;
+                    if (meta.coverUrl) existing.cover = meta.coverUrl;
+                    if (meta.creatorName) existing.creator = meta.creatorName;
+                  } else {
+                    followedPlaylists.value.push({
+                      id: plId,
+                      sourceResourceId: sourceResId,
+                      source: d.source || 'wy',
+                      name: meta.title || d.name || '云端收藏歌单',
+                      cover: meta.coverUrl || '/assets/branding/app_icon.png',
+                      creator: meta.creatorName || '',
+                      description: meta.description || '',
+                      tracks: []
+                    });
+                    addedFollowed++;
+                  }
                 }
               });
             }
@@ -2629,9 +2815,10 @@
           // Persist locally
           saveLocalFavorites();
           saveLocalPlaylists();
+          saveLocalFollowedPlaylists();
           saveLocalHistory();
 
-          return { addedFavs, addedPlaylists, addedHistory };
+          return { addedFavs, addedPlaylists, addedFollowed, addedHistory };
         }
 
         async function syncLibrary(manual = false) {
@@ -2658,6 +2845,7 @@
                       `已成功同步：\n` +
                       `- 红心收藏：${favoriteTracks.value.length} 首曲目\n` +
                       `- 自建歌单：${customPlaylists.value.length} 个（包含 ${customPlaylists.value.reduce((a, b) => a + (b.tracks ? b.tracks.length : 0), 0)} 首歌曲）\n` +
+                      `- 收藏歌单：${followedPlaylists.value.length} 个\n` +
                       `- 播放历史：${playHistory.value.length} 首记录！`);
               }
             } else if (resp.status === 401) {
@@ -2702,9 +2890,39 @@
                 `已成功解析并导入：\n` +
                 `- 红心收藏：${favoriteTracks.value.length} 首曲目\n` +
                 `- 自建歌单：${customPlaylists.value.length} 个（包含 ${customPlaylists.value.reduce((a, b) => a + (b.tracks ? b.tracks.length : 0), 0)} 首歌曲）\n` +
+                `- 收藏歌单：${followedPlaylists.value.length} 个\n` +
                 `- 播放历史：${playHistory.value.length} 首记录\n\n` +
                 `页面已自动切换至「我的音乐库」！`);
           activeTab.value = 'library';
+        }
+
+        async function openFollowedPlaylist(pl) {
+          selectedPlaylist.value = pl;
+          if (!pl.tracks || pl.tracks.length === 0) {
+            await reloadFollowedPlaylist(pl);
+          }
+        }
+
+        async function reloadFollowedPlaylist(pl) {
+          if (!pl || !pl.sourceResourceId) return;
+          loadingPlaylistTracks.value = true;
+          try {
+            const resp = await fetch(`/api/playlist/detail?id=${encodeURIComponent(pl.sourceResourceId)}&source=${encodeURIComponent(pl.source || 'wy')}`);
+            const data = await resp.json();
+            if (data.success && data.data && Array.isArray(data.data.tracks)) {
+              pl.tracks = data.data.tracks;
+              if (data.data.cover && (!pl.cover || pl.cover.includes('app_icon'))) pl.cover = data.data.cover;
+              if (data.data.creator && !pl.creator) pl.creator = data.data.creator;
+              if (data.data.description && !pl.description) pl.description = data.data.description;
+              saveLocalFollowedPlaylists();
+            } else {
+              console.warn('Failed to load playlist tracks', data);
+            }
+          } catch (err) {
+            console.error('Fetch playlist error', err);
+          } finally {
+            loadingPlaylistTracks.value = false;
+          }
         }
 
         function formatTime(seconds) {
@@ -2736,8 +2954,12 @@
           libraryTab,
           favoriteTracks,
           customPlaylists,
+          followedPlaylists,
           playHistory,
           selectedPlaylist,
+          loadingPlaylistTracks,
+          openFollowedPlaylist,
+          reloadFollowedPlaylist,
           showCreatePlaylistModal,
           newPlaylistName,
           syncing,

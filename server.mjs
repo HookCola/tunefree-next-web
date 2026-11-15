@@ -197,6 +197,103 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 1.8. Playlist Detail API (/api/playlist/detail)
+  if (pathname === '/api/playlist/detail') {
+    const id = reqUrl.searchParams.get('id');
+    const source = reqUrl.searchParams.get('source') || 'wy';
+    if (!id) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ success: false, message: 'Missing playlist id' }));
+      return;
+    }
+
+    try {
+      if (source === 'qq') {
+        const resp = await fetch(`https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg?type=1&json=1&utf8=1&onlysong=0&disstid=${encodeURIComponent(id)}&loginUin=0&hostUin=0&format=json&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq.json&needNewCode=0`, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://y.qq.com/'
+          }
+        });
+        const data = await resp.json();
+        const cd = (data.cdlist && data.cdlist[0]) || {};
+        const songlist = cd.songlist || [];
+        const tracks = songlist.map(s => {
+          const singers = (s.singer || []).map(x => x.name).join(' / ');
+          const albumMid = s.albummid || (s.album && s.album.mid) || '';
+          const cover = albumMid ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albumMid}.jpg` : '/assets/branding/app_icon.png';
+          const dur = s.interval || 0;
+          const sId = s.songmid || s.mid || String(s.songid);
+          return {
+            id: sId,
+            sourceId: sId,
+            title: s.songname || s.name || '未知曲目',
+            artist: singers || '未知歌手',
+            album: s.albumname || (s.album && s.album.name) || '',
+            cover: cover,
+            source: 'qq',
+            duration: dur
+          };
+        });
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({
+          success: true,
+          data: {
+            id: id,
+            title: cd.dissname || '',
+            cover: cd.logo || '',
+            creator: cd.nickname || '',
+            description: cd.desc || '',
+            tracks: tracks
+          }
+        }));
+        return;
+      } else {
+        // Default to Netease Cloud Music (wy)
+        const resp = await fetch(`https://music.163.com/api/v6/playlist/detail?id=${encodeURIComponent(id)}&n=500`, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://music.163.com/'
+          }
+        });
+        const data = await resp.json();
+        const pl = data.playlist || {};
+        const tracks = (pl.tracks || []).map(t => {
+          const ar = (t.ar || []).map(a => a.name).join(' / ');
+          const cover = (t.al && t.al.picUrl) ? t.al.picUrl : '/assets/branding/app_icon.png';
+          const dur = t.dt ? Math.floor(t.dt / 1000) : 0;
+          return {
+            id: String(t.id),
+            sourceId: String(t.id),
+            title: t.name || '未知曲目',
+            artist: ar || '未知歌手',
+            album: (t.al && t.al.name) || '',
+            cover: cover,
+            source: 'wy',
+            duration: dur
+          };
+        });
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({
+          success: true,
+          data: {
+            id: id,
+            title: pl.name || '',
+            cover: pl.coverImgUrl || '',
+            creator: (pl.creator && pl.creator.nickname) || '',
+            description: pl.description || '',
+            tracks: tracks
+          }
+        }));
+        return;
+      }
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ success: false, message: err.message }));
+      return;
+    }
+  }
+
   // 2. Proxy TuneFree V1 APIs (/v1/*)
   if (pathname.startsWith('/v1/')) {
     const targetUrl = new URL(TUNEFREE_TARGET);
