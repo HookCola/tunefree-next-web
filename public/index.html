@@ -2378,120 +2378,126 @@
         }
 
         function extractTrackInfo(item) {
+          if (!item || typeof item !== 'object') return null;
+          if (item.deletedAt || item.isDeleted) return null;
+
           let p = item.payload || item.dataJson || item.data_json || item.data || item;
           if (typeof p === 'string') {
             try { p = JSON.parse(p); } catch(e) {}
           }
           if (!p || typeof p !== 'object') p = item;
 
-          // Handle nested containers: p.track, p.song, p.item, p.metadata
-          if (p.track && typeof p.track === 'object') p = p.track;
-          else if (p.song && typeof p.song === 'object') p = p.song;
-          else if (p.item && typeof p.item === 'object') p = p.item;
-          else if (p.metadata && typeof p.metadata === 'object') p = p.metadata;
+          // Handle nested containers
+          const t = p.track || p.song || p.item || p.metadata || p;
+          const m = t.metadataSnapshot || t;
 
-          const title = String(p.title || p.name || p.songName || p.songname || p.trackName || '').trim();
-          const id = String(p.id || p.mid || p.trackId || p.songId || p.songmid || p.musicId || item.resourceId || item.identityKey || '');
-          if (!title && !id) return null;
+          const title = String(m.title || m.name || m.songName || t.title || t.name || item.name || '').trim();
+          const sourceId = String(t.sourceTrackId || t.id || m.id || item.resourceId || item.identityKey || '').trim();
+          const trackId = sourceId || String(item.id || '');
+          if (!title && !trackId) return null;
 
           let artist = '';
-          if (typeof p.artist === 'string') artist = p.artist;
-          else if (typeof p.singer === 'string') artist = p.singer;
-          else if (Array.isArray(p.artists)) artist = p.artists.map(a => a.name || a).join(' / ');
-          else if (Array.isArray(p.singer)) artist = p.singer.map(s => s.name || s).join(' / ');
-          else if (Array.isArray(p.ar)) artist = p.ar.map(a => a.name || a).join(' / ');
-          else if (typeof p.author === 'string') artist = p.author;
+          const artists = m.artists || m.singer || m.ar || t.artists || t.singer || [];
+          if (Array.isArray(artists)) {
+            artist = artists.map(a => (a && typeof a === 'object') ? (a.name || '') : String(a || '')).filter(Boolean).join(' / ');
+          } else if (typeof artists === 'string') {
+            artist = artists;
+          } else if (typeof m.artist === 'string') {
+            artist = m.artist;
+          } else if (typeof t.artist === 'string') {
+            artist = t.artist;
+          } else if (typeof p.author === 'string') {
+            artist = p.author;
+          }
 
-          const album = p.album?.name || p.albumName || (typeof p.album === 'string' ? p.album : '') || '';
-          let cover = p.cover || p.picUrl || p.pic || p.albumPic || p.artwork || p.img || '/assets/branding/app_icon.png';
+          const albumObj = m.album || t.album || '';
+          const album = (albumObj && typeof albumObj === 'object') ? (albumObj.name || '') : String(albumObj || '');
+
+          let cover = m.coverUrl || m.picUrl || m.pic || m.cover || m.albumPic || t.coverUrl || t.picUrl || t.cover || '/assets/branding/app_icon.png';
           if (typeof cover !== 'string' || !cover) cover = '/assets/branding/app_icon.png';
-          const source = p.source || p.platform || 'qq';
-          const duration = parseInt(p.duration || p.interval || p.dt || 0, 10) || 0;
+
+          const durRaw = m.durationMs || m.duration || m.interval || t.durationMs || t.duration || 0;
+          let duration = 0;
+          try {
+            const num = parseInt(durRaw, 10);
+            duration = num > 1000 ? Math.floor(num / 1000) : (num || 0);
+          } catch(e) { duration = 0; }
+
+          const source = t.source || item.source || p.source || 'wy';
+          const playlistId = p.playlistId || item.playlistId || item.parentId || null;
 
           return {
-            id: id || `${title}-${artist}`,
+            id: trackId || `${title}-${artist}`,
+            sourceId: sourceId || trackId,
             title: title || '未知曲目',
             artist: artist || '未知歌手',
             album,
             cover,
             source,
-            duration
+            duration,
+            playlistId
           };
         }
 
         function parseAndLoadResources(data) {
           let addedFavs = 0;
           let addedPlaylists = 0;
-          if (!data) return { addedFavs, addedPlaylists };
+          let addedHistory = 0;
+          if (!data) return { addedFavs, addedPlaylists, addedHistory };
 
           console.log('[Sync Engine] Parsing raw data envelope:', data);
+          const root = (data.data && typeof data.data === 'object') ? data.data : data;
+          const resources = (root.resources && typeof root.resources === 'object') ? root.resources : {};
 
-          const allResources = collectAllResources(data);
-          console.log('[Sync Engine] Extracted raw resources count:', allResources.length);
+          // Check if TuneFree V4 native dictionary schema
+          if (resources.favorites || resources.playlists || resources.playlistItems || resources.playHistory) {
+            console.log('[Sync Engine] Processing TuneFree V4 native collections');
 
-          allResources.forEach(res => {
-            let payload = res.payload || res.dataJson || res.data_json || res.data || res;
-            if (typeof payload === 'string') {
-              try { payload = JSON.parse(payload); } catch(e) {}
-            }
-            if (!payload || typeof payload !== 'object') payload = res;
+            // 1. Playlists
+            if (Array.isArray(resources.playlists)) {
+              resources.playlists.forEach(plItem => {
+                if (plItem.deletedAt) {
+                  customPlaylists.value = customPlaylists.value.filter(pl => pl.id !== plItem.id);
+                  return;
+                }
+                const plId = plItem.id;
+                const p = plItem.data || plItem;
+                const plName = p.name || p.title || '我的歌单';
+                const plDesc = p.description || '';
+                const plCover = p.cover || '/assets/branding/app_icon.png';
 
-            const rType = String(res.resourceType || res.resource_type || res.type || res.kind || '').toLowerCase();
-            const parentId = res.parentId || res.parent_id || payload.parentId || payload.parent_id || null;
-            const isDeleted = !!(res.deletedAt || res.deleted_at || res.isDeleted || payload.isDeleted);
-
-            // Check if Playlist definition
-            if (rType.includes('playlist') && !rType.includes('item')) {
-              const plId = res.resourceId || res.resource_id || payload.id || payload.playlistId || parentId;
-              if (plId) {
-                if (isDeleted) {
-                  customPlaylists.value = customPlaylists.value.filter(pl => pl.id !== plId);
+                let existing = customPlaylists.value.find(pl => pl.id === plId);
+                if (existing) {
+                  existing.name = plName;
+                  existing.description = plDesc;
+                  if (p.cover) existing.cover = plCover;
                 } else {
-                  let existing = customPlaylists.value.find(pl => pl.id === plId);
-                  if (existing) {
-                    existing.name = payload.name || payload.title || existing.name;
-                    existing.description = payload.description || existing.description;
-                    if (payload.cover) existing.cover = payload.cover;
-                  } else {
-                    customPlaylists.value.push({
-                      id: plId,
-                      name: payload.name || payload.title || '我的歌单',
-                      cover: payload.cover || payload.picUrl || '/assets/branding/app_icon.png',
-                      description: payload.description || '',
-                      tracks: Array.isArray(payload.tracks) ? payload.tracks.map(extractTrackInfo).filter(Boolean) : []
-                    });
-                    addedPlaylists++;
-                  }
+                  customPlaylists.value.push({
+                    id: plId,
+                    name: plName,
+                    cover: plCover,
+                    description: plDesc,
+                    tracks: []
+                  });
+                  addedPlaylists++;
                 }
-              }
-              return;
+              });
             }
 
-            // Check if Track
-            const track = extractTrackInfo(res);
-            if (track) {
-              if (isDeleted) {
-                favoriteTracks.value = favoriteTracks.value.filter(t => t.id !== track.id);
-                customPlaylists.value.forEach(pl => {
-                  pl.tracks = pl.tracks.filter(t => t.id !== track.id);
-                });
-                return;
-              }
-
-              // Determine target collection
-              const isFav = !parentId || parentId === 'favorites' || parentId === 'favorite' || parentId === 'fav' || parentId === '0' || rType.includes('fav');
-              if (isFav) {
-                if (!favoriteTracks.value.some(t => t.id === track.id)) {
-                  favoriteTracks.value.push(track);
-                  addedFavs++;
-                }
-              } else {
-                let pl = customPlaylists.value.find(p => p.id === parentId);
+            // 2. Playlist Items
+            if (Array.isArray(resources.playlistItems)) {
+              resources.playlistItems.forEach(item => {
+                const track = extractTrackInfo(item);
+                if (!track) return;
+                const plId = track.playlistId;
+                if (!plId) return;
+                let pl = customPlaylists.value.find(p => p.id === plId);
                 if (!pl) {
                   pl = {
-                    id: parentId,
-                    name: payload.playlistName || `云端歌单 #${String(parentId).slice(-4)}`,
+                    id: plId,
+                    name: `云端歌单 #${String(plId).slice(-4)}`,
                     cover: track.cover,
+                    description: '',
                     tracks: []
                   };
                   customPlaylists.value.push(pl);
@@ -2501,11 +2507,111 @@
                   pl.tracks.push(track);
                   if (!pl.cover || pl.cover.includes('app_icon')) pl.cover = track.cover;
                 }
-              }
+              });
             }
-          });
 
-          // Smart fallback: If favoriteTracks is still empty, look for any playlist containing "喜欢" or "Favorite" or "默认"
+            // 3. Favorites
+            if (Array.isArray(resources.favorites)) {
+              resources.favorites.forEach(item => {
+                const track = extractTrackInfo(item);
+                if (!track) return;
+                if (!favoriteTracks.value.some(t => t.id === track.id)) {
+                  favoriteTracks.value.push(track);
+                  addedFavs++;
+                }
+              });
+            }
+
+            // 4. Play History
+            if (Array.isArray(resources.playHistory)) {
+              resources.playHistory.forEach(item => {
+                const track = extractTrackInfo(item);
+                if (!track) return;
+                if (!playHistory.value.some(t => t.id === track.id)) {
+                  playHistory.value.push(track);
+                  addedHistory++;
+                }
+              });
+            }
+          } else {
+            // Generic recursive fallback for arbitrary array or nested tree
+            console.log('[Sync Engine] Processing via universal recursive collector');
+            const allResources = collectAllResources(data);
+            allResources.forEach(res => {
+              let payload = res.payload || res.dataJson || res.data_json || res.data || res;
+              if (typeof payload === 'string') {
+                try { payload = JSON.parse(payload); } catch(e) {}
+              }
+              if (!payload || typeof payload !== 'object') payload = res;
+
+              const rType = String(res.resourceType || res.resource_type || res.type || res.kind || '').toLowerCase();
+              const parentId = res.parentId || res.parent_id || payload.parentId || payload.parent_id || null;
+              const isDeleted = !!(res.deletedAt || res.deleted_at || res.isDeleted || payload.isDeleted);
+
+              if (rType.includes('playlist') && !rType.includes('item')) {
+                const plId = res.resourceId || res.resource_id || payload.id || payload.playlistId || parentId;
+                if (plId) {
+                  if (isDeleted) {
+                    customPlaylists.value = customPlaylists.value.filter(pl => pl.id !== plId);
+                  } else {
+                    let existing = customPlaylists.value.find(pl => pl.id === plId);
+                    if (existing) {
+                      existing.name = payload.name || payload.title || existing.name;
+                      existing.description = payload.description || existing.description;
+                      if (payload.cover) existing.cover = payload.cover;
+                    } else {
+                      customPlaylists.value.push({
+                        id: plId,
+                        name: payload.name || payload.title || '我的歌单',
+                        cover: payload.cover || payload.picUrl || '/assets/branding/app_icon.png',
+                        description: payload.description || '',
+                        tracks: Array.isArray(payload.tracks) ? payload.tracks.map(extractTrackInfo).filter(Boolean) : []
+                      });
+                      addedPlaylists++;
+                    }
+                  }
+                }
+                return;
+              }
+
+              const track = extractTrackInfo(res);
+              if (track) {
+                if (isDeleted) {
+                  favoriteTracks.value = favoriteTracks.value.filter(t => t.id !== track.id);
+                  customPlaylists.value.forEach(pl => {
+                    pl.tracks = pl.tracks.filter(t => t.id !== track.id);
+                  });
+                  return;
+                }
+
+                const isFav = !parentId || parentId === 'favorites' || parentId === 'favorite' || parentId === 'fav' || parentId === '0' || rType.includes('fav');
+                if (isFav) {
+                  if (!favoriteTracks.value.some(t => t.id === track.id)) {
+                    favoriteTracks.value.push(track);
+                    addedFavs++;
+                  }
+                } else {
+                  let pl = customPlaylists.value.find(p => p.id === parentId);
+                  if (!pl) {
+                    pl = {
+                      id: parentId,
+                      name: payload.playlistName || `云端歌单 #${String(parentId).slice(-4)}`,
+                      cover: track.cover,
+                      tracks: []
+                    };
+                    customPlaylists.value.push(pl);
+                    addedPlaylists++;
+                  }
+                  if (!pl.tracks.some(t => t.id === track.id)) {
+                    pl.tracks.push(track);
+                    if (!pl.cover || pl.cover.includes('app_icon')) pl.cover = track.cover;
+                  }
+                }
+              }
+            });
+          }
+
+          // Smart fallback: If favoriteTracks is still empty, look for any playlist containing "喜欢" or "Favorite"
           if (!favoriteTracks.value.length && customPlaylists.value.length) {
             const favPl = customPlaylists.value.find(pl => 
               pl.name.includes('喜欢') || pl.name.toLowerCase().includes('favorite') || pl.name.includes('默认')
@@ -2525,7 +2631,7 @@
           saveLocalPlaylists();
           saveLocalHistory();
 
-          return { addedFavs, addedPlaylists };
+          return { addedFavs, addedPlaylists, addedHistory };
         }
 
         async function syncLibrary(manual = false) {
@@ -2548,7 +2654,11 @@
             if (resp.status === 200 && data) {
               const res = parseAndLoadResources(data);
               if (manual) {
-                alert(`云端同步成功！\n已同步 ${favoriteTracks.value.length} 首红心收藏曲目，${customPlaylists.value.length} 个自建歌单。`);
+                alert(`【云端同步成功！】\n` +
+                      `已成功同步：\n` +
+                      `- 红心收藏：${favoriteTracks.value.length} 首曲目\n` +
+                      `- 自建歌单：${customPlaylists.value.length} 个（包含 ${customPlaylists.value.reduce((a, b) => a + (b.tracks ? b.tracks.length : 0), 0)} 首歌曲）\n` +
+                      `- 播放历史：${playHistory.value.length} 首记录！`);
               }
             } else if (resp.status === 401) {
               if (manual) {
@@ -2588,7 +2698,12 @@
         function reparseFromLog(data) {
           if (!data) return;
           const res = parseAndLoadResources(data);
-          alert(`解析完成！\n已成功从该日志数据解析并加载 ${res.addedFavs} 首曲目，${res.addedPlaylists} 个歌单。当前前端收藏总数：${favoriteTracks.value.length} 首！`);
+          alert(`【解析导入成功！】\n` +
+                `已成功解析并导入：\n` +
+                `- 红心收藏：${favoriteTracks.value.length} 首曲目\n` +
+                `- 自建歌单：${customPlaylists.value.length} 个（包含 ${customPlaylists.value.reduce((a, b) => a + (b.tracks ? b.tracks.length : 0), 0)} 首歌曲）\n` +
+                `- 播放历史：${playHistory.value.length} 首记录\n\n` +
+                `页面已自动切换至「我的音乐库」！`);
           activeTab.value = 'library';
         }
 
@@ -2673,6 +2788,8 @@
           orderLoading,
           createOrder,
           logs,
+          copyLogJson,
+          reparseFromLog,
           formatTime
         };
       }
