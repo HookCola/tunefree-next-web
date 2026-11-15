@@ -218,45 +218,55 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    const options = {
-      hostname: targetUrl.hostname,
-      port: 443,
-      path: `${pathname}${reqUrl.search}`,
-      method: req.method,
-      ciphers: 'DEFAULT@SECLEVEL=1',
-      headers: {
-        ...headers,
-        host: targetUrl.hostname,
-        'user-agent': headers['user-agent'] || 'TuneFree/4.3.6 (Android)',
-      }
-    };
-
-    const proxyReq = https.request(options, (proxyRes) => {
-      const respHeaders = {};
-      for (const [key, val] of Object.entries(proxyRes.headers)) {
-        if (key.toLowerCase() !== 'transfer-encoding' && key.toLowerCase() !== 'content-encoding') {
-          respHeaders[key] = val;
+    function sendProxyRequest(useDirectIp = false) {
+      const options = {
+        hostname: useDirectIp ? '103.236.73.149' : targetUrl.hostname,
+        port: 443,
+        path: `${pathname}${reqUrl.search}`,
+        method: req.method,
+        ciphers: 'DEFAULT@SECLEVEL=1',
+        servername: targetUrl.hostname,
+        headers: {
+          ...headers,
+          host: targetUrl.hostname,
+          'user-agent': headers['user-agent'] || 'TuneFree/4.3.6 (Android)',
         }
+      };
+
+      const proxyReq = https.request(options, (proxyRes) => {
+        const respHeaders = {};
+        for (const [key, val] of Object.entries(proxyRes.headers)) {
+          if (key.toLowerCase() !== 'transfer-encoding' && key.toLowerCase() !== 'content-encoding') {
+            respHeaders[key] = val;
+          }
+        }
+        // Special handling for 302 redirects (such as /v1/play/{token})
+        if (proxyRes.statusCode === 302 && proxyRes.headers.location) {
+          respHeaders['location'] = proxyRes.headers.location;
+        }
+
+        res.writeHead(proxyRes.statusCode, respHeaders);
+        proxyRes.pipe(res);
+      });
+
+      proxyReq.on('error', (err) => {
+        if (!useDirectIp && (err.code === 'ENOTFOUND' || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT')) {
+          console.warn(`[Proxy Fallback] DNS/Connection failed for ${pathname} (${err.code}), retrying via direct origin IP...`);
+          sendProxyRequest(true);
+          return;
+        }
+        console.error(`Proxy error for ${pathname}:`, err);
+        res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ success: false, error: { message: `Proxy Failed: ${err.message}` } }));
+      });
+
+      if (body && body.length > 0) {
+        proxyReq.write(body);
       }
-      // Special handling for 302 redirects (such as /v1/play/{token})
-      if (proxyRes.statusCode === 302 && proxyRes.headers.location) {
-        respHeaders['location'] = proxyRes.headers.location;
-      }
-
-      res.writeHead(proxyRes.statusCode, respHeaders);
-      proxyRes.pipe(res);
-    });
-
-    proxyReq.on('error', (err) => {
-      console.error(`Proxy error for ${pathname}:`, err);
-      res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ success: false, error: { message: `Proxy Failed: ${err.message}` } }));
-    });
-
-    if (body && body.length > 0) {
-      proxyReq.write(body);
+      proxyReq.end();
     }
-    proxyReq.end();
+
+    sendProxyRequest(false);
     return;
   }
 
