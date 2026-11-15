@@ -246,6 +246,22 @@ const server = http.createServer(async (req, res) => {
         }
 
         res.writeHead(proxyRes.statusCode, respHeaders);
+
+        // Capture sync/bootstrap response for instant debugging
+        if (pathname.includes('/sync/bootstrap')) {
+          const debugChunks = [];
+          proxyRes.on('data', c => debugChunks.push(c));
+          proxyRes.on('end', () => {
+            try {
+              const bodyStr = Buffer.concat(debugChunks).toString('utf-8');
+              fs.writeFileSync(path.join(__dirname, 'latest_bootstrap_response.json'), bodyStr, 'utf-8');
+              console.log(`[Sync Debug] Captured /v1/sync/bootstrap response (${bodyStr.length} bytes) to latest_bootstrap_response.json`);
+            } catch (err) {
+              console.error('[Sync Debug] Error saving bootstrap response:', err);
+            }
+          });
+        }
+
         proxyRes.pipe(res);
       });
 

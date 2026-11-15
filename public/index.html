@@ -1096,8 +1096,26 @@
             <span class="text-[10px] text-zinc-500">{{ log.time }}</span>
           </div>
           <div v-if="log.requestId" class="text-[10px] text-zinc-500">requestId: {{ log.requestId }}</div>
-          <div v-if="log.response" class="bg-zinc-900 p-2 rounded text-[11px] text-zinc-400 overflow-x-auto max-h-40">
-            <pre>{{ JSON.stringify(log.response, null, 2) }}</pre>
+          <div v-if="log.response" class="bg-zinc-900 p-2.5 rounded-xl text-[11px] text-zinc-400 space-y-2">
+            <div class="flex items-center justify-between pb-1.5 border-b border-zinc-800/80">
+              <span class="text-zinc-500 font-sans text-[10px]">响应报文内容</span>
+              <div class="flex items-center gap-2">
+                <button 
+                  v-if="log.url.includes('/sync/bootstrap')" 
+                  @click="reparseFromLog(log.response)" 
+                  class="px-2 py-0.5 bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 rounded text-[10px] transition flex items-center gap-1 font-sans">
+                  <i class="fa-solid fa-arrows-rotate"></i>
+                  <span>直接将此数据导入音乐库</span>
+                </button>
+                <button 
+                  @click="copyLogJson(log.response)" 
+                  class="px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-[10px] transition font-sans flex items-center gap-1">
+                  <i class="fa-solid fa-copy"></i>
+                  <span>复制 JSON</span>
+                </button>
+              </div>
+            </div>
+            <pre class="overflow-x-auto max-h-48 text-[11px]">{{ JSON.stringify(log.response, null, 2) }}</pre>
           </div>
         </div>
       </div>
@@ -2315,6 +2333,201 @@
           }
         }
 
+        function collectAllResources(rootData) {
+          const collected = [];
+          const visited = new Set();
+
+          function isResourceOrSong(obj) {
+            if (!obj || typeof obj !== 'object' || visited.has(obj)) return false;
+            if (obj.resourceType || obj.resource_type || obj.resourceId || obj.resource_id) return true;
+            if (obj.dataJson || obj.data_json || obj.payload) return true;
+            const t = obj.title || obj.name || obj.songName || obj.songname || obj.trackName;
+            const a = obj.artist || obj.singer || obj.author || (Array.isArray(obj.ar) ? 'ar' : null) || (Array.isArray(obj.singer) ? 'singer' : null);
+            const id = obj.id || obj.mid || obj.trackId || obj.songId || obj.musicId;
+            if (t && (a || id)) return true;
+            if ((obj.tracks || obj.songList) && (obj.name || obj.title)) return true;
+            return false;
+          }
+
+          function traverse(node, depth = 0) {
+            if (!node || depth > 6) return;
+            if (Array.isArray(node)) {
+              for (const item of node) {
+                if (item && typeof item === 'object') {
+                  if (isResourceOrSong(item)) {
+                    collected.push(item);
+                  } else {
+                    traverse(item, depth + 1);
+                  }
+                }
+              }
+            } else if (typeof node === 'object') {
+              if (isResourceOrSong(node)) {
+                collected.push(node);
+                return;
+              }
+              for (const [k, v] of Object.entries(node)) {
+                if (k === 'user' || k === 'listeningStats') continue;
+                traverse(v, depth + 1);
+              }
+            }
+          }
+
+          traverse(rootData);
+          return collected;
+        }
+
+        function extractTrackInfo(item) {
+          let p = item.payload || item.dataJson || item.data_json || item.data || item;
+          if (typeof p === 'string') {
+            try { p = JSON.parse(p); } catch(e) {}
+          }
+          if (!p || typeof p !== 'object') p = item;
+
+          // Handle nested containers: p.track, p.song, p.item, p.metadata
+          if (p.track && typeof p.track === 'object') p = p.track;
+          else if (p.song && typeof p.song === 'object') p = p.song;
+          else if (p.item && typeof p.item === 'object') p = p.item;
+          else if (p.metadata && typeof p.metadata === 'object') p = p.metadata;
+
+          const title = String(p.title || p.name || p.songName || p.songname || p.trackName || '').trim();
+          const id = String(p.id || p.mid || p.trackId || p.songId || p.songmid || p.musicId || item.resourceId || item.identityKey || '');
+          if (!title && !id) return null;
+
+          let artist = '';
+          if (typeof p.artist === 'string') artist = p.artist;
+          else if (typeof p.singer === 'string') artist = p.singer;
+          else if (Array.isArray(p.artists)) artist = p.artists.map(a => a.name || a).join(' / ');
+          else if (Array.isArray(p.singer)) artist = p.singer.map(s => s.name || s).join(' / ');
+          else if (Array.isArray(p.ar)) artist = p.ar.map(a => a.name || a).join(' / ');
+          else if (typeof p.author === 'string') artist = p.author;
+
+          const album = p.album?.name || p.albumName || (typeof p.album === 'string' ? p.album : '') || '';
+          let cover = p.cover || p.picUrl || p.pic || p.albumPic || p.artwork || p.img || '/assets/branding/app_icon.png';
+          if (typeof cover !== 'string' || !cover) cover = '/assets/branding/app_icon.png';
+          const source = p.source || p.platform || 'qq';
+          const duration = parseInt(p.duration || p.interval || p.dt || 0, 10) || 0;
+
+          return {
+            id: id || `${title}-${artist}`,
+            title: title || '未知曲目',
+            artist: artist || '未知歌手',
+            album,
+            cover,
+            source,
+            duration
+          };
+        }
+
+        function parseAndLoadResources(data) {
+          let addedFavs = 0;
+          let addedPlaylists = 0;
+          if (!data) return { addedFavs, addedPlaylists };
+
+          console.log('[Sync Engine] Parsing raw data envelope:', data);
+
+          const allResources = collectAllResources(data);
+          console.log('[Sync Engine] Extracted raw resources count:', allResources.length);
+
+          allResources.forEach(res => {
+            let payload = res.payload || res.dataJson || res.data_json || res.data || res;
+            if (typeof payload === 'string') {
+              try { payload = JSON.parse(payload); } catch(e) {}
+            }
+            if (!payload || typeof payload !== 'object') payload = res;
+
+            const rType = String(res.resourceType || res.resource_type || res.type || res.kind || '').toLowerCase();
+            const parentId = res.parentId || res.parent_id || payload.parentId || payload.parent_id || null;
+            const isDeleted = !!(res.deletedAt || res.deleted_at || res.isDeleted || payload.isDeleted);
+
+            // Check if Playlist definition
+            if (rType.includes('playlist') && !rType.includes('item')) {
+              const plId = res.resourceId || res.resource_id || payload.id || payload.playlistId || parentId;
+              if (plId) {
+                if (isDeleted) {
+                  customPlaylists.value = customPlaylists.value.filter(pl => pl.id !== plId);
+                } else {
+                  let existing = customPlaylists.value.find(pl => pl.id === plId);
+                  if (existing) {
+                    existing.name = payload.name || payload.title || existing.name;
+                    existing.description = payload.description || existing.description;
+                    if (payload.cover) existing.cover = payload.cover;
+                  } else {
+                    customPlaylists.value.push({
+                      id: plId,
+                      name: payload.name || payload.title || '我的歌单',
+                      cover: payload.cover || payload.picUrl || '/assets/branding/app_icon.png',
+                      description: payload.description || '',
+                      tracks: Array.isArray(payload.tracks) ? payload.tracks.map(extractTrackInfo).filter(Boolean) : []
+                    });
+                    addedPlaylists++;
+                  }
+                }
+              }
+              return;
+            }
+
+            // Check if Track
+            const track = extractTrackInfo(res);
+            if (track) {
+              if (isDeleted) {
+                favoriteTracks.value = favoriteTracks.value.filter(t => t.id !== track.id);
+                customPlaylists.value.forEach(pl => {
+                  pl.tracks = pl.tracks.filter(t => t.id !== track.id);
+                });
+                return;
+              }
+
+              // Determine target collection
+              const isFav = !parentId || parentId === 'favorites' || parentId === 'favorite' || parentId === 'fav' || parentId === '0' || rType.includes('fav');
+              if (isFav) {
+                if (!favoriteTracks.value.some(t => t.id === track.id)) {
+                  favoriteTracks.value.push(track);
+                  addedFavs++;
+                }
+              } else {
+                let pl = customPlaylists.value.find(p => p.id === parentId);
+                if (!pl) {
+                  pl = {
+                    id: parentId,
+                    name: payload.playlistName || `云端歌单 #${String(parentId).slice(-4)}`,
+                    cover: track.cover,
+                    tracks: []
+                  };
+                  customPlaylists.value.push(pl);
+                  addedPlaylists++;
+                }
+                if (!pl.tracks.some(t => t.id === track.id)) {
+                  pl.tracks.push(track);
+                  if (!pl.cover || pl.cover.includes('app_icon')) pl.cover = track.cover;
+                }
+              }
+            }
+          });
+
+          // Smart fallback: If favoriteTracks is still empty, look for any playlist containing "喜欢" or "Favorite" or "默认"
+          if (!favoriteTracks.value.length && customPlaylists.value.length) {
+            const favPl = customPlaylists.value.find(pl => 
+              pl.name.includes('喜欢') || pl.name.toLowerCase().includes('favorite') || pl.name.includes('默认')
+            );
+            if (favPl && favPl.tracks.length) {
+              favPl.tracks.forEach(t => {
+                if (!favoriteTracks.value.some(f => f.id === t.id)) {
+                  favoriteTracks.value.push(t);
+                  addedFavs++;
+                }
+              });
+            }
+          }
+
+          // Persist locally
+          saveLocalFavorites();
+          saveLocalPlaylists();
+          saveLocalHistory();
+
+          return { addedFavs, addedPlaylists };
+        }
+
         async function syncLibrary(manual = false) {
           const token = localStorage.getItem('tunefree_access_token');
           if (!token) {
@@ -2326,7 +2539,6 @@
           }
           syncing.value = true;
           try {
-            // Attempt to fetch cloud bootstrap
             const resp = await authFetch('/v1/sync/bootstrap', {
               method: 'GET'
             });
@@ -2334,196 +2546,9 @@
             addLog('GET (Cloud Sync)', '/v1/sync/bootstrap', resp.status, data, data?.requestId);
 
             if (resp.status === 200 && data) {
-              let addedFavs = 0;
-              let addedPlaylists = 0;
-
-              // 1. Gather all resources from various backend response envelope formats
-              const rawResources = [
-                ...(Array.isArray(data?.data?.resources) ? data.data.resources : []),
-                ...(Array.isArray(data?.data?.snapshot?.resources) ? data.data.snapshot.resources : []),
-                ...(Array.isArray(data?.data?.changes) ? data.data.changes : []),
-                ...(Array.isArray(data?.data?.items) ? data.data.items : []),
-                ...(Array.isArray(data?.data) ? data.data : []),
-                ...(Array.isArray(data?.resources) ? data.resources : [])
-              ];
-
-              // Helper function to extract and parse payload/dataJson
-              const parsePayload = (r) => {
-                let p = r.payload || r.dataJson || r.data_json || r.data || r;
-                if (typeof p === 'string') {
-                  try {
-                    p = JSON.parse(p);
-                  } catch (e) {
-                    console.warn('Failed to parse resource dataJson string:', p);
-                    p = {};
-                  }
-                }
-                return p || {};
-              };
-
-              // Process all resources
-              rawResources.forEach(res => {
-                const payload = parsePayload(res);
-                const rType = String(res.resourceType || res.resource_type || res.type || '').toLowerCase();
-                const parentId = res.parentId || res.parent_id || payload.parentId || payload.parent_id || null;
-                const isDeleted = !!(res.deletedAt || res.deleted_at || res.isDeleted);
-
-                // Case 1: Custom Playlist Definition
-                if (rType === 'playlist' || rType === 'customplaylist') {
-                  const plId = res.resourceId || res.resource_id || payload.id || payload.playlistId;
-                  if (plId) {
-                    if (isDeleted) {
-                      customPlaylists.value = customPlaylists.value.filter(p => p.id !== plId);
-                    } else {
-                      let existing = customPlaylists.value.find(p => p.id === plId);
-                      if (existing) {
-                        existing.name = payload.name || payload.title || existing.name;
-                        existing.description = payload.description || existing.description;
-                        if (payload.cover) existing.cover = payload.cover;
-                      } else {
-                        customPlaylists.value.push({
-                          id: plId,
-                          name: payload.name || payload.title || '我的歌单',
-                          cover: payload.cover || payload.picUrl || '/assets/branding/app_icon.png',
-                          description: payload.description || '',
-                          tracks: Array.isArray(payload.tracks) ? payload.tracks : []
-                        });
-                        addedPlaylists++;
-                      }
-                    }
-                  }
-                }
-                // Case 2: Playlist Item (Songs in a playlist OR favorites)
-                else if (rType === 'playlistitem') {
-                  const trackId = payload.id || payload.mid || payload.trackId;
-                  if (trackId) {
-                    const track = {
-                      id: String(trackId),
-                      title: payload.title || payload.name || payload.songname || '未知曲目',
-                      artist: payload.artist || payload.singer || '未知歌手',
-                      album: payload.album || payload.albumName || '',
-                      cover: payload.cover || payload.picUrl || payload.artwork || '/assets/branding/app_icon.png',
-                      source: payload.source || 'qq',
-                      duration: parseInt(payload.duration, 10) || 0
-                    };
-
-                    // If parentId represents favorites or is empty/null, treat as Favorite Track
-                    if (!parentId || parentId === 'favorites' || parentId === 'favorite' || parentId === 'fav' || parentId === '0') {
-                      if (isDeleted) {
-                        favoriteTracks.value = favoriteTracks.value.filter(t => t.id !== track.id);
-                      } else if (!favoriteTracks.value.some(t => t.id === track.id)) {
-                        favoriteTracks.value.push(track);
-                        addedFavs++;
-                      }
-                    } else {
-                      // Belongs to custom playlist
-                      let pl = customPlaylists.value.find(p => p.id === parentId);
-                      if (!pl) {
-                        pl = {
-                          id: parentId,
-                          name: payload.playlistName || `云端歌单 #${parentId.slice(-4)}`,
-                          cover: track.cover,
-                          tracks: []
-                        };
-                        customPlaylists.value.push(pl);
-                        addedPlaylists++;
-                      }
-                      if (isDeleted) {
-                        pl.tracks = pl.tracks.filter(t => t.id !== track.id);
-                      } else if (!pl.tracks.some(t => t.id === track.id)) {
-                        pl.tracks.push(track);
-                        if (!pl.cover || pl.cover.includes('app_icon')) {
-                          pl.cover = track.cover;
-                        }
-                      }
-                    }
-                  }
-                }
-                // Case 3: Dedicated Favorite Track Resource
-                else if (rType === 'favorite_track' || rType === 'favoritetrack' || rType === 'favorite' || rType === 'fav') {
-                  const trackId = payload.id || payload.mid || payload.trackId;
-                  if (trackId) {
-                    if (isDeleted) {
-                      favoriteTracks.value = favoriteTracks.value.filter(t => t.id !== String(trackId));
-                    } else if (!favoriteTracks.value.some(t => t.id === String(trackId))) {
-                      favoriteTracks.value.push({
-                        id: String(trackId),
-                        title: payload.title || payload.name || payload.songname || '未知曲目',
-                        artist: payload.artist || payload.singer || '未知歌手',
-                        album: payload.album || payload.albumName || '',
-                        cover: payload.cover || payload.picUrl || payload.artwork || '/assets/branding/app_icon.png',
-                        source: payload.source || 'qq',
-                        duration: parseInt(payload.duration, 10) || 0
-                      });
-                      addedFavs++;
-                    }
-                  }
-                }
-                // Case 4: Play History Resource
-                else if (rType === 'playhistory') {
-                  const trackId = payload.id || payload.mid || payload.trackId;
-                  if (trackId && !isDeleted) {
-                    if (!playHistory.value.some(t => t.id === String(trackId))) {
-                      playHistory.value.push({
-                        id: String(trackId),
-                        title: payload.title || payload.name || '未知曲目',
-                        artist: payload.artist || payload.singer || '未知歌手',
-                        album: payload.album || '',
-                        cover: payload.cover || '/assets/branding/app_icon.png',
-                        source: payload.source || 'qq',
-                        duration: parseInt(payload.duration, 10) || 0,
-                        playedAt: res.eventAt || res.event_at || payload.playedAt || Date.now()
-                      });
-                    }
-                  }
-                }
-              });
-
-              // Also check direct arrays if returned by backend
-              if (Array.isArray(data?.data?.favorites)) {
-                data.data.favorites.forEach(f => {
-                  const item = parsePayload(f);
-                  if (item.id && !favoriteTracks.value.some(t => t.id === String(item.id))) {
-                    favoriteTracks.value.push({
-                      id: String(item.id),
-                      title: item.title || item.name || '未知曲目',
-                      artist: item.artist || item.singer || '未知歌手',
-                      album: item.album || '',
-                      cover: item.cover || '/assets/branding/app_icon.png',
-                      source: item.source || 'qq',
-                      duration: item.duration || 0
-                    });
-                    addedFavs++;
-                  }
-                });
-              }
-
-              if (Array.isArray(data?.data?.playlists)) {
-                data.data.playlists.forEach(pl => {
-                  const p = parsePayload(pl);
-                  if (p.id) {
-                    let existing = customPlaylists.value.find(c => c.id === p.id);
-                    if (!existing) {
-                      customPlaylists.value.push({
-                        id: p.id,
-                        name: p.name || p.title || '我的歌单',
-                        cover: p.cover || '/assets/branding/app_icon.png',
-                        description: p.description || '',
-                        tracks: Array.isArray(p.tracks) ? p.tracks : []
-                      });
-                      addedPlaylists++;
-                    }
-                  }
-                });
-              }
-
-              // Persist locally
-              saveLocalFavorites();
-              saveLocalPlaylists();
-              saveLocalHistory();
-
+              const res = parseAndLoadResources(data);
               if (manual) {
-                alert(`云端同步成功！\n已同步 ${favoriteTracks.value.length} 首收藏曲目，${customPlaylists.value.length} 个自定义歌单。`);
+                alert(`云端同步成功！\n已同步 ${favoriteTracks.value.length} 首红心收藏曲目，${customPlaylists.value.length} 个自建歌单。`);
               }
             } else if (resp.status === 401) {
               if (manual) {
@@ -2544,6 +2569,27 @@
           } finally {
             syncing.value = false;
           }
+        }
+
+        function copyLogJson(data) {
+          if (!data) return;
+          const str = JSON.stringify(data, null, 2);
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(str).then(() => {
+              alert('已将 API 响应 JSON 复制到剪贴板！');
+            }).catch(() => {
+              prompt('请手动按 Ctrl+C 复制以下 JSON：', str);
+            });
+          } else {
+            prompt('请手动按 Ctrl+C 复制以下 JSON：', str);
+          }
+        }
+
+        function reparseFromLog(data) {
+          if (!data) return;
+          const res = parseAndLoadResources(data);
+          alert(`解析完成！\n已成功从该日志数据解析并加载 ${res.addedFavs} 首曲目，${res.addedPlaylists} 个歌单。当前前端收藏总数：${favoriteTracks.value.length} 首！`);
+          activeTab.value = 'library';
         }
 
         function formatTime(seconds) {
