@@ -3,3 +3,5 @@ node_modules/
 *.log
 .env
 .env.local
+
+latest_bootstrap_response.json
