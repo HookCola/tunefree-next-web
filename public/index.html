@@ -655,8 +655,18 @@
               </div>
             </div>
 
-            <!-- Actions (Compact on Mobile, Full on Desktop) -->
-            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <!-- Mobile: Single ··· Action Sheet Button (sm:hidden) -->
+            <div class="sm:hidden flex items-center shrink-0">
+              <button 
+                type="button"
+                @click.stop="openTrackActionSheet(song)"
+                class="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 active:scale-90 transition">
+                <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
+              </button>
+            </div>
+
+            <!-- Desktop: Full Actions (hidden sm:flex) -->
+            <div class="hidden sm:flex items-center gap-1.5 sm:gap-2 shrink-0">
               <!-- Favorite Heart Button -->
               <button 
                 type="button"
@@ -681,7 +691,7 @@
                   <i class="fa-solid fa-chevron-down text-[8px] text-zinc-500 transition-transform duration-200" :class="{ 'rotate-180': activeQualityMenuTrackId === song.id }"></i>
                 </button>
 
-                <!-- Dropdown Popover (图 2 同款) -->
+                <!-- Dropdown Popover -->
                 <div 
                   v-show="activeQualityMenuTrackId === song.id"
                   class="absolute right-0 top-full mt-1.5 z-40 w-32 bg-zinc-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl p-1.5 space-y-1 ring-1 ring-black/50 animate-fade-in">
@@ -789,719 +799,397 @@
         </button>
       </div>
 
-      <!-- Library Top Subtabs & Actions -->
-      <div class="bg-zinc-900 border border-zinc-800 p-3 sm:p-4 rounded-2xl shadow-sm mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 relative">
-        
-        <!-- Mobile Custom Liquid Glass Dropdown Selector (sm:hidden) -->
-        <div class="sm:hidden relative w-full" id="mobile-library-tab-picker">
-          <button 
-            type="button"
-            @click.stop="showMobileLibraryTabDropdown = !showMobileLibraryTabDropdown"
-            class="w-full bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs font-medium text-zinc-200 transition-all shadow-inner flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-              <i class="fa-solid" :class="{
-                'fa-heart text-rose-500': libraryTab === 'favorites',
-                'fa-list-ul text-blue-400': libraryTab === 'playlists',
-                'fa-bookmark text-amber-400': libraryTab === 'followed',
-                'fa-clock-rotate-left text-indigo-400': libraryTab === 'history'
-              }"></i>
-              <span class="font-semibold text-zinc-100">
-                {{ libraryTab === 'favorites' ? '我喜欢的音乐' : (libraryTab === 'playlists' ? '自建歌单' : (libraryTab === 'followed' ? '收藏的歌单' : '最近播放')) }}
-              </span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-medium" :class="{
-                'bg-rose-500/15 text-rose-400 border border-rose-500/30': libraryTab === 'favorites',
-                'bg-blue-500/15 text-blue-400 border border-blue-500/30': libraryTab === 'playlists',
-                'bg-amber-500/15 text-amber-400 border border-amber-500/30': libraryTab === 'followed',
-                'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30': libraryTab === 'history'
-              }">
-                {{ libraryTab === 'favorites' ? favoriteTracks.length + ' 首' : (libraryTab === 'playlists' ? customPlaylists.length + ' 个' : (libraryTab === 'followed' ? followedPlaylists.length + ' 个' : playHistory.length + ' 首')) }}
-              </span>
-            </div>
-            <i class="fa-solid fa-chevron-down text-zinc-500 text-xs transition-transform duration-200" :class="{ 'rotate-180': showMobileLibraryTabDropdown }"></i>
-          </button>
+            <!-- 1. 资料库总览主页 (librarySubView === 'index') -->
+      <div v-if="librarySubView === 'index'" class="space-y-6">
+        <!-- 资料库顶部 Header -->
+        <div class="flex items-center justify-between px-1">
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+              <span>资料库</span>
+            </h1>
+            <p class="text-xs text-zinc-400 mt-1">管理你的专属歌单与珍藏曲目</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button 
+              type="button"
+              @click="showCreatePlaylistModal = true"
+              title="新建自建歌单"
+              class="w-10 h-10 rounded-2xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-400 flex items-center justify-center text-sm shadow-md transition active:scale-95">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
 
-          <!-- Custom Liquid Glass Dropdown Popover -->
+        <!-- 4大核心竖排入口卡片 -->
+        <div class="grid grid-cols-1 gap-2.5">
+          <!-- 1. 收藏的歌单 -->
           <div 
-            v-show="showMobileLibraryTabDropdown" 
-            class="absolute left-0 right-0 top-full mt-1.5 z-40 bg-zinc-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl p-1.5 space-y-1 ring-1 ring-black/50 animate-fade-in">
-            <!-- Item 1: Favorites -->
-            <button 
-              type="button"
-              @click="libraryTab = 'favorites'; selectedPlaylist = null; showMobileLibraryTabDropdown = false;"
-              class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition"
-              :class="libraryTab === 'favorites' ? 'bg-rose-600/20 text-rose-300 font-semibold border border-rose-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
-              <div class="flex items-center gap-2.5">
-                <div class="w-6 h-6 rounded-lg bg-rose-500/20 text-rose-500 flex items-center justify-center text-xs">
-                  <i class="fa-solid fa-heart"></i>
-                </div>
-                <span>我喜欢的音乐</span>
+            @click="librarySubView = 'followed_list'"
+            class="group p-3.5 sm:p-4 rounded-2xl bg-zinc-900/60 hover:bg-zinc-800/80 border border-white/5 hover:border-amber-500/30 backdrop-blur-xl transition-all cursor-pointer shadow-sm flex items-center justify-between active:scale-[0.99]">
+            <div class="flex items-center gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-500/20 flex items-center justify-center text-amber-400 text-lg shadow-inner">
+                <i class="fa-solid fa-bookmark"></i>
               </div>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
-                {{ favoriteTracks.length }} 首
-              </span>
-            </button>
-
-            <!-- Item 2: Playlists -->
-            <button 
-              type="button"
-              @click="libraryTab = 'playlists'; selectedPlaylist = null; showMobileLibraryTabDropdown = false;"
-              class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition"
-              :class="libraryTab === 'playlists' ? 'bg-blue-600/20 text-blue-300 font-semibold border border-blue-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
-              <div class="flex items-center gap-2.5">
-                <div class="w-6 h-6 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs">
-                  <i class="fa-solid fa-list-ul"></i>
-                </div>
-                <span>自建歌单</span>
+              <div>
+                <div class="text-sm font-bold text-zinc-100 group-hover:text-amber-300 transition">收藏的歌单</div>
+                <div class="text-xs text-zinc-400 mt-0.5">导入与关注的网络精选单曲集</div>
               </div>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
-                {{ customPlaylists.length }} 个
-              </span>
-            </button>
-
-            <!-- Item 3: Followed -->
-            <button 
-              type="button"
-              @click="libraryTab = 'followed'; selectedPlaylist = null; showMobileLibraryTabDropdown = false;"
-              class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition"
-              :class="libraryTab === 'followed' ? 'bg-amber-600/20 text-amber-300 font-semibold border border-amber-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
-              <div class="flex items-center gap-2.5">
-                <div class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs">
-                  <i class="fa-solid fa-bookmark"></i>
-                </div>
-                <span>收藏的歌单</span>
-              </div>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
+            </div>
+            <div class="flex items-center gap-2.5">
+              <span class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 font-medium">
                 {{ followedPlaylists.length }} 个
               </span>
-            </button>
+              <i class="fa-solid fa-chevron-right text-zinc-600 text-xs group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all"></i>
+            </div>
+          </div>
 
-            <!-- Item 4: History -->
-            <button 
-              type="button"
-              @click="libraryTab = 'history'; selectedPlaylist = null; showMobileLibraryTabDropdown = false;"
-              class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition"
-              :class="libraryTab === 'history' ? 'bg-indigo-600/20 text-indigo-300 font-semibold border border-indigo-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
-              <div class="flex items-center gap-2.5">
-                <div class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs">
-                  <i class="fa-solid fa-clock-rotate-left"></i>
-                </div>
-                <span>最近播放</span>
+          <!-- 2. 创建的歌单 -->
+          <div 
+            @click="librarySubView = 'playlists_list'"
+            class="group p-3.5 sm:p-4 rounded-2xl bg-zinc-900/60 hover:bg-zinc-800/80 border border-white/5 hover:border-blue-500/30 backdrop-blur-xl transition-all cursor-pointer shadow-sm flex items-center justify-between active:scale-[0.99]">
+            <div class="flex items-center gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-blue-500/15 border border-blue-500/20 flex items-center justify-center text-blue-400 text-lg shadow-inner">
+                <i class="fa-solid fa-list-ul"></i>
               </div>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
+              <div>
+                <div class="text-sm font-bold text-zinc-100 group-hover:text-blue-300 transition">创建的歌单</div>
+                <div class="text-xs text-zinc-400 mt-0.5">本地分类与云端自建曲库</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2.5">
+              <span class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 font-medium">
+                {{ customPlaylists.length }} 个
+              </span>
+              <i class="fa-solid fa-chevron-right text-zinc-600 text-xs group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all"></i>
+            </div>
+          </div>
+
+          <!-- 3. 喜欢的音乐 -->
+          <div 
+            @click="openFavoritesView"
+            class="group p-3.5 sm:p-4 rounded-2xl bg-zinc-900/60 hover:bg-zinc-800/80 border border-white/5 hover:border-rose-500/30 backdrop-blur-xl transition-all cursor-pointer shadow-sm flex items-center justify-between active:scale-[0.99]">
+            <div class="flex items-center gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-rose-500/15 border border-rose-500/20 flex items-center justify-center text-rose-500 text-lg shadow-inner">
+                <i class="fa-solid fa-heart"></i>
+              </div>
+              <div>
+                <div class="text-sm font-bold text-zinc-100 group-hover:text-rose-300 transition">我喜欢的音乐</div>
+                <div class="text-xs text-zinc-400 mt-0.5">所有平台标记红心的爱听歌曲</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2.5">
+              <span class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/20 font-medium">
+                {{ favoriteTracks.length }} 首
+              </span>
+              <i class="fa-solid fa-chevron-right text-zinc-600 text-xs group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all"></i>
+            </div>
+          </div>
+
+          <!-- 4. 播放历史 -->
+          <div 
+            @click="openHistoryView"
+            class="group p-3.5 sm:p-4 rounded-2xl bg-zinc-900/60 hover:bg-zinc-800/80 border border-white/5 hover:border-indigo-500/30 backdrop-blur-xl transition-all cursor-pointer shadow-sm flex items-center justify-between active:scale-[0.99]">
+            <div class="flex items-center gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-indigo-500/15 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-lg shadow-inner">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+              </div>
+              <div>
+                <div class="text-sm font-bold text-zinc-100 group-hover:text-indigo-300 transition">播放历史</div>
+                <div class="text-xs text-zinc-400 mt-0.5">最近聆听与解析播放足迹</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2.5">
+              <span class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-medium">
                 {{ playHistory.length }} 首
               </span>
-            </button>
+              <i class="fa-solid fa-chevron-right text-zinc-600 text-xs group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all"></i>
+            </div>
           </div>
         </div>
 
-        <!-- Desktop Sub Tabs (hidden sm:flex) -->
-        <div class="hidden sm:flex rounded-xl bg-zinc-950 p-1 border border-zinc-800 shrink-0">
-          <button 
-            type="button"
-            @click="libraryTab = 'favorites'"
-            :class="libraryTab === 'favorites' ? 'bg-rose-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-200'"
-            class="px-3.5 py-2 rounded-lg text-xs transition flex items-center gap-2">
-            <i class="fa-solid fa-heart"></i>
-            <span>我喜欢的音乐 ({{ favoriteTracks.length }})</span>
-          </button>
-          <button 
-            type="button"
-            @click="libraryTab = 'playlists'; selectedPlaylist = null"
-            :class="libraryTab === 'playlists' ? 'bg-blue-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-200'"
-            class="px-3.5 py-2 rounded-lg text-xs transition flex items-center gap-2">
-            <i class="fa-solid fa-list-ul"></i>
-            <span>自建歌单 ({{ customPlaylists.length }})</span>
-          </button>
-          <button 
-            type="button"
-            @click="libraryTab = 'followed'; selectedPlaylist = null"
-            :class="libraryTab === 'followed' ? 'bg-amber-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-200'"
-            class="px-3.5 py-2 rounded-lg text-xs transition flex items-center gap-2">
-            <i class="fa-solid fa-bookmark"></i>
-            <span>收藏的歌单 ({{ followedPlaylists.length }})</span>
-          </button>
-          <button 
-            type="button"
-            @click="libraryTab = 'history'; selectedPlaylist = null"
-            :class="libraryTab === 'history' ? 'bg-indigo-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-200'"
-            class="px-3.5 py-2 rounded-lg text-xs transition flex items-center gap-2">
-            <i class="fa-solid fa-clock-rotate-left"></i>
-            <span>最近播放 ({{ playHistory.length }})</span>
-          </button>
-        </div>
+        <!-- 下方「最近添加」歌单双列大封面瀑布流 -->
+        <div class="pt-2">
+          <div class="flex items-center justify-between mb-4 px-1">
+            <h2 class="text-base font-bold text-zinc-200 flex items-center gap-2">
+              <i class="fa-solid fa-compact-disc text-blue-400 text-sm"></i>
+              <span>最近添加</span>
+            </h2>
+            <span class="text-xs text-zinc-500">自建与收藏</span>
+          </div>
 
-        <!-- Sync Actions & Create Playlist -->
-        <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
-          <!-- Global Default Quality for Library (Liquid Glass Custom Dropdown) -->
-          <div class="relative quality-picker-container">
-            <button 
-              type="button"
-              @click.stop="showDefaultQualityDropdown = !showDefaultQualityDropdown"
-              class="flex items-center gap-1.5 text-xs text-zinc-300 bg-zinc-950/80 hover:bg-zinc-900 px-3 py-1.5 rounded-xl border border-white/10 shadow-inner cursor-pointer transition">
-              <i class="fa-solid fa-sliders text-blue-400"></i>
-              <span class="hidden sm:inline text-zinc-400">默认音质:</span>
-              <span class="font-mono font-semibold text-zinc-100 uppercase">{{ defaultQuality === 'flac24bit' ? 'Hi-Res' : defaultQuality }}</span>
-              <i class="fa-solid fa-chevron-down text-zinc-500 text-[10px] ml-0.5 transition-transform duration-200" :class="{ 'rotate-180': showDefaultQualityDropdown }"></i>
-            </button>
+          <!-- 空状态 -->
+          <div v-if="!customPlaylists.length && !followedPlaylists.length && !favoriteTracks.length" class="text-center py-12 bg-zinc-900/40 border border-white/5 rounded-3xl backdrop-blur-xl">
+            <i class="fa-solid fa-music text-3xl text-zinc-600 mb-2"></i>
+            <p class="text-xs text-zinc-400">暂无歌单，点击右上角「+」创建你的第一个歌单吧</p>
+          </div>
 
-            <!-- Custom Liquid Glass Dropdown Popover (图 2 同款极致暗黑圆角) -->
+          <!-- 2-column Grid (瀑布流卡片) -->
+          <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 sm:gap-4">
+            <!-- 喜欢的音乐首个大卡片 -->
             <div 
-              v-show="showDefaultQualityDropdown"
-              class="absolute right-0 top-full mt-1.5 z-40 w-44 bg-zinc-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl p-1.5 space-y-1 ring-1 ring-black/50 animate-fade-in">
-              <button 
-                v-for="item in qualityOptions" 
-                :key="item.value"
-                type="button"
-                @click="selectDefaultQuality(item.value)"
-                class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition"
-                :class="defaultQuality === item.value ? 'bg-blue-600/20 text-blue-300 font-semibold border border-blue-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
-                <div class="flex items-center gap-2">
-                  <span class="font-mono font-bold">{{ item.label }}</span>
-                  <span class="text-[10px] text-zinc-500 font-sans">{{ item.badge }}</span>
-                </div>
-                <i v-if="defaultQuality === item.value" class="fa-solid fa-check text-blue-400 text-xs"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-1.5 sm:gap-2">
-            <!-- Create Playlist Button (only visible in playlists tab) -->
-            <button 
-              v-if="libraryTab === 'playlists'"
-              @click="showCreatePlaylistModal = true"
-              class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition flex items-center gap-1.5 shadow-sm shrink-0">
-              <i class="fa-solid fa-plus"></i>
-              <span>新建歌单</span>
-            </button>
-
-            <!-- Sync with Cloud Button -->
-            <button 
-              @click="syncLibrary(true)" 
-              :disabled="syncing"
-              class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium transition flex items-center gap-1.5 border border-zinc-700 shadow-sm shrink-0"
-              title="与 TuneFree 云端同步">
-              <i class="fa-solid fa-cloud-arrow-up text-blue-400" :class="{ 'fa-spin': syncing }"></i>
-              <span>{{ syncing ? '同步中' : '云端同步' }}</span>
-            </button>
-
-            <!-- Clear list button -->
-            <button 
-              v-if="libraryTab === 'history' && playHistory.length"
-              @click="clearHistory"
-              class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-red-400 text-xs transition flex items-center gap-1 shrink-0">
-              <i class="fa-solid fa-trash-can"></i>
-              <span>清空</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- SUBTAB 1: 我喜欢的音乐 (Favorites) -->
-      <div v-show="libraryTab === 'favorites'" class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm flex-1 flex flex-col">
-        <!-- Header -->
-        <div class="px-5 py-3.5 border-b border-zinc-800 flex items-center justify-between text-xs text-zinc-400">
-          <div class="flex items-center gap-2">
-            <i class="fa-solid fa-heart text-rose-500"></i>
-            <span class="font-bold text-zinc-200">红心收藏曲目</span>
-            <span class="font-mono text-zinc-500">({{ favoriteTracks.length }} 首)</span>
-          </div>
-          <div class="flex items-center gap-2" v-if="favoriteTracks.length">
-            <button 
-              @click="playAllFavorites" 
-              class="px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-medium transition flex items-center gap-1 shadow-sm">
-              <i class="fa-solid fa-play text-[10px]"></i>
-              <span>播放全部</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Empty state -->
-        <div v-if="!favoriteTracks.length" class="py-24 text-center text-zinc-500 flex-1 flex flex-col items-center justify-center">
-          <div class="w-16 h-16 rounded-2xl bg-zinc-800/80 flex items-center justify-center mb-3 text-rose-500/50">
-            <i class="fa-solid fa-heart text-3xl"></i>
-          </div>
-          <p class="text-sm font-medium text-zinc-400">暂无收藏的歌曲</p>
-          <p class="text-xs text-zinc-600 mt-1 max-w-sm">如果您在手机 App 拥有收藏，请登录账号后点击同步；或在搜索列表中点击红心 ❤️ 收藏。</p>
-          <div class="mt-4 flex items-center gap-2">
-            <button v-if="!user" @click="activeTab = 'account'" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-xl transition shadow">
-              前往登录账号
-            </button>
-            <button v-else @click="syncLibrary(true)" :disabled="syncing" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-medium rounded-xl transition shadow flex items-center gap-1.5">
-              <i class="fa-solid fa-cloud-arrow-up" :class="{ 'fa-spin': syncing }"></i>
-              <span>{{ syncing ? '正在同步...' : '立即同步云端收藏' }}</span>
-            </button>
-            <button @click="activeTab = 'search'" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-xl transition">
-              前往搜歌
-            </button>
-          </div>
-        </div>
-
-        <!-- Song list -->
-        <div v-else class="divide-y divide-zinc-800/60 overflow-y-auto max-h-[600px]">
-          <div 
-            v-for="(song, idx) in favoriteTracks" 
-            :key="song.id"
-            @click="parseAndPlay(song)"
-            :class="currentTrack && currentTrack.id === song.id ? 'bg-rose-950/20' : 'hover:bg-zinc-800/40'"
-            class="px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-2.5 sm:gap-4 transition group cursor-pointer">
-            
-            <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
-              <!-- Index number (Desktop only) -->
-              <span class="hidden sm:inline-block text-xs text-zinc-600 w-6 text-right font-mono shrink-0">{{ idx + 1 }}</span>
-              
-              <!-- Album Cover Thumbnail -->
-              <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-zinc-800 shrink-0 overflow-hidden relative shadow-sm group/img">
-                <img :src="song.cover || '/assets/branding/app_icon.png'" class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                  <i class="fa-solid fa-play text-xs text-white"></i>
+              @click="openFavoritesView"
+              class="group bg-gradient-to-br from-rose-950/40 to-zinc-900/80 border border-rose-500/20 hover:border-rose-500/40 rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-md backdrop-blur-xl">
+              <div class="aspect-square w-full rounded-xl bg-gradient-to-br from-rose-600/30 to-rose-900/50 border border-rose-500/30 flex items-center justify-center overflow-hidden mb-2.5 relative">
+                <img v-if="favoriteTracks[0]?.cover" :src="favoriteTracks[0]?.cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                <i v-else class="fa-solid fa-heart text-4xl text-rose-500 drop-shadow-lg"></i>
+                <div class="absolute inset-0 bg-black/15"></div>
+                <div class="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-rose-600/90 text-white flex items-center justify-center text-xs shadow-md">
+                  <i class="fa-solid fa-heart text-[10px]"></i>
                 </div>
               </div>
-
-              <!-- Song Info (Full width responsive) -->
-              <div class="min-w-0 flex-1">
-                <div class="text-xs sm:text-sm font-semibold text-zinc-200 truncate flex items-center gap-1.5 sm:gap-2">
-                  <span class="truncate">{{ song.title }}</span>
-                  <span 
-                    class="text-[9px] font-mono px-1.5 py-0.2 rounded shrink-0"
-                    :class="song.source === 'wy' ? 'bg-red-950/60 text-red-400 border border-red-800/40' : (song.source === 'kw' ? 'bg-amber-950/60 text-amber-400 border border-amber-800/40' : 'bg-blue-950/60 text-blue-400 border border-blue-800/40')">
-                    {{ song.source === 'kw' ? '酷我' : (song.source === 'wy' ? '网易' : 'QQ') }}
-                  </span>
-                </div>
-                <div class="text-[11px] sm:text-xs text-zinc-400 truncate flex items-center gap-1.5 mt-0.5">
-                  <span class="truncate">{{ song.artist }}</span>
-                  <span v-if="song.album" class="text-zinc-600 hidden sm:inline">•</span>
-                  <span v-if="song.album" class="text-zinc-500 truncate hidden sm:inline">{{ song.album }}</span>
-                </div>
+              <div>
+                <div class="text-xs sm:text-sm font-bold text-zinc-100 group-hover:text-rose-300 truncate">我喜欢的音乐</div>
+                <div class="text-[11px] text-zinc-400 mt-0.5 font-mono">{{ favoriteTracks.length }} 首</div>
               </div>
             </div>
 
-            <!-- Actions (Compact on Mobile, Full on Desktop) -->
-            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <!-- Remove Favorite Button -->
-              <button 
-                type="button"
-                @click.stop="toggleFavorite(song)" 
-                title="取消收藏"
-                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-rose-500 hover:text-zinc-400 hover:bg-zinc-800 transition">
-                <i class="fa-solid fa-heart text-xs sm:text-sm"></i>
-              </button>
-
-              <span class="text-xs text-zinc-500 font-mono hidden md:inline mr-1">
-                {{ formatTime(song.duration) }}
-              </span>
-
-              <!-- Quality select (Liquid Glass Popover) -->
-              <div class="relative track-quality-picker-container">
-                <button 
-                  type="button"
-                  @click.stop="activeQualityMenuTrackId = (activeQualityMenuTrackId === song.id ? null : song.id)"
-                  class="bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 hover:border-rose-500/40 rounded-xl text-[10px] sm:text-xs px-2 py-1 text-zinc-200 font-mono shadow-inner cursor-pointer transition flex items-center gap-1">
-                  <span>{{ (song.selectedQuality || defaultQuality || '320k') === 'flac24bit' ? 'Hi-Res' : (song.selectedQuality || defaultQuality || '320k').toUpperCase() }}</span>
-                  <i class="fa-solid fa-chevron-down text-[8px] text-zinc-500 transition-transform duration-200" :class="{ 'rotate-180': activeQualityMenuTrackId === song.id }"></i>
-                </button>
-
-                <!-- Dropdown Popover (图 2 同款) -->
-                <div 
-                  v-show="activeQualityMenuTrackId === song.id"
-                  class="absolute right-0 top-full mt-1.5 z-40 w-32 bg-zinc-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl p-1.5 space-y-1 ring-1 ring-black/50 animate-fade-in">
-                  <button 
-                    v-for="item in qualityOptions" 
-                    :key="item.value"
-                    type="button"
-                    @click.stop="selectTrackQuality(song, item.value, saveLocalFavorites)"
-                    class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition"
-                    :class="(song.selectedQuality || defaultQuality) === item.value ? 'bg-rose-600/20 text-rose-300 font-semibold border border-rose-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
-                    <span class="font-mono font-medium">{{ item.label }}</span>
-                    <span class="text-[9px] text-zinc-500 font-sans">{{ item.badge }}</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Play Button (Icon only on Mobile, Text on Desktop) -->
-              <button 
-                type="button"
-                @click.stop="parseAndPlay(song)" 
-                :disabled="parsingId === song.id"
-                class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white text-xs font-medium transition flex items-center justify-center gap-1.5 shadow-sm">
-                <i v-if="parsingId === song.id" class="fa-solid fa-spinner animate-spin text-xs"></i>
-                <i v-else class="fa-solid fa-play text-xs sm:text-[11px] ml-0.5 sm:ml-0"></i>
-                <span class="hidden sm:inline">播放</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SUBTAB 2: 我的自定义歌单 (Custom Playlists) -->
-      <div v-show="libraryTab === 'playlists'" class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm flex-1 flex flex-col p-6">
-        <!-- Playlist grid -->
-        <div v-if="!selectedPlaylist">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-bold text-zinc-200">自建歌单列表</h3>
-            <span class="text-xs text-zinc-500">共 {{ customPlaylists.length }} 个歌单</span>
-          </div>
-
-          <div v-if="!customPlaylists.length" class="py-20 text-center text-zinc-500 flex flex-col items-center justify-center">
-            <i class="fa-solid fa-folder-plus text-4xl mb-3 text-zinc-700"></i>
-            <p class="text-sm">暂无自建歌单</p>
-            <p class="text-xs text-zinc-600 mt-1 max-w-sm">如果您在手机 App 拥有自定义歌单，请登录账号后点击同步；或创建专属您的分类歌单。</p>
-            <div class="mt-4 flex items-center gap-2">
-              <button @click="showCreatePlaylistModal = true" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-xl transition shadow">
-                立即创建歌单
-              </button>
-              <button v-if="user" @click="syncLibrary(true)" :disabled="syncing" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-xl transition border border-zinc-700 flex items-center gap-1.5">
-                <i class="fa-solid fa-cloud-arrow-up text-blue-400" :class="{ 'fa-spin': syncing }"></i>
-                <span>{{ syncing ? '正在同步...' : '同步云端歌单' }}</span>
-              </button>
-            </div>
-          </div>
-
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <!-- 自建歌单卡片 -->
             <div 
               v-for="pl in customPlaylists" 
               :key="pl.id"
-              @click="selectedPlaylist = pl"
-              class="bg-zinc-950 border border-zinc-800/80 hover:border-blue-500/50 rounded-2xl p-4 cursor-pointer transition group flex flex-col justify-between">
+              @click="openPlaylistDetail(pl)"
+              class="group bg-zinc-900/60 hover:bg-zinc-800/80 border border-white/5 hover:border-blue-500/30 rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-md backdrop-blur-xl">
+              <div class="aspect-square w-full rounded-xl bg-zinc-950 border border-zinc-800/80 flex items-center justify-center overflow-hidden mb-2.5 relative">
+                <img v-if="pl.cover || pl.tracks?.[0]?.cover" :src="pl.cover || pl.tracks?.[0]?.cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                <div v-else class="flex flex-col items-center justify-center text-zinc-600 gap-1">
+                  <i class="fa-solid fa-music text-3xl"></i>
+                </div>
+                <div class="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-blue-600/90 text-white flex items-center justify-center text-xs shadow-md">
+                  <i class="fa-solid fa-list-ul text-[10px]"></i>
+                </div>
+              </div>
               <div>
-                <div class="w-full aspect-square rounded-xl bg-gradient-to-tr from-zinc-800 to-zinc-700 flex items-center justify-center mb-3 relative overflow-hidden shadow-md">
-                  <img v-if="pl.tracks?.[0]?.cover" :src="pl.tracks[0].cover" class="w-full h-full object-cover">
-                  <i v-else class="fa-solid fa-compact-disc text-4xl text-zinc-600 group-hover:scale-110 transition duration-300"></i>
-                  <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                    <i class="fa-solid fa-folder-open text-white text-lg"></i>
-                  </div>
-                </div>
-                <div class="font-bold text-sm text-zinc-200 truncate group-hover:text-blue-400 transition">{{ pl.name }}</div>
-                <div class="text-xs text-zinc-500 mt-1">{{ pl.tracks?.length || 0 }} 首曲目</div>
-              </div>
-              <div class="flex items-center justify-between mt-3 pt-3 border-t border-zinc-800/60">
-                <span class="text-[10px] text-zinc-600 font-mono">{{ pl.createdAt ? new Date(pl.createdAt).toLocaleDateString() : '本地' }}</span>
-                <button 
-                  @click.stop="deletePlaylist(pl)" 
-                  title="删除歌单"
-                  class="text-zinc-600 hover:text-red-400 text-xs p-1">
-                  <i class="fa-solid fa-trash-can"></i>
-                </button>
+                <div class="text-xs sm:text-sm font-bold text-zinc-100 group-hover:text-blue-300 truncate">{{ pl.name }}</div>
+                <div class="text-[11px] text-zinc-400 mt-0.5 font-mono">{{ pl.tracks ? pl.tracks.length : 0 }} 首</div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- Playlist Detail View -->
-        <div v-else class="flex flex-col flex-1">
-          <div class="flex items-center justify-between mb-4 pb-4 border-b border-zinc-800">
-            <div class="flex items-center gap-3">
-              <button @click="selectedPlaylist = null" class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center transition">
-                <i class="fa-solid fa-arrow-left text-xs"></i>
-              </button>
-              <div>
-                <h3 class="text-base font-bold text-zinc-100">{{ selectedPlaylist.name }}</h3>
-                <span class="text-xs text-zinc-500">{{ selectedPlaylist.tracks?.length || 0 }} 首歌曲</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <button 
-                v-if="selectedPlaylist.tracks?.length"
-                @click="playAllInPlaylist(selectedPlaylist)"
-                class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
-                <i class="fa-solid fa-play text-xs"></i>
-                <span>播放全部</span>
-              </button>
-              <button 
-                @click="deletePlaylist(selectedPlaylist)" 
-                class="px-3 py-1.5 rounded-lg bg-red-600/10 hover:bg-red-600/20 text-red-400 text-xs font-medium transition flex items-center gap-1">
-                <i class="fa-solid fa-trash-can"></i>
-                <span>删除歌单</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Empty tracks in playlist -->
-          <div v-if="!selectedPlaylist.tracks || !selectedPlaylist.tracks.length" class="py-20 text-center text-zinc-500 flex-1 flex flex-col items-center justify-center">
-            <i class="fa-solid fa-music text-3xl mb-2 text-zinc-700"></i>
-            <p class="text-sm">歌单还是空的</p>
-            <p class="text-xs text-zinc-600 mt-1">在搜索歌曲时点击加入歌单，丰富你的音乐珍藏</p>
-          </div>
-
-          <!-- Tracks List -->
-          <div v-else class="divide-y divide-zinc-800/60 overflow-y-auto max-h-[500px]">
-            <div 
-              v-for="(song, idx) in selectedPlaylist.tracks" 
-              :key="song.id"
-              @click="parseAndPlay(song)"
-              class="px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2.5 sm:gap-4 transition hover:bg-zinc-800/40 cursor-pointer group">
-              <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
-                <span class="hidden sm:inline-block text-xs text-zinc-600 w-5 text-right font-mono shrink-0">{{ idx + 1 }}</span>
-                <img :src="song.cover || '/assets/branding/app_icon.png'" class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover shrink-0">
-                <div class="min-w-0 flex-1">
-                  <div class="text-xs sm:text-sm font-semibold text-zinc-200 truncate">{{ song.title }}</div>
-                  <div class="text-[11px] sm:text-xs text-zinc-400 truncate mt-0.5">{{ song.artist }}</div>
-                </div>
-              </div>
-              <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                <!-- Quality select (Liquid Glass Popover) -->
-                <div class="relative track-quality-picker-container">
-                  <button 
-                    type="button"
-                    @click.stop="activeQualityMenuTrackId = (activeQualityMenuTrackId === song.id ? null : song.id)"
-                    class="bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 hover:border-blue-500/40 rounded-xl text-[10px] sm:text-xs px-2 py-1 text-zinc-200 font-mono shadow-inner cursor-pointer transition flex items-center gap-1">
-                    <span>{{ (song.selectedQuality || defaultQuality || '320k') === 'flac24bit' ? 'Hi-Res' : (song.selectedQuality || defaultQuality || '320k').toUpperCase() }}</span>
-                    <i class="fa-solid fa-chevron-down text-[8px] text-zinc-500 transition-transform duration-200" :class="{ 'rotate-180': activeQualityMenuTrackId === song.id }"></i>
-                  </button>
-
-                  <!-- Dropdown Popover (图 2 同款) -->
-                  <div 
-                    v-show="activeQualityMenuTrackId === song.id"
-                    class="absolute right-0 top-full mt-1.5 z-40 w-32 bg-zinc-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl p-1.5 space-y-1 ring-1 ring-black/50 animate-fade-in">
-                    <button 
-                      v-for="item in qualityOptions" 
-                      :key="item.value"
-                      type="button"
-                      @click.stop="selectTrackQuality(song, item.value, saveLocalPlaylists)"
-                      class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition"
-                      :class="(song.selectedQuality || defaultQuality) === item.value ? 'bg-blue-600/20 text-blue-300 font-semibold border border-blue-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
-                      <span class="font-mono font-medium">{{ item.label }}</span>
-                      <span class="text-[9px] text-zinc-500 font-sans">{{ item.badge }}</span>
-                    </button>
-                  </div>
-                </div>
-                <button 
-                  type="button"
-                  @click.stop="removeTrackFromPlaylist(selectedPlaylist, song.id)" 
-                  title="从歌单移除"
-                  class="text-zinc-600 hover:text-red-400 p-1.5 text-xs">
-                  <i class="fa-solid fa-xmark"></i>
-                </button>
-                <button 
-                  type="button"
-                  @click.stop="parseAndPlay(song)" 
-                  class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition flex items-center justify-center gap-1">
-                  <i class="fa-solid fa-play text-xs sm:text-[11px] ml-0.5 sm:ml-0"></i>
-                  <span class="hidden sm:inline">播放</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SUBTAB 3: 我收藏的歌单 (Followed Playlists) -->
-      <div v-show="libraryTab === 'followed'" class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm flex-1 flex flex-col p-6">
-        <!-- Followed Playlists Grid -->
-        <div v-if="!selectedPlaylist">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-bold text-zinc-200">云端收藏歌单列表</h3>
-            <span class="text-xs text-zinc-500">共 {{ followedPlaylists.length }} 个收藏歌单</span>
-          </div>
-
-          <div v-if="!followedPlaylists.length" class="py-20 text-center text-zinc-500 flex flex-col items-center justify-center">
-            <i class="fa-solid fa-bookmark text-4xl mb-3 text-zinc-700"></i>
-            <p class="text-sm">暂无收藏歌单</p>
-            <p class="text-xs text-zinc-600 mt-1 max-w-sm">如果您在 TuneFree App 收藏了外部歌单，点击右上角「同步云端」即可完整呈现。</p>
-            <div class="mt-4 flex items-center gap-2">
-              <button v-if="user" @click="syncLibrary(true)" :disabled="syncing" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-xl transition border border-zinc-700 flex items-center gap-1.5">
-                <i class="fa-solid fa-cloud-arrow-up text-amber-400" :class="{ 'fa-spin': syncing }"></i>
-                <span>{{ syncing ? '正在同步...' : '立即同步收藏歌单' }}</span>
-              </button>
-            </div>
-          </div>
-
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <!-- 收藏的歌单卡片 -->
             <div 
               v-for="pl in followedPlaylists" 
-              :key="pl.id"
-              @click="openFollowedPlaylist(pl)"
-              class="bg-zinc-950 border border-zinc-800/80 hover:border-amber-500/50 rounded-2xl p-4 cursor-pointer transition group flex flex-col justify-between">
+              :key="pl.id || pl.sourceResourceId"
+              @click="openPlaylistDetail(pl)"
+              class="group bg-zinc-900/60 hover:bg-zinc-800/80 border border-white/5 hover:border-amber-500/30 rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-md backdrop-blur-xl">
+              <div class="aspect-square w-full rounded-xl bg-zinc-950 border border-zinc-800/80 flex items-center justify-center overflow-hidden mb-2.5 relative">
+                <img v-if="pl.cover" :src="pl.cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                <div v-else class="flex flex-col items-center justify-center text-zinc-600 gap-1">
+                  <i class="fa-solid fa-bookmark text-3xl text-amber-500/50"></i>
+                </div>
+                <div class="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-amber-600/90 text-white flex items-center justify-center text-xs shadow-md">
+                  <i class="fa-solid fa-bookmark text-[10px]"></i>
+                </div>
+              </div>
               <div>
-                <div class="w-full aspect-square rounded-xl bg-gradient-to-tr from-zinc-800 to-zinc-700 flex items-center justify-center mb-3 relative overflow-hidden shadow-md">
-                  <img :src="pl.cover || '/assets/branding/app_icon.png'" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                  <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                    <i class="fa-solid fa-arrow-up-right-from-square text-white text-lg"></i>
-                  </div>
-                  <span class="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-black/70 backdrop-blur-sm text-zinc-200 uppercase tracking-wider">
-                    {{ pl.source === 'wy' ? '网易云' : (pl.source === 'qq' ? 'QQ音乐' : pl.source) }}
-                  </span>
-                </div>
-                <div class="font-bold text-sm text-zinc-200 truncate group-hover:text-amber-400 transition">{{ pl.name }}</div>
-                <div class="text-xs text-zinc-500 mt-1 flex items-center justify-between">
-                  <span class="truncate">创建者: {{ pl.creator || '云端同步' }}</span>
-                  <span class="text-zinc-600 font-mono shrink-0 ml-1">{{ pl.tracks?.length ? pl.tracks.length + ' 首' : '点击载入' }}</span>
-                </div>
+                <div class="text-xs sm:text-sm font-bold text-zinc-100 group-hover:text-amber-300 truncate">{{ pl.name }}</div>
+                <div class="text-[11px] text-zinc-400 mt-0.5 truncate">{{ pl.creator || (pl.tracks ? pl.tracks.length + ' 首' : '精选歌单') }}</div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Followed Playlist Detail View -->
-        <div v-else class="flex flex-col flex-1">
-          <div class="flex items-center justify-between mb-4 pb-4 border-b border-zinc-800">
-            <div class="flex items-center gap-3">
-              <button @click="selectedPlaylist = null" class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center transition">
-                <i class="fa-solid fa-arrow-left text-xs"></i>
-              </button>
-              <img :src="selectedPlaylist.cover || '/assets/branding/app_icon.png'" class="w-12 h-12 rounded-xl object-cover shrink-0">
-              <div>
-                <h3 class="text-base font-bold text-zinc-100">{{ selectedPlaylist.name }}</h3>
-                <div class="flex items-center gap-2 text-xs text-zinc-400 mt-0.5">
-                  <span v-if="selectedPlaylist.creator">创建者：{{ selectedPlaylist.creator }}</span>
-                  <span class="text-zinc-600">·</span>
-                  <span>{{ loadingPlaylistTracks ? '正在从云端拉取完整曲目...' : (selectedPlaylist.tracks?.length || 0) + ' 首歌曲' }}</span>
+      <!-- 2. 歌单二级列表 (librarySubView === 'playlists_list' || 'followed_list') -->
+      <div v-else-if="librarySubView === 'playlists_list' || librarySubView === 'followed_list'" class="space-y-6">
+        <div class="flex items-center justify-between mb-4">
+          <button 
+            type="button"
+            @click="librarySubView = 'index'"
+            class="flex items-center gap-2 text-zinc-200 hover:text-white px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-medium transition active:scale-95 shadow-sm">
+            <i class="fa-solid fa-chevron-left text-xs"></i> 资料库
+          </button>
+          <div class="text-sm sm:text-base font-bold text-white">
+            {{ librarySubView === 'playlists_list' ? '创建的歌单' : '收藏的歌单' }}
+          </div>
+          <button 
+            v-if="librarySubView === 'playlists_list'"
+            type="button"
+            @click="showCreatePlaylistModal = true"
+            class="text-xs px-3 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-medium flex items-center gap-1.5 shadow-md active:scale-95 transition">
+            <i class="fa-solid fa-plus"></i> 新建
+          </button>
+          <div v-else class="w-16"></div>
+        </div>
+
+        <!-- 歌单列表卡片网格 -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 sm:gap-4">
+          <template v-if="librarySubView === 'playlists_list'">
+            <div 
+              v-for="pl in customPlaylists" 
+              :key="pl.id"
+              @click="openPlaylistDetail(pl)"
+              class="group bg-zinc-900/60 hover:bg-zinc-800/80 border border-white/5 hover:border-blue-500/30 rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-md backdrop-blur-xl">
+              <div class="aspect-square w-full rounded-xl bg-zinc-950 border border-zinc-800/80 flex items-center justify-center overflow-hidden mb-2.5 relative">
+                <img v-if="pl.cover || pl.tracks?.[0]?.cover" :src="pl.cover || pl.tracks?.[0]?.cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                <div v-else class="flex flex-col items-center justify-center text-zinc-600 gap-1">
+                  <i class="fa-solid fa-music text-3xl"></i>
                 </div>
               </div>
+              <div>
+                <div class="text-xs sm:text-sm font-bold text-zinc-100 group-hover:text-blue-300 truncate">{{ pl.name }}</div>
+                <div class="text-[11px] text-zinc-400 mt-0.5 font-mono">{{ pl.tracks ? pl.tracks.length : 0 }} 首</div>
+              </div>
             </div>
-            <div class="flex items-center gap-2">
-              <button 
-                v-if="selectedPlaylist.tracks?.length"
-                @click="playAllInPlaylist(selectedPlaylist)"
-                class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
-                <i class="fa-solid fa-play text-xs"></i>
-                <span>播放全部</span>
-              </button>
-              <button 
-                v-if="selectedPlaylist.sourceResourceId"
-                @click="reloadFollowedPlaylist(selectedPlaylist)"
-                :disabled="loadingPlaylistTracks"
-                class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium transition flex items-center gap-1 border border-zinc-700">
-                <i class="fa-solid fa-arrows-rotate text-xs" :class="{ 'fa-spin': loadingPlaylistTracks }"></i>
-                <span>刷新曲目</span>
-              </button>
+          </template>
+
+          <template v-else>
+            <div 
+              v-for="pl in followedPlaylists" 
+              :key="pl.id || pl.sourceResourceId"
+              @click="openPlaylistDetail(pl)"
+              class="group bg-zinc-900/60 hover:bg-zinc-800/80 border border-white/5 hover:border-amber-500/30 rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-md backdrop-blur-xl">
+              <div class="aspect-square w-full rounded-xl bg-zinc-950 border border-zinc-800/80 flex items-center justify-center overflow-hidden mb-2.5 relative">
+                <img v-if="pl.cover" :src="pl.cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                <div v-else class="flex flex-col items-center justify-center text-zinc-600 gap-1">
+                  <i class="fa-solid fa-bookmark text-3xl text-amber-500/50"></i>
+                </div>
+              </div>
+              <div>
+                <div class="text-xs sm:text-sm font-bold text-zinc-100 group-hover:text-amber-300 truncate">{{ pl.name }}</div>
+                <div class="text-[11px] text-zinc-400 mt-0.5 truncate">{{ pl.creator || (pl.tracks ? pl.tracks.length + ' 首' : '精选歌单') }}</div>
+              </div>
             </div>
-          </div>
+          </template>
+        </div>
+      </div>
 
-          <!-- Loading Indicator -->
-          <div v-if="loadingPlaylistTracks" class="py-20 text-center text-zinc-400 flex-1 flex flex-col items-center justify-center">
-            <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3 text-amber-500"></i>
-            <p class="text-sm">正在从官方云端抓取完整曲目列表...</p>
-            <p class="text-xs text-zinc-600 mt-1">请稍候片刻</p>
-          </div>
+      <!-- 3. 沉浸式歌单详情页 (librarySubView === 'favorites' | 'history' | 'playlist') -->
+      <div v-else class="relative -mx-3 sm:mx-0 -mt-2">
+        <!-- 沉浸式超高清毛玻璃高斯模糊背景封面 -->
+        <div class="absolute inset-x-0 -top-8 h-[440px] overflow-hidden pointer-events-none -z-0">
+          <img 
+            :src="currentPlaylistCover" 
+            class="w-full h-full object-cover filter blur-3xl opacity-35 scale-125 saturate-150 transform -translate-y-8" />
+          <div class="absolute inset-0 bg-gradient-to-b from-[#090a0f]/20 via-[#090a0f]/80 to-[#090a0f]"></div>
+        </div>
 
-          <!-- Empty tracks in playlist -->
-          <div v-else-if="!selectedPlaylist.tracks || !selectedPlaylist.tracks.length" class="py-20 text-center text-zinc-500 flex-1 flex flex-col items-center justify-center">
-            <i class="fa-solid fa-music text-3xl mb-2 text-zinc-700"></i>
-            <p class="text-sm">该歌单暂无曲目或加载失败</p>
-            <button @click="reloadFollowedPlaylist(selectedPlaylist)" class="mt-3 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-300">
-              重新加载
+        <!-- 顶部导航栏 -->
+        <div class="relative z-10 flex items-center justify-between mb-6 px-3 sm:px-0">
+          <button 
+            type="button"
+            @click="librarySubView = 'index'"
+            class="flex items-center gap-2 text-zinc-200 hover:text-white px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-medium transition active:scale-95 shadow-sm">
+            <i class="fa-solid fa-chevron-left text-xs"></i> 资料库
+          </button>
+          <div class="flex items-center gap-2">
+            <button 
+              v-if="librarySubView === 'playlist' && selectedPlaylist && !selectedPlaylist.sourceResourceId"
+              type="button"
+              @click="deletePlaylist(selectedPlaylist.id)"
+              class="text-xs px-3 py-1.5 rounded-full bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 font-medium flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-trash-can"></i> 删除歌单
+            </button>
+            <button 
+              v-if="librarySubView === 'history' && playHistory.length"
+              type="button"
+              @click="clearHistory"
+              class="text-xs px-3 py-1.5 rounded-full bg-zinc-800/80 hover:bg-zinc-700/80 border border-white/10 text-zinc-300 font-medium flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-trash-can"></i> 清空历史
             </button>
           </div>
+        </div>
 
-          <!-- Tracks List -->
-          <div v-else class="divide-y divide-zinc-800/60 overflow-y-auto max-h-[500px]">
-            <div 
-              v-for="(song, idx) in selectedPlaylist.tracks" 
-              :key="song.id"
-              @click="parseAndPlay(song)"
-              class="px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2.5 sm:gap-4 transition hover:bg-zinc-800/40 cursor-pointer group">
-              <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
-                <span class="hidden sm:inline-block text-xs text-zinc-600 w-5 text-right font-mono shrink-0">{{ idx + 1 }}</span>
-                <img :src="song.cover || '/assets/branding/app_icon.png'" class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover shrink-0">
-                <div class="min-w-0 flex-1">
-                  <div class="text-xs sm:text-sm font-semibold text-zinc-200 truncate">{{ song.title }}</div>
-                  <div class="text-[11px] sm:text-xs text-zinc-400 truncate mt-0.5">{{ song.artist }} · {{ song.album || '单曲' }}</div>
-                </div>
-              </div>
-              <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                <!-- Quality select (Liquid Glass Popover) -->
-                <div class="relative track-quality-picker-container">
-                  <button 
-                    type="button"
-                    @click.stop="activeQualityMenuTrackId = (activeQualityMenuTrackId === song.id ? null : song.id)"
-                    class="bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 hover:border-amber-500/40 rounded-xl text-[10px] sm:text-xs px-2 py-1 text-zinc-200 font-mono shadow-inner cursor-pointer transition flex items-center gap-1">
-                    <span>{{ (song.selectedQuality || defaultQuality || '320k') === 'flac24bit' ? 'Hi-Res' : (song.selectedQuality || defaultQuality || '320k').toUpperCase() }}</span>
-                    <i class="fa-solid fa-chevron-down text-[8px] text-zinc-500 transition-transform duration-200" :class="{ 'rotate-180': activeQualityMenuTrackId === song.id }"></i>
-                  </button>
+        <!-- 歌单头部大封面与信息居中区 -->
+        <div class="relative z-10 flex flex-col items-center text-center mb-6 px-3 sm:px-0">
+          <div class="w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden shadow-2xl border border-white/15 mb-3.5 relative bg-zinc-900 group">
+            <img :src="currentPlaylistCover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          </div>
+          <h2 class="text-lg sm:text-2xl font-black text-white tracking-tight px-4 line-clamp-2">
+            {{ currentPlaylistTitle }}
+          </h2>
+          <p class="text-xs text-zinc-400 mt-1 font-medium">
+            {{ currentPlaylistSubTitle }}
+          </p>
 
-                  <!-- Dropdown Popover (图 2 同款) -->
-                  <div 
-                    v-show="activeQualityMenuTrackId === song.id"
-                    class="absolute right-0 top-full mt-1.5 z-40 w-32 bg-zinc-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl p-1.5 space-y-1 ring-1 ring-black/50 animate-fade-in">
-                    <button 
-                      v-for="item in qualityOptions" 
-                      :key="item.value"
-                      type="button"
-                      @click.stop="selectTrackQuality(song, item.value, saveLocalFollowedPlaylists)"
-                      class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition"
-                      :class="(song.selectedQuality || defaultQuality) === item.value ? 'bg-amber-600/20 text-amber-300 font-semibold border border-amber-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
-                      <span class="font-mono font-medium">{{ item.label }}</span>
-                      <span class="text-[9px] text-zinc-500 font-sans">{{ item.badge }}</span>
-                    </button>
-                  </div>
-                </div>
-                <button 
-                  type="button"
-                  @click.stop="toggleFavorite(song)" 
-                  class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition" 
-                  :class="isFavorite(song) ? 'text-rose-500 bg-rose-500/10' : 'text-zinc-600 hover:text-zinc-400'">
-                  <i class="fa-solid fa-heart text-xs sm:text-sm"></i>
-                </button>
-                <button 
-                  type="button"
-                  @click.stop="parseAndPlay(song)" 
-                  class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition flex items-center justify-center gap-1 shadow-sm">
-                  <i class="fa-solid fa-play text-xs sm:text-[11px] ml-0.5 sm:ml-0"></i>
-                  <span class="hidden sm:inline">播放</span>
-                </button>
-              </div>
-            </div>
+          <!-- 居中双胶囊播放按钮组 (随机播放 + 播放全部) -->
+          <div class="flex items-center justify-center gap-3.5 mt-4 w-full max-w-xs">
+            <button 
+              type="button"
+              @click="playRandomTracks(currentPlaylistTracks)"
+              :disabled="!currentPlaylistTracks.length"
+              class="flex-1 py-2.5 rounded-full bg-white/10 hover:bg-white/15 active:scale-95 border border-white/15 backdrop-blur-md text-zinc-100 text-xs font-semibold flex items-center justify-center gap-2 shadow-md transition disabled:opacity-40">
+              <i class="fa-solid fa-shuffle text-xs text-blue-400"></i>
+              <span>随机播放</span>
+            </button>
+            <button 
+              type="button"
+              @click="playAllCurrentPlaylist"
+              :disabled="!currentPlaylistTracks.length"
+              class="flex-1 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 transition disabled:opacity-40">
+              <i class="fa-solid fa-play text-xs"></i>
+              <span>全部播放</span>
+            </button>
           </div>
         </div>
-      </div>
 
-      <!-- SUBTAB 4: 最近播放记录 (History) -->
-      <div v-show="libraryTab === 'history'" class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm flex-1 flex flex-col">
-        <div class="px-5 py-3.5 border-b border-zinc-800 flex items-center justify-between text-xs text-zinc-400">
-          <span>最近成功解析与播放的曲目 (最多保存 100 首)</span>
-          <span class="font-mono">{{ playHistory.length }} 首</span>
-        </div>
+        <!-- 极简歌曲列表 (Song List) -->
+        <div class="relative z-10 bg-zinc-900/60 backdrop-blur-2xl border border-white/5 rounded-3xl p-2 sm:p-4 shadow-xl">
+          <!-- 空列表 -->
+          <div v-if="!currentPlaylistTracks.length" class="text-center py-16">
+            <i class="fa-solid fa-music text-3xl text-zinc-600 mb-2"></i>
+            <p class="text-xs text-zinc-400">暂无曲目，去搜索添加歌曲吧</p>
+          </div>
 
-        <div v-if="!playHistory.length" class="py-24 text-center text-zinc-500 flex-1 flex flex-col items-center justify-center">
-          <i class="fa-solid fa-clock-rotate-left text-4xl mb-3 text-zinc-700"></i>
-          <p class="text-sm">暂无播放记录</p>
-          <p class="text-xs text-zinc-600 mt-1">播放过的歌曲将自动呈现在这里</p>
-        </div>
-
-        <div v-else class="divide-y divide-zinc-800/60 overflow-y-auto max-h-[600px]">
-          <div 
-            v-for="(song, idx) in playHistory" 
-            :key="song.id"
-            @click="parseAndPlay(song)"
-            class="px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-2.5 sm:gap-4 transition hover:bg-zinc-800/40 cursor-pointer group">
-            <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
-              <span class="hidden sm:inline-block text-xs text-zinc-600 w-6 text-right font-mono shrink-0">{{ idx + 1 }}</span>
-              <img :src="song.cover || '/assets/branding/app_icon.png'" class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover shrink-0">
-              <div class="min-w-0 flex-1">
-                <div class="text-xs sm:text-sm font-semibold text-zinc-200 truncate flex items-center gap-1.5 sm:gap-2">
-                  <span class="truncate">{{ song.title }}</span>
-                  <span 
-                    class="text-[9px] font-mono px-1.5 py-0.2 rounded shrink-0"
-                    :class="song.source === 'wy' ? 'bg-red-950/60 text-red-400 border border-red-800/40' : (song.source === 'kw' ? 'bg-amber-950/60 text-amber-400 border border-amber-800/40' : 'bg-blue-950/60 text-blue-400 border border-blue-800/40')">
-                    {{ song.source === 'kw' ? '酷我' : (song.source === 'wy' ? '网易' : 'QQ') }}
+          <!-- 歌曲项 (原生极简行) -->
+          <div v-else class="divide-y divide-white/[0.04]">
+            <div 
+              v-for="(song, idx) in currentPlaylistTracks" 
+              :key="song.id || idx"
+              @click="parseAndPlay(song)"
+              class="group flex items-center justify-between p-2.5 sm:p-3 rounded-2xl hover:bg-white/[0.06] active:bg-white/[0.1] transition-all cursor-pointer gap-3">
+              
+              <!-- 左侧：序号/播放状态 + 封面 + 歌曲信息 -->
+              <div class="flex items-center gap-3 min-w-0 flex-1">
+                <!-- 序号或播放指示 -->
+                <div class="w-6 text-center shrink-0">
+                  <span v-if="currentTrack && currentTrack.id === song.id && isPlaying" class="text-blue-400 text-xs animate-pulse">
+                    <i class="fa-solid fa-volume-high"></i>
+                  </span>
+                  <span v-else class="text-zinc-500 font-mono text-xs group-hover:text-zinc-300">
+                    {{ idx + 1 }}
                   </span>
                 </div>
-                <div class="text-[11px] sm:text-xs text-zinc-400 truncate mt-0.5">{{ song.artist }}</div>
+
+                <!-- 封面 -->
+                <div class="w-11 h-11 rounded-xl overflow-hidden bg-zinc-800 shrink-0 border border-white/10 relative">
+                  <img :src="song.cover || '/assets/branding/app_icon.png'" class="w-full h-full object-cover" />
+                  <div v-if="parsingId === song.id" class="absolute inset-0 bg-black/60 flex items-center justify-center">
+                    <i class="fa-solid fa-spinner fa-spin text-blue-400 text-xs"></i>
+                  </div>
+                </div>
+
+                <!-- 歌名与歌手 -->
+                <div class="min-w-0 flex-1">
+                  <div class="text-sm font-semibold truncate flex items-center gap-1.5" :class="currentTrack && currentTrack.id === song.id ? 'text-blue-400 font-bold' : 'text-zinc-100 group-hover:text-white'">
+                    <span class="truncate">{{ song.title || song.name || '未知曲目' }}</span>
+                  </div>
+                  <div class="text-xs text-zinc-400 truncate flex items-center gap-1.5 mt-0.5">
+                    <!-- 音源小标签 -->
+                    <span class="text-[9px] px-1.5 py-0.2 rounded font-medium shrink-0" :class="{
+                      'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30': song.source === 'qq',
+                      'bg-rose-500/15 text-rose-400 border border-rose-500/30': song.source === 'netease',
+                      'bg-amber-500/15 text-amber-400 border border-amber-500/30': song.source === 'kuwo'
+                    }">
+                      {{ song.source === 'qq' ? 'QQ' : (song.source === 'netease' ? '网易' : '酷我') }}
+                    </span>
+                    <span class="truncate">{{ song.artist || song.singer || '未知歌手' }}</span>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <button 
-                type="button"
-                @click.stop="toggleFavorite(song)" 
-                :title="isFavorite(song) ? '已收藏' : '收藏'"
-                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition"
-                :class="isFavorite(song) ? 'text-rose-500 bg-rose-500/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'">
-                <i class="fa-solid fa-heart text-xs sm:text-sm"></i>
-              </button>
-
-              <button 
-                type="button"
-                @click.stop="parseAndPlay(song)" 
-                class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition flex items-center justify-center gap-1">
-                <i class="fa-solid fa-play text-xs sm:text-[11px] ml-0.5 sm:ml-0"></i>
-                <span class="hidden sm:inline">播放</span>
-              </button>
+              <!-- 右侧：仅保留一个 ··· 更多操作按钮 -->
+              <div class="shrink-0 flex items-center gap-1">
+                <button 
+                  type="button"
+                  @click.stop="openTrackActionSheet(song)"
+                  class="w-9 h-9 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 active:scale-90 transition">
+                  <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </main>
+</main>
 
     <!-- Create Playlist Modal -->
     <div 
@@ -1531,6 +1219,120 @@
             创建
           </button>
         </div>
+      </div>
+    </div>
+    
+    <!-- Global Track Action Sheet (Native Android 4.3.7 Style) -->
+    <div 
+      v-if="showActionSheet && activeActionSheetTrack" 
+      class="fixed inset-0 z-50 flex flex-col justify-end">
+      <!-- Backdrop -->
+      <div 
+        @click="closeActionSheet" 
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"></div>
+      
+      <!-- Sheet Container -->
+      <div class="relative z-10 w-full max-w-lg mx-auto bg-zinc-900/95 backdrop-blur-2xl border-t border-white/10 rounded-t-3xl p-5 shadow-2xl space-y-4 animate-slide-up">
+        <!-- Drag Handle -->
+        <div class="w-10 h-1 bg-zinc-700 rounded-full mx-auto"></div>
+
+        <!-- Song Info Header -->
+        <div class="flex items-center gap-3 pb-3 border-b border-white/5">
+          <img 
+            :src="activeActionSheetTrack.cover || '/assets/branding/app_icon.png'" 
+            class="w-12 h-12 rounded-xl object-cover border border-white/10 shrink-0" />
+          <div class="min-w-0 flex-1">
+            <div class="text-sm font-bold text-zinc-100 truncate">
+              {{ activeActionSheetTrack.title || activeActionSheetTrack.name }}
+            </div>
+            <div class="text-xs text-zinc-400 truncate mt-0.5 flex items-center gap-1.5">
+              <span class="text-[9px] px-1.5 py-0.2 rounded font-medium" :class="{
+                'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30': activeActionSheetTrack.source === 'qq',
+                'bg-rose-500/15 text-rose-400 border border-rose-500/30': activeActionSheetTrack.source === 'netease',
+                'bg-amber-500/15 text-amber-400 border border-amber-500/30': activeActionSheetTrack.source === 'kuwo'
+              }">
+                {{ activeActionSheetTrack.source === 'qq' ? 'QQ' : (activeActionSheetTrack.source === 'netease' ? '网易' : '酷我') }}
+              </span>
+              <span>{{ activeActionSheetTrack.artist || activeActionSheetTrack.singer }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action 1: 解析播放 -->
+        <button 
+          type="button"
+          @click="parseAndPlay(activeActionSheetTrack); closeActionSheet()"
+          class="w-full py-3 px-4 rounded-2xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 text-xs font-semibold flex items-center justify-between transition">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-play text-sm text-blue-400"></i>
+            <span>立即解析并播放</span>
+          </div>
+          <i class="fa-solid fa-chevron-right text-xs opacity-50"></i>
+        </button>
+
+        <!-- Action 2: 喜欢/取消喜欢 -->
+        <button 
+          type="button"
+          @click="toggleFavorite(activeActionSheetTrack)"
+          class="w-full py-3 px-4 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 text-xs font-medium flex items-center justify-between transition"
+          :class="isFavorite(activeActionSheetTrack) ? 'text-rose-400' : 'text-zinc-200'">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-heart text-sm" :class="isFavorite(activeActionSheetTrack) ? 'text-rose-500' : 'text-zinc-400'"></i>
+            <span>{{ isFavorite(activeActionSheetTrack) ? '已收藏在「我喜欢的音乐」' : '收藏到「我喜欢的音乐」' }}</span>
+          </div>
+          <i class="fa-solid" :class="isFavorite(activeActionSheetTrack) ? 'fa-check text-rose-500' : 'fa-plus text-zinc-500'"></i>
+        </button>
+
+        <!-- Action 3: 音质选择 (128k, 320k, FLAC, Hi-Res) -->
+        <div class="p-3 rounded-2xl bg-white/[0.03] border border-white/5">
+          <div class="text-[11px] font-semibold text-zinc-400 mb-2 flex items-center justify-between">
+            <span>解析音质偏好</span>
+            <span class="text-zinc-500 font-normal">当前: {{ (activeActionSheetTrack.selectedQuality || defaultQuality || 'flac').toUpperCase() }}</span>
+          </div>
+          <div class="grid grid-cols-4 gap-2">
+            <button 
+              v-for="q in ['128k', '320k', 'flac', 'hires']" 
+              :key="q"
+              type="button"
+              @click="activeActionSheetTrack.selectedQuality = q"
+              class="py-2 rounded-xl text-xs font-medium transition text-center"
+              :class="(activeActionSheetTrack.selectedQuality || defaultQuality || 'flac') === q ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold' : 'bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700/80'">
+              {{ q === '128k' ? '标准' : (q === '320k' ? '高品' : (q === 'flac' ? '无损' : 'Hi-Res')) }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Action 4: 下载歌曲 -->
+        <button 
+          type="button"
+          @click="downloadTrack(activeActionSheetTrack); closeActionSheet()"
+          class="w-full py-3 px-4 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 text-zinc-200 text-xs font-medium flex items-center justify-between transition">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-download text-sm text-emerald-400"></i>
+            <span>下载音频文件</span>
+          </div>
+          <i class="fa-solid fa-arrow-down text-xs text-zinc-500"></i>
+        </button>
+
+        <!-- Action 5: 如果在自建歌单内，可移除歌曲 -->
+        <button 
+          v-if="librarySubView === 'playlist' && selectedPlaylist && !selectedPlaylist.sourceResourceId"
+          type="button"
+          @click="removeTrackFromPlaylist(selectedPlaylist.id, activeActionSheetTrack.id); closeActionSheet()"
+          class="w-full py-3 px-4 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 text-xs font-medium flex items-center justify-between transition">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-circle-minus text-sm text-rose-500"></i>
+            <span>从当前歌单移除</span>
+          </div>
+        </button>
+
+        <!-- Close Button -->
+        <button 
+          type="button"
+          @click="closeActionSheet"
+          class="w-full py-3 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition">
+          关闭
+        </button>
       </div>
     </div>
     <main v-show="activeTab === 'account'" class="flex-1 max-w-2xl mx-auto w-full">
@@ -2521,6 +2323,9 @@
 
         // Library State (Favorites, Playlists, Followed, History)
         const libraryTab = ref('favorites');
+        const librarySubView = ref('index'); // 'index' (主页列表), 'favorites', 'history', 'playlist', 'playlists_list', 'followed_list'
+        const activeActionSheetTrack = ref(null);
+        const showActionSheet = ref(false);
         const showMobileLibraryTabDropdown = ref(false);
         const showMobileSearchSourceDropdown = ref(false);
         const favoriteTracks = ref([]);
@@ -2528,6 +2333,47 @@
         const followedPlaylists = ref([]);
         const playHistory = ref([]);
         const selectedPlaylist = ref(null);
+
+        const currentPlaylistCover = computed(() => {
+          if (librarySubView.value === 'favorites') {
+            return favoriteTracks.value[0]?.cover || '/assets/branding/app_icon.png';
+          }
+          if (librarySubView.value === 'history') {
+            return playHistory.value[0]?.cover || '/assets/branding/app_icon.png';
+          }
+          if (selectedPlaylist.value) {
+            return selectedPlaylist.value.cover || selectedPlaylist.value.tracks?.[0]?.cover || '/assets/branding/app_icon.png';
+          }
+          return '';
+        });
+
+        const currentPlaylistTracks = computed(() => {
+          if (librarySubView.value === 'favorites') return favoriteTracks.value;
+          if (librarySubView.value === 'history') return playHistory.value;
+          if (selectedPlaylist.value) return selectedPlaylist.value.tracks || [];
+          return [];
+        });
+
+        const currentPlaylistTitle = computed(() => {
+          if (librarySubView.value === 'favorites') return '我喜欢的音乐';
+          if (librarySubView.value === 'history') return '播放历史';
+          if (selectedPlaylist.value) return selectedPlaylist.value.name || '歌单详情';
+          return '歌单详情';
+        });
+
+        const currentPlaylistSubTitle = computed(() => {
+          const count = currentPlaylistTracks.value.length;
+          if (librarySubView.value === 'favorites') return `${count} 首红心珍藏曲目`;
+          if (librarySubView.value === 'history') return `${count} 首歌曲 · 最近播放记录`;
+          if (selectedPlaylist.value) return `${count} 首歌曲 ${selectedPlaylist.value.creator ? '· ' + selectedPlaylist.value.creator : ''}`;
+          return `${count} 首歌曲`;
+        });
+
+        function playAllCurrentPlaylist() {
+          if (currentPlaylistTracks.value.length) {
+            parseAndPlay(currentPlaylistTracks.value[0]);
+          }
+        }
         const loadingPlaylistTracks = ref(false);
         const showCreatePlaylistModal = ref(false);
         const newPlaylistName = ref('');
@@ -3502,6 +3348,42 @@
           }
         }
 
+        function openFavoritesView() {
+          librarySubView.value = 'favorites';
+          selectedPlaylist.value = null;
+        }
+
+        function openHistoryView() {
+          librarySubView.value = 'history';
+          selectedPlaylist.value = null;
+        }
+
+        function openPlaylistDetail(pl) {
+          selectedPlaylist.value = pl;
+          librarySubView.value = 'playlist';
+          if (!pl.tracks || pl.tracks.length === 0) {
+            if (pl.sourceResourceId) {
+              reloadFollowedPlaylist(pl);
+            }
+          }
+        }
+
+        function playRandomTracks(trackList) {
+          if (!trackList || !trackList.length) return;
+          const randomIndex = Math.floor(Math.random() * trackList.length);
+          parseAndPlay(trackList[randomIndex]);
+        }
+
+        function openTrackActionSheet(song) {
+          activeActionSheetTrack.value = song;
+          showActionSheet.value = true;
+        }
+
+        function closeActionSheet() {
+          showActionSheet.value = false;
+          activeActionSheetTrack.value = null;
+        }
+
         function collectAllResources(rootData) {
           const collected = [];
           const visited = new Set();
@@ -4062,6 +3944,20 @@
           goToPage,
           onPageSizeChange,
           libraryTab,
+          librarySubView,
+          currentPlaylistCover,
+          currentPlaylistTracks,
+          currentPlaylistTitle,
+          currentPlaylistSubTitle,
+          playAllCurrentPlaylist,
+          activeActionSheetTrack,
+          showActionSheet,
+          openFavoritesView,
+          openHistoryView,
+          openPlaylistDetail,
+          openTrackActionSheet,
+          closeActionSheet,
+          playRandomTracks,
           showMobileLibraryTabDropdown,
           favoriteTracks,
           customPlaylists,
