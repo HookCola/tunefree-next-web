@@ -254,7 +254,7 @@
             <!-- Default Quality Picker -->
             <label class="flex items-center gap-1.5 cursor-pointer">
               <span>默认解析音质:</span>
-              <select v-model="defaultQuality" class="bg-zinc-800 border border-zinc-700 rounded px-2 py-0.5 text-zinc-200 focus:outline-none cursor-pointer">
+              <select v-model="defaultQuality" @change="onDefaultQualityChange" class="bg-zinc-800 border border-zinc-700 rounded px-2 py-0.5 text-zinc-200 focus:outline-none cursor-pointer">
                 <option value="128k">128k (标准)</option>
                 <option value="320k">320k (高品质)</option>
                 <option value="flac">FLAC (无损)</option>
@@ -462,6 +462,21 @@
 
         <!-- Sync Actions & Create Playlist -->
         <div class="flex items-center gap-2">
+          <!-- Global Default Quality for Library -->
+          <div class="flex items-center gap-1.5 text-xs text-zinc-400 bg-zinc-950/80 px-2.5 py-1.5 rounded-xl border border-zinc-800">
+            <i class="fa-solid fa-sliders text-blue-400"></i>
+            <span class="hidden sm:inline">默认音质:</span>
+            <select 
+              v-model="defaultQuality" 
+              @change="onDefaultQualityChange"
+              class="bg-zinc-800 border border-zinc-700 rounded px-2 py-0.5 text-zinc-200 text-xs focus:outline-none cursor-pointer">
+              <option value="128k">128k (标准)</option>
+              <option value="320k">320k (高品质)</option>
+              <option value="flac">FLAC (无损)</option>
+              <option value="flac24bit">Hi-Res 24bit</option>
+            </select>
+          </div>
+
           <!-- Create Playlist Button (only visible in playlists tab) -->
           <button 
             v-if="libraryTab === 'playlists'"
@@ -580,7 +595,7 @@
               </span>
 
               <!-- Quality select -->
-              <select v-model="song.selectedQuality" class="bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-xs px-2 py-1.5 text-zinc-300 focus:outline-none">
+              <select v-model="song.selectedQuality" @change="saveLocalFavorites" class="bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-xs px-2 py-1.5 text-zinc-300 focus:outline-none">
                 <option value="128k">128k</option>
                 <option value="320k">320k</option>
                 <option value="flac">FLAC</option>
@@ -706,6 +721,13 @@
                 </div>
               </div>
               <div class="flex items-center gap-2 shrink-0">
+                <!-- Quality select -->
+                <select v-model="song.selectedQuality" @change="saveLocalPlaylists" class="bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-xs px-2 py-1.5 text-zinc-300 focus:outline-none">
+                  <option value="128k">128k</option>
+                  <option value="320k">320k</option>
+                  <option value="flac">FLAC</option>
+                  <option value="flac24bit">Hi-Res</option>
+                </select>
                 <button 
                   @click="removeTrackFromPlaylist(selectedPlaylist, song.id)" 
                   title="从歌单移除"
@@ -838,6 +860,13 @@
                 </div>
               </div>
               <div class="flex items-center gap-2 shrink-0">
+                <!-- Quality select -->
+                <select v-model="song.selectedQuality" @change="saveLocalFollowedPlaylists" class="bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-xs px-2 py-1.5 text-zinc-300 focus:outline-none">
+                  <option value="128k">128k</option>
+                  <option value="320k">320k</option>
+                  <option value="flac">FLAC</option>
+                  <option value="flac24bit">Hi-Res</option>
+                </select>
                 <button 
                   @click="toggleFavorite(song)" 
                   class="p-1.5 text-xs transition" 
@@ -1563,7 +1592,7 @@
         const keyword = ref('晴天');
         const searching = ref(false);
         const songList = ref([]);
-        const defaultQuality = ref('320k');
+        const defaultQuality = ref(localStorage.getItem('tunefree_default_quality') || '320k');
         const parsingId = ref(null);
         const currentTrack = ref(null);
         const audioPlayer = ref(null);
@@ -2335,20 +2364,66 @@
         // ==========================================
         // 4. Library & Favorites & Playlists Logic
         // ==========================================
+        function onDefaultQualityChange() {
+          localStorage.setItem('tunefree_default_quality', defaultQuality.value);
+          // Apply to all current tracks in library
+          favoriteTracks.value.forEach(t => {
+            t.selectedQuality = defaultQuality.value;
+          });
+          customPlaylists.value.forEach(pl => {
+            (pl.tracks || []).forEach(t => {
+              t.selectedQuality = defaultQuality.value;
+            });
+          });
+          followedPlaylists.value.forEach(pl => {
+            (pl.tracks || []).forEach(t => {
+              t.selectedQuality = defaultQuality.value;
+            });
+          });
+          saveLocalFavorites();
+          saveLocalPlaylists();
+          saveLocalFollowedPlaylists();
+        }
+
         function loadLocalLibrary() {
+          const defQ = defaultQuality.value || '320k';
           try {
             const favRaw = localStorage.getItem('tunefree_favorite_tracks');
-            if (favRaw) favoriteTracks.value = JSON.parse(favRaw);
+            if (favRaw) {
+              const list = JSON.parse(favRaw);
+              favoriteTracks.value = (list || []).map(t => ({
+                ...t,
+                selectedQuality: t.selectedQuality || defQ
+              }));
+            }
           } catch(e) {}
 
           try {
             const plRaw = localStorage.getItem('tunefree_custom_playlists');
-            if (plRaw) customPlaylists.value = JSON.parse(plRaw);
+            if (plRaw) {
+              const pls = JSON.parse(plRaw);
+              customPlaylists.value = (pls || []).map(pl => ({
+                ...pl,
+                tracks: (pl.tracks || []).map(t => ({
+                  ...t,
+                  selectedQuality: t.selectedQuality || defQ
+                }))
+              }));
+            }
           } catch(e) {}
 
           try {
             const flRaw = localStorage.getItem('tunefree_followed_playlists');
-            if (flRaw) followedPlaylists.value = JSON.parse(flRaw);
+            if (flRaw) {
+              const pls = JSON.parse(flRaw);
+              followedPlaylists.value = (pls || []).map(pl => ({
+                ...pl,
+                tracks: (pl.tracks || []).map(t => ({
+                  ...t,
+                  selectedQuality: t.selectedQuality || defQ
+                }))
+              }));
+            }
           } catch(e) {}
 
           try {
@@ -2576,6 +2651,7 @@
 
           const source = t.source || item.source || p.source || 'wy';
           const playlistId = p.playlistId || item.playlistId || item.parentId || null;
+          const selectedQuality = item.selectedQuality || p.selectedQuality || defaultQuality.value || '320k';
 
           return {
             id: trackId || `${title}-${artist}`,
@@ -2586,6 +2662,7 @@
             cover,
             source,
             duration,
+            selectedQuality,
             playlistId
           };
         }
@@ -3012,6 +3089,7 @@
           logs,
           copyLogJson,
           reparseFromLog,
+          onDefaultQualityChange,
           formatTime
         };
       }
