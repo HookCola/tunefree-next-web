@@ -37,6 +37,13 @@
     ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #52525b; }
 
+    /* Prevent mobile horizontal overflow completely */
+    html, body {
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
+      width: 100%;
+    }
+
     /* Vinyl disc reflection */
     .vinyl-grooves {
       background: repeating-radial-gradient(
@@ -221,7 +228,7 @@
       </header>
 
       <!-- MAIN CONTAINER -->
-      <div class="max-w-6xl w-full mx-auto p-4 md:p-8 flex-1 flex flex-col">
+      <div class="max-w-6xl w-full mx-auto p-3 sm:p-4 md:p-8 flex-1 flex flex-col min-w-0 overflow-x-hidden">
 
         <!-- TAB 0: 探索发现 (Explore - App 4.3.7 Native Style) -->
         <main v-show="activeTab === 'explore'" class="flex-1 flex flex-col gap-8">
@@ -407,40 +414,41 @@
 
       <!-- Search Results Table -->
       <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm flex-1 flex flex-col">
-        <div class="px-5 py-3.5 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-400">
+        <div class="px-3.5 sm:px-5 py-3 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-2.5 text-xs text-zinc-400">
           <div class="flex items-center gap-2">
             <span class="font-medium text-zinc-300">搜索结果</span>
             <span v-if="searchTotal > 0" class="px-2 py-0.5 rounded-full bg-blue-950/60 border border-blue-800/40 text-blue-300 text-[11px] font-mono">
-              找到 {{ searchTotal.toLocaleString() }} 首 • 第 {{ searchPage }} / {{ searchTotalPages }} 页
+              {{ searchTotal.toLocaleString() }} 首 • {{ searchPage }}/{{ searchTotalPages }} 页
             </span>
             <span v-else-if="songList.length" class="text-zinc-500 font-mono">
               ({{ songList.length }} 首)
             </span>
           </div>
 
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2.5 sm:gap-4">
             <!-- Page Size Setting Picker -->
-            <label class="flex items-center gap-1.5 cursor-pointer">
+            <label class="flex items-center gap-1 cursor-pointer">
               <span>每页:</span>
               <select 
                 v-model.number="searchPageSize" 
                 @change="onPageSizeChange"
-                class="bg-zinc-800 border border-zinc-700 rounded px-2 py-0.5 text-zinc-200 focus:outline-none cursor-pointer">
+                class="bg-zinc-800 border border-zinc-700 rounded px-1.5 py-0.5 text-zinc-200 focus:outline-none cursor-pointer text-xs">
                 <option :value="20">20 首</option>
                 <option :value="30">30 首</option>
-                <option :value="50">50 首 (默认)</option>
+                <option :value="50">50 首</option>
                 <option :value="100">100 首</option>
               </select>
             </label>
 
             <!-- Default Quality Picker -->
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <span>默认解析音质:</span>
-              <select v-model="defaultQuality" @change="onDefaultQualityChange" class="bg-zinc-800 border border-zinc-700 rounded px-2 py-0.5 text-zinc-200 focus:outline-none cursor-pointer">
-                <option value="128k">128k (标准)</option>
-                <option value="320k">320k (高品质)</option>
-                <option value="flac">FLAC (无损)</option>
-                <option value="flac24bit">Hi-Res 24bit</option>
+            <label class="flex items-center gap-1 cursor-pointer">
+              <span class="hidden sm:inline">默认解析音质:</span>
+              <span class="sm:hidden">音质:</span>
+              <select v-model="defaultQuality" @change="onDefaultQualityChange" class="bg-zinc-800 border border-zinc-700 rounded px-1.5 py-0.5 text-zinc-200 focus:outline-none cursor-pointer text-xs">
+                <option value="128k">128k</option>
+                <option value="320k">320k</option>
+                <option value="flac">FLAC</option>
+                <option value="flac24bit">Hi-Res</option>
               </select>
             </label>
           </div>
@@ -602,23 +610,48 @@
       </div>
 
       <!-- Authenticated Sync Status Badge -->
-      <div v-else class="mb-5 px-4 py-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs text-zinc-400">
-        <div class="flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-          <span>已连接 TuneFree 账号：<strong class="text-zinc-200">{{ user.username || user.email }}</strong></span>
-          <span class="text-zinc-600">|</span>
-          <span class="text-zinc-500">云端与本地同步通道就绪</span>
+      <div v-else class="mb-5 px-3.5 sm:px-4 py-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-zinc-400 overflow-hidden">
+        <div class="flex items-center gap-2 min-w-0 flex-1 truncate">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse shrink-0"></span>
+          <span class="truncate">已连接账号：<strong class="text-zinc-200">{{ user.username || user.email }}</strong></span>
+          <span class="text-zinc-600 hidden sm:inline">|</span>
+          <span class="text-zinc-500 hidden sm:inline">云端与本地同步通道就绪</span>
         </div>
-        <button @click="syncLibrary(true)" :disabled="syncing" class="text-blue-400 hover:text-blue-300 transition flex items-center gap-1 font-medium">
+        <button @click="syncLibrary(true)" :disabled="syncing" class="text-blue-400 hover:text-blue-300 transition flex items-center gap-1 font-medium shrink-0 self-end sm:self-auto">
           <i class="fa-solid fa-arrows-rotate" :class="{ 'fa-spin': syncing }"></i>
           <span>{{ syncing ? '正在同步...' : '立即同步云端' }}</span>
         </button>
       </div>
 
       <!-- Library Top Subtabs & Actions -->
-      <div class="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl shadow-sm mb-6 flex flex-wrap items-center justify-between gap-4">
-        <!-- Sub Tabs -->
-        <div class="flex rounded-xl bg-zinc-950 p-1 border border-zinc-800 shrink-0">
+      <div class="bg-zinc-900 border border-zinc-800 p-3 sm:p-4 rounded-2xl shadow-sm mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 overflow-hidden">
+        
+        <!-- Mobile Dropdown Selector (sm:hidden) - 响应式折叠下拉选择 (Tabs-to-Select) -->
+        <div class="sm:hidden relative w-full">
+          <div class="relative flex items-center">
+            <div class="absolute left-3 text-zinc-400 pointer-events-none">
+              <i class="fa-solid" :class="{
+                'fa-heart text-rose-500': libraryTab === 'favorites',
+                'fa-list-ul text-blue-400': libraryTab === 'playlists',
+                'fa-bookmark text-amber-400': libraryTab === 'followed',
+                'fa-clock-rotate-left text-indigo-400': libraryTab === 'history'
+              }"></i>
+            </div>
+            <select 
+              v-model="libraryTab" 
+              @change="selectedPlaylist = null"
+              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-9 pr-8 py-2.5 text-xs font-medium text-zinc-200 focus:outline-none focus:border-blue-500 appearance-none shadow-inner cursor-pointer">
+              <option value="favorites">❤️ 我喜欢的音乐 ({{ favoriteTracks.length }} 首)</option>
+              <option value="playlists">📋 自建歌单 ({{ customPlaylists.length }} 个)</option>
+              <option value="followed">🔖 收藏的歌单 ({{ followedPlaylists.length }} 个)</option>
+              <option value="history">🕒 最近播放 ({{ playHistory.length }} 首)</option>
+            </select>
+            <i class="fa-solid fa-chevron-down absolute right-3 text-zinc-500 text-xs pointer-events-none"></i>
+          </div>
+        </div>
+
+        <!-- Desktop Sub Tabs (hidden sm:flex) -->
+        <div class="hidden sm:flex rounded-xl bg-zinc-950 p-1 border border-zinc-800 shrink-0">
           <button 
             type="button"
             @click="libraryTab = 'favorites'"
@@ -654,7 +687,7 @@
         </div>
 
         <!-- Sync Actions & Create Playlist -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
           <!-- Global Default Quality for Library -->
           <div class="flex items-center gap-1.5 text-xs text-zinc-400 bg-zinc-950/80 px-2.5 py-1.5 rounded-xl border border-zinc-800">
             <i class="fa-solid fa-sliders text-blue-400"></i>
@@ -662,41 +695,43 @@
             <select 
               v-model="defaultQuality" 
               @change="onDefaultQualityChange"
-              class="bg-zinc-800 border border-zinc-700 rounded px-2 py-0.5 text-zinc-200 text-xs focus:outline-none cursor-pointer">
-              <option value="128k">128k (标准)</option>
-              <option value="320k">320k (高品质)</option>
-              <option value="flac">FLAC (无损)</option>
-              <option value="flac24bit">Hi-Res 24bit</option>
+              class="bg-zinc-800 border border-zinc-700 rounded px-1.5 py-0.5 text-zinc-200 text-xs focus:outline-none cursor-pointer">
+              <option value="128k">128k</option>
+              <option value="320k">320k</option>
+              <option value="flac">FLAC</option>
+              <option value="flac24bit">Hi-Res</option>
             </select>
           </div>
 
-          <!-- Create Playlist Button (only visible in playlists tab) -->
-          <button 
-            v-if="libraryTab === 'playlists'"
-            @click="showCreatePlaylistModal = true"
-            class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
-            <i class="fa-solid fa-plus"></i>
-            <span>新建歌单</span>
-          </button>
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <!-- Create Playlist Button (only visible in playlists tab) -->
+            <button 
+              v-if="libraryTab === 'playlists'"
+              @click="showCreatePlaylistModal = true"
+              class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition flex items-center gap-1.5 shadow-sm shrink-0">
+              <i class="fa-solid fa-plus"></i>
+              <span>新建歌单</span>
+            </button>
 
-          <!-- Sync with Cloud Button -->
-          <button 
-            @click="syncLibrary(true)" 
-            :disabled="syncing"
-            class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium transition flex items-center gap-1.5 border border-zinc-700 shadow-sm"
-            title="与 TuneFree 云端同步">
-            <i class="fa-solid fa-cloud-arrow-up text-blue-400" :class="{ 'fa-spin': syncing }"></i>
-            <span>{{ syncing ? '正在同步...' : '云端同步' }}</span>
-          </button>
+            <!-- Sync with Cloud Button -->
+            <button 
+              @click="syncLibrary(true)" 
+              :disabled="syncing"
+              class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium transition flex items-center gap-1.5 border border-zinc-700 shadow-sm shrink-0"
+              title="与 TuneFree 云端同步">
+              <i class="fa-solid fa-cloud-arrow-up text-blue-400" :class="{ 'fa-spin': syncing }"></i>
+              <span>{{ syncing ? '同步中' : '云端同步' }}</span>
+            </button>
 
-          <!-- Clear list button -->
-          <button 
-            v-if="libraryTab === 'history' && playHistory.length"
-            @click="clearHistory"
-            class="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-red-400 text-xs transition flex items-center gap-1">
-            <i class="fa-solid fa-trash-can"></i>
-            <span>清空</span>
-          </button>
+            <!-- Clear list button -->
+            <button 
+              v-if="libraryTab === 'history' && playHistory.length"
+              @click="clearHistory"
+              class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-red-400 text-xs transition flex items-center gap-1 shrink-0">
+              <i class="fa-solid fa-trash-can"></i>
+              <span>清空</span>
+            </button>
+          </div>
         </div>
       </div>
 
