@@ -335,8 +335,8 @@
       <!-- Search Bar -->
       <div class="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl shadow-sm mb-6">
         <div class="flex flex-col md:flex-row gap-3">
-          <!-- Search Source Picker -->
-          <div class="flex rounded-xl bg-zinc-950 p-1 border border-zinc-800 shrink-0">
+          <!-- Search Source Picker (Desktop: md:flex) -->
+          <div class="hidden md:flex rounded-xl bg-zinc-950 p-1 border border-zinc-800 shrink-0">
             <button 
               type="button"
               @click="onSearchSourceChange('qq')"
@@ -361,6 +361,88 @@
               <i class="fa-solid fa-bolt"></i>
               <span>橙源 (酷我)</span>
             </button>
+          </div>
+
+          <!-- Search Source Picker (Mobile: md:hidden Custom Liquid Glass Dropdown) -->
+          <div class="md:hidden relative w-full" id="mobile-search-source-picker">
+            <button 
+              type="button"
+              @click.stop="showMobileSearchSourceDropdown = !showMobileSearchSourceDropdown"
+              class="w-full bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs font-medium text-zinc-200 transition-all shadow-inner flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full" :class="{
+                  'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]': searchSource === 'qq',
+                  'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]': searchSource === 'wy',
+                  'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]': searchSource === 'kw'
+                }"></span>
+                <i class="fa-solid" :class="{
+                  'fa-music text-blue-400': searchSource === 'qq',
+                  'fa-brands fa-cloudsmith text-rose-500': searchSource === 'wy',
+                  'fa-bolt text-amber-400': searchSource === 'kw'
+                }"></i>
+                <span class="font-semibold text-zinc-100">
+                  {{ searchSource === 'kw' ? '橙源 (酷我音乐)' : (searchSource === 'wy' ? '红源 (网易云音乐)' : '绿源 (QQ 音乐)') }}
+                </span>
+                <span class="text-[10px] text-zinc-500 ml-1">切换音源</span>
+              </div>
+              <i class="fa-solid fa-chevron-down text-zinc-500 text-xs transition-transform duration-200" :class="{ 'rotate-180': showMobileSearchSourceDropdown }"></i>
+            </button>
+
+            <!-- Custom Liquid Glass Dropdown Popover -->
+            <div 
+              v-show="showMobileSearchSourceDropdown" 
+              class="absolute left-0 right-0 top-full mt-1.5 z-40 bg-zinc-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl p-1.5 space-y-1 ring-1 ring-black/50 animate-fade-in">
+              <button 
+                type="button"
+                @click="onSearchSourceChange('qq'); showMobileSearchSourceDropdown = false;"
+                class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition"
+                :class="searchSource === 'qq' ? 'bg-blue-600/20 text-blue-300 font-semibold border border-blue-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-6 h-6 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-music"></i>
+                  </div>
+                  <div class="text-left">
+                    <div class="font-medium text-zinc-200">绿源 (QQ 音乐)</div>
+                    <div class="text-[10px] text-zinc-500">曲库丰富 • 支持无损 FLAC</div>
+                  </div>
+                </div>
+                <i v-if="searchSource === 'qq'" class="fa-solid fa-check text-blue-400 text-xs"></i>
+              </button>
+
+              <button 
+                type="button"
+                @click="onSearchSourceChange('wy'); showMobileSearchSourceDropdown = false;"
+                class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition"
+                :class="searchSource === 'wy' ? 'bg-red-600/20 text-red-300 font-semibold border border-red-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-6 h-6 rounded-lg bg-red-500/20 text-rose-400 flex items-center justify-center text-xs">
+                    <i class="fa-brands fa-cloudsmith"></i>
+                  </div>
+                  <div class="text-left">
+                    <div class="font-medium text-zinc-200">红源 (网易云音乐)</div>
+                    <div class="text-[10px] text-zinc-500">热歌新歌 • 评论丰富</div>
+                  </div>
+                </div>
+                <i v-if="searchSource === 'wy'" class="fa-solid fa-check text-rose-500 text-xs"></i>
+              </button>
+
+              <button 
+                type="button"
+                @click="onSearchSourceChange('kw'); showMobileSearchSourceDropdown = false;"
+                class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition"
+                :class="searchSource === 'kw' ? 'bg-amber-600/20 text-amber-300 font-semibold border border-amber-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-bolt"></i>
+                  </div>
+                  <div class="text-left">
+                    <div class="font-medium text-zinc-200">橙源 (酷我音乐)</div>
+                    <div class="text-[10px] text-zinc-500">极速响应 • 高清音质</div>
+                  </div>
+                </div>
+                <i v-if="searchSource === 'kw'" class="fa-solid fa-check text-amber-400 text-xs"></i>
+              </button>
+            </div>
           </div>
 
           <!-- Input -->
@@ -624,29 +706,107 @@
       </div>
 
       <!-- Library Top Subtabs & Actions -->
-      <div class="bg-zinc-900 border border-zinc-800 p-3 sm:p-4 rounded-2xl shadow-sm mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 overflow-hidden">
+      <div class="bg-zinc-900 border border-zinc-800 p-3 sm:p-4 rounded-2xl shadow-sm mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 relative">
         
-        <!-- Mobile Dropdown Selector (sm:hidden) - 响应式折叠下拉选择 (Tabs-to-Select) -->
-        <div class="sm:hidden relative w-full">
-          <div class="relative flex items-center">
-            <div class="absolute left-3 text-zinc-400 pointer-events-none">
+        <!-- Mobile Custom Liquid Glass Dropdown Selector (sm:hidden) -->
+        <div class="sm:hidden relative w-full" id="mobile-library-tab-picker">
+          <button 
+            type="button"
+            @click.stop="showMobileLibraryTabDropdown = !showMobileLibraryTabDropdown"
+            class="w-full bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs font-medium text-zinc-200 transition-all shadow-inner flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
               <i class="fa-solid" :class="{
                 'fa-heart text-rose-500': libraryTab === 'favorites',
                 'fa-list-ul text-blue-400': libraryTab === 'playlists',
                 'fa-bookmark text-amber-400': libraryTab === 'followed',
                 'fa-clock-rotate-left text-indigo-400': libraryTab === 'history'
               }"></i>
+              <span class="font-semibold text-zinc-100">
+                {{ libraryTab === 'favorites' ? '我喜欢的音乐' : (libraryTab === 'playlists' ? '自建歌单' : (libraryTab === 'followed' ? '收藏的歌单' : '最近播放')) }}
+              </span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full font-mono font-medium" :class="{
+                'bg-rose-500/15 text-rose-400 border border-rose-500/30': libraryTab === 'favorites',
+                'bg-blue-500/15 text-blue-400 border border-blue-500/30': libraryTab === 'playlists',
+                'bg-amber-500/15 text-amber-400 border border-amber-500/30': libraryTab === 'followed',
+                'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30': libraryTab === 'history'
+              }">
+                {{ libraryTab === 'favorites' ? favoriteTracks.length + ' 首' : (libraryTab === 'playlists' ? customPlaylists.length + ' 个' : (libraryTab === 'followed' ? followedPlaylists.length + ' 个' : playHistory.length + ' 首')) }}
+              </span>
             </div>
-            <select 
-              v-model="libraryTab" 
-              @change="selectedPlaylist = null"
-              class="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-9 pr-8 py-2.5 text-xs font-medium text-zinc-200 focus:outline-none focus:border-blue-500 appearance-none shadow-inner cursor-pointer">
-              <option value="favorites">❤️ 我喜欢的音乐 ({{ favoriteTracks.length }} 首)</option>
-              <option value="playlists">📋 自建歌单 ({{ customPlaylists.length }} 个)</option>
-              <option value="followed">🔖 收藏的歌单 ({{ followedPlaylists.length }} 个)</option>
-              <option value="history">🕒 最近播放 ({{ playHistory.length }} 首)</option>
-            </select>
-            <i class="fa-solid fa-chevron-down absolute right-3 text-zinc-500 text-xs pointer-events-none"></i>
+            <i class="fa-solid fa-chevron-down text-zinc-500 text-xs transition-transform duration-200" :class="{ 'rotate-180': showMobileLibraryTabDropdown }"></i>
+          </button>
+
+          <!-- Custom Liquid Glass Dropdown Popover -->
+          <div 
+            v-show="showMobileLibraryTabDropdown" 
+            class="absolute left-0 right-0 top-full mt-1.5 z-40 bg-zinc-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl p-1.5 space-y-1 ring-1 ring-black/50 animate-fade-in">
+            <!-- Item 1: Favorites -->
+            <button 
+              type="button"
+              @click="libraryTab = 'favorites'; selectedPlaylist = null; showMobileLibraryTabDropdown = false;"
+              class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition"
+              :class="libraryTab === 'favorites' ? 'bg-rose-600/20 text-rose-300 font-semibold border border-rose-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
+              <div class="flex items-center gap-2.5">
+                <div class="w-6 h-6 rounded-lg bg-rose-500/20 text-rose-500 flex items-center justify-center text-xs">
+                  <i class="fa-solid fa-heart"></i>
+                </div>
+                <span>我喜欢的音乐</span>
+              </div>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
+                {{ favoriteTracks.length }} 首
+              </span>
+            </button>
+
+            <!-- Item 2: Playlists -->
+            <button 
+              type="button"
+              @click="libraryTab = 'playlists'; selectedPlaylist = null; showMobileLibraryTabDropdown = false;"
+              class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition"
+              :class="libraryTab === 'playlists' ? 'bg-blue-600/20 text-blue-300 font-semibold border border-blue-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
+              <div class="flex items-center gap-2.5">
+                <div class="w-6 h-6 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs">
+                  <i class="fa-solid fa-list-ul"></i>
+                </div>
+                <span>自建歌单</span>
+              </div>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
+                {{ customPlaylists.length }} 个
+              </span>
+            </button>
+
+            <!-- Item 3: Followed -->
+            <button 
+              type="button"
+              @click="libraryTab = 'followed'; selectedPlaylist = null; showMobileLibraryTabDropdown = false;"
+              class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition"
+              :class="libraryTab === 'followed' ? 'bg-amber-600/20 text-amber-300 font-semibold border border-amber-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
+              <div class="flex items-center gap-2.5">
+                <div class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs">
+                  <i class="fa-solid fa-bookmark"></i>
+                </div>
+                <span>收藏的歌单</span>
+              </div>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
+                {{ followedPlaylists.length }} 个
+              </span>
+            </button>
+
+            <!-- Item 4: History -->
+            <button 
+              type="button"
+              @click="libraryTab = 'history'; selectedPlaylist = null; showMobileLibraryTabDropdown = false;"
+              class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition"
+              :class="libraryTab === 'history' ? 'bg-indigo-600/20 text-indigo-300 font-semibold border border-indigo-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
+              <div class="flex items-center gap-2.5">
+                <div class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <span>最近播放</span>
+              </div>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
+                {{ playHistory.length }} 首
+              </span>
+            </button>
           </div>
         </div>
 
@@ -2205,6 +2365,8 @@
 
         // Library State (Favorites, Playlists, Followed, History)
         const libraryTab = ref('favorites');
+        const showMobileLibraryTabDropdown = ref(false);
+        const showMobileSearchSourceDropdown = ref(false);
         const favoriteTracks = ref([]);
         const customPlaylists = ref([]);
         const followedPlaylists = ref([]);
@@ -2609,6 +2771,16 @@
 
           // Start visualizer sync loop
           startVisualizerLoop();
+
+          // Global click outside listener to collapse custom mobile dropdowns
+          document.addEventListener('click', (e) => {
+            if (!e.target.closest('#mobile-search-source-picker')) {
+              showMobileSearchSourceDropdown.value = false;
+            }
+            if (!e.target.closest('#mobile-library-tab-picker')) {
+              showMobileLibraryTabDropdown.value = false;
+            }
+          });
         });
 
         // 1. Search Logic
@@ -3674,6 +3846,7 @@
         return {
           activeTab,
           searchSource,
+          showMobileSearchSourceDropdown,
           keyword,
           searching,
           songList,
@@ -3691,6 +3864,7 @@
           goToPage,
           onPageSizeChange,
           libraryTab,
+          showMobileLibraryTabDropdown,
           favoriteTracks,
           customPlaylists,
           followedPlaylists,
