@@ -332,7 +332,7 @@
           <div class="flex rounded-xl bg-zinc-950 p-1 border border-zinc-800 shrink-0">
             <button 
               type="button"
-              @click="searchSource = 'qq'"
+              @click="onSearchSourceChange('qq')"
               :class="searchSource === 'qq' ? 'bg-blue-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-200'"
               class="px-3 py-2 rounded-lg text-xs transition flex items-center gap-1.5">
               <i class="fa-solid fa-music"></i>
@@ -340,7 +340,7 @@
             </button>
             <button 
               type="button"
-              @click="searchSource = 'wy'"
+              @click="onSearchSourceChange('wy')"
               :class="searchSource === 'wy' ? 'bg-red-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-200'"
               class="px-3 py-2 rounded-lg text-xs transition flex items-center gap-1.5">
               <i class="fa-brands fa-cloudsmith"></i>
@@ -348,7 +348,7 @@
             </button>
             <button 
               type="button"
-              @click="searchSource = 'kw'"
+              @click="onSearchSourceChange('kw')"
               :class="searchSource === 'kw' ? 'bg-amber-600 text-white font-medium shadow' : 'text-zinc-400 hover:text-zinc-200'"
               class="px-3 py-2 rounded-lg text-xs transition flex items-center gap-1.5">
               <i class="fa-solid fa-bolt"></i>
@@ -1489,28 +1489,36 @@
           <div class="bg-white/[0.02] p-4 rounded-xl border border-white/5 flex flex-col gap-2.5">
             <div class="flex items-center justify-between">
               <span class="font-medium text-zinc-300">默认搜索与解析引擎</span>
-              <span class="text-[10px] text-emerald-400 font-mono">双通道</span>
+              <span class="text-[10px] text-emerald-400 font-mono">多源聚合</span>
             </div>
-            <div class="grid grid-cols-2 gap-2">
+            <div class="grid grid-cols-3 gap-2">
               <button 
                 type="button"
-                @click="searchSource = 'qq'"
-                :class="searchSource === 'qq' ? 'bg-emerald-600 text-white font-semibold shadow' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'"
-                class="py-2 px-2.5 rounded-lg text-center transition flex items-center justify-center gap-1.5">
-                <i class="fa-solid fa-music"></i>
+                @click="onSearchSourceChange('qq')"
+                :class="searchSource === 'qq' ? 'bg-blue-600 text-white font-semibold shadow' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'"
+                class="py-2 px-2 rounded-lg text-center transition flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-music text-xs"></i>
                 <span>绿源 (QQ)</span>
               </button>
               <button 
                 type="button"
-                @click="searchSource = 'wy'"
-                :class="searchSource === 'wy' ? 'bg-rose-600 text-white font-semibold shadow' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'"
-                class="py-2 px-2.5 rounded-lg text-center transition flex items-center justify-center gap-1.5">
-                <i class="fa-solid fa-cloud"></i>
-                <span>橙源 (网易云)</span>
+                @click="onSearchSourceChange('wy')"
+                :class="searchSource === 'wy' ? 'bg-red-600 text-white font-semibold shadow' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'"
+                class="py-2 px-2 rounded-lg text-center transition flex items-center justify-center gap-1.5">
+                <i class="fa-brands fa-cloudsmith text-xs"></i>
+                <span>红源 (网易)</span>
+              </button>
+              <button 
+                type="button"
+                @click="onSearchSourceChange('kw')"
+                :class="searchSource === 'kw' ? 'bg-amber-600 text-white font-semibold shadow' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'"
+                class="py-2 px-2 rounded-lg text-center transition flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-bolt text-xs"></i>
+                <span>橙源 (酷我)</span>
               </button>
             </div>
             <p class="text-[11px] text-zinc-500 leading-relaxed">
-              进入搜索页时预选的数据源平台，随时可以在搜索框上方一键即时切换。
+              进入搜索页时默认预选的数据源平台（绿源/红源/橙源），可随时在搜索框上方一键切换。
             </p>
           </div>
         </div>
@@ -2067,7 +2075,7 @@
     createApp({
       setup() {
         const activeTab = ref('explore');
-        const searchSource = ref('qq');
+        const searchSource = ref(localStorage.getItem('tunefree_default_search_source') || 'qq');
         const keyword = ref('晴天');
         const searching = ref(false);
         const songList = ref([]);
@@ -2843,6 +2851,11 @@
         // ==========================================
         // 4. Library & Favorites & Playlists Logic
         // ==========================================
+        function onSearchSourceChange(source) {
+          searchSource.value = source;
+          localStorage.setItem('tunefree_default_search_source', source);
+        }
+
         function onDefaultQualityChange() {
           localStorage.setItem('tunefree_default_quality', defaultQuality.value);
           // Apply to all current tracks in library
@@ -3626,6 +3639,7 @@
           copyLogJson,
           reparseFromLog,
           onDefaultQualityChange,
+          onSearchSourceChange,
           formatTime,
           exportDataBackup,
           importDataBackup,
