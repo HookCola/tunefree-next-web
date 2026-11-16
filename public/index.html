@@ -745,42 +745,49 @@
           <div 
             v-for="(song, idx) in favoriteTracks" 
             :key="song.id"
+            @click="parseAndPlay(song)"
             :class="currentTrack && currentTrack.id === song.id ? 'bg-rose-950/20' : 'hover:bg-zinc-800/40'"
-            class="px-5 py-3 flex items-center justify-between gap-4 transition group">
+            class="px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-2.5 sm:gap-4 transition group cursor-pointer">
             
-            <div class="flex items-center gap-3.5 min-w-0">
-              <span class="text-xs text-zinc-600 w-6 text-right font-mono">{{ idx + 1 }}</span>
-              <div class="w-10 h-10 rounded-lg bg-zinc-800 shrink-0 overflow-hidden relative shadow-sm group/img">
+            <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+              <!-- Index number (Desktop only) -->
+              <span class="hidden sm:inline-block text-xs text-zinc-600 w-6 text-right font-mono shrink-0">{{ idx + 1 }}</span>
+              
+              <!-- Album Cover Thumbnail -->
+              <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-zinc-800 shrink-0 overflow-hidden relative shadow-sm group/img">
                 <img :src="song.cover || '/assets/branding/app_icon.png'" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
                   <i class="fa-solid fa-play text-xs text-white"></i>
                 </div>
               </div>
-              <div class="min-w-0">
-                <div class="text-sm font-medium text-zinc-200 truncate flex items-center gap-2">
+
+              <!-- Song Info (Full width responsive) -->
+              <div class="min-w-0 flex-1">
+                <div class="text-xs sm:text-sm font-semibold text-zinc-200 truncate flex items-center gap-1.5 sm:gap-2">
                   <span class="truncate">{{ song.title }}</span>
                   <span 
-                    class="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                    class="text-[9px] font-mono px-1.5 py-0.2 rounded shrink-0"
                     :class="song.source === 'wy' ? 'bg-red-950/60 text-red-400 border border-red-800/40' : (song.source === 'kw' ? 'bg-amber-950/60 text-amber-400 border border-amber-800/40' : 'bg-blue-950/60 text-blue-400 border border-blue-800/40')">
-                    {{ song.source === 'kw' ? '橙源 · 酷我' : (song.source === 'wy' ? '红源 · 网易' : '绿源 · QQ') }}
+                    {{ song.source === 'kw' ? '酷我' : (song.source === 'wy' ? '网易' : 'QQ') }}
                   </span>
                 </div>
-                <div class="text-xs text-zinc-400 truncate flex items-center gap-2 mt-0.5">
+                <div class="text-[11px] sm:text-xs text-zinc-400 truncate flex items-center gap-1.5 mt-0.5">
                   <span class="truncate">{{ song.artist }}</span>
-                  <span v-if="song.album" class="text-zinc-600">•</span>
-                  <span v-if="song.album" class="text-zinc-500 truncate">{{ song.album }}</span>
+                  <span v-if="song.album" class="text-zinc-600 hidden sm:inline">•</span>
+                  <span v-if="song.album" class="text-zinc-500 truncate hidden sm:inline">{{ song.album }}</span>
                 </div>
               </div>
             </div>
 
-            <!-- Actions -->
-            <div class="flex items-center gap-2 shrink-0">
+            <!-- Actions (Compact on Mobile, Full on Desktop) -->
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <!-- Remove Favorite Button -->
               <button 
-                @click="toggleFavorite(song)" 
+                type="button"
+                @click.stop="toggleFavorite(song)" 
                 title="取消收藏"
-                class="w-8 h-8 rounded-lg flex items-center justify-center text-rose-500 hover:text-zinc-400 hover:bg-zinc-800 transition">
-                <i class="fa-solid fa-heart text-sm"></i>
+                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-rose-500 hover:text-zinc-400 hover:bg-zinc-800 transition">
+                <i class="fa-solid fa-heart text-xs sm:text-sm"></i>
               </button>
 
               <span class="text-xs text-zinc-500 font-mono hidden md:inline mr-1">
@@ -788,21 +795,26 @@
               </span>
 
               <!-- Quality select -->
-              <select v-model="song.selectedQuality" @change="saveLocalFavorites" class="bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-xs px-2 py-1.5 text-zinc-300 focus:outline-none">
+              <select 
+                @click.stop
+                v-model="song.selectedQuality" 
+                @change="saveLocalFavorites" 
+                class="bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-[10px] sm:text-xs px-1.5 py-1 text-zinc-300 focus:outline-none w-14 sm:w-auto cursor-pointer">
                 <option value="128k">128k</option>
                 <option value="320k">320k</option>
                 <option value="flac">FLAC</option>
                 <option value="flac24bit">Hi-Res</option>
               </select>
 
-              <!-- Play Button -->
+              <!-- Play Button (Icon only on Mobile, Text on Desktop) -->
               <button 
-                @click="parseAndPlay(song)" 
+                type="button"
+                @click.stop="parseAndPlay(song)" 
                 :disabled="parsingId === song.id"
-                class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
-                <i v-if="parsingId === song.id" class="fa-solid fa-spinner animate-spin"></i>
-                <i v-else class="fa-solid fa-play"></i>
-                <span>播放</span>
+                class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white text-xs font-medium transition flex items-center justify-center gap-1.5 shadow-sm">
+                <i v-if="parsingId === song.id" class="fa-solid fa-spinner animate-spin text-xs"></i>
+                <i v-else class="fa-solid fa-play text-xs sm:text-[11px] ml-0.5 sm:ml-0"></i>
+                <span class="hidden sm:inline">播放</span>
               </button>
             </div>
           </div>
@@ -904,34 +916,41 @@
             <div 
               v-for="(song, idx) in selectedPlaylist.tracks" 
               :key="song.id"
-              class="px-4 py-3 flex items-center justify-between gap-4 transition hover:bg-zinc-800/40">
-              <div class="flex items-center gap-3.5 min-w-0">
-                <span class="text-xs text-zinc-600 w-5 text-right font-mono">{{ idx + 1 }}</span>
-                <img :src="song.cover || '/assets/branding/app_icon.png'" class="w-10 h-10 rounded-lg object-cover shrink-0">
-                <div class="min-w-0">
-                  <div class="text-sm font-medium text-zinc-200 truncate">{{ song.title }}</div>
-                  <div class="text-xs text-zinc-400 truncate">{{ song.artist }}</div>
+              @click="parseAndPlay(song)"
+              class="px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2.5 sm:gap-4 transition hover:bg-zinc-800/40 cursor-pointer group">
+              <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+                <span class="hidden sm:inline-block text-xs text-zinc-600 w-5 text-right font-mono shrink-0">{{ idx + 1 }}</span>
+                <img :src="song.cover || '/assets/branding/app_icon.png'" class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover shrink-0">
+                <div class="min-w-0 flex-1">
+                  <div class="text-xs sm:text-sm font-semibold text-zinc-200 truncate">{{ song.title }}</div>
+                  <div class="text-[11px] sm:text-xs text-zinc-400 truncate mt-0.5">{{ song.artist }}</div>
                 </div>
               </div>
-              <div class="flex items-center gap-2 shrink-0">
+              <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <!-- Quality select -->
-                <select v-model="song.selectedQuality" @change="saveLocalPlaylists" class="bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-xs px-2 py-1.5 text-zinc-300 focus:outline-none">
+                <select 
+                  @click.stop
+                  v-model="song.selectedQuality" 
+                  @change="saveLocalPlaylists" 
+                  class="bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-[10px] sm:text-xs px-1.5 py-1 text-zinc-300 focus:outline-none w-14 sm:w-auto cursor-pointer">
                   <option value="128k">128k</option>
                   <option value="320k">320k</option>
                   <option value="flac">FLAC</option>
                   <option value="flac24bit">Hi-Res</option>
                 </select>
                 <button 
-                  @click="removeTrackFromPlaylist(selectedPlaylist, song.id)" 
+                  type="button"
+                  @click.stop="removeTrackFromPlaylist(selectedPlaylist, song.id)" 
                   title="从歌单移除"
                   class="text-zinc-600 hover:text-red-400 p-1.5 text-xs">
                   <i class="fa-solid fa-xmark"></i>
                 </button>
                 <button 
-                  @click="parseAndPlay(song)" 
-                  class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition flex items-center gap-1">
-                  <i class="fa-solid fa-play"></i>
-                  <span>播放</span>
+                  type="button"
+                  @click.stop="parseAndPlay(song)" 
+                  class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition flex items-center justify-center gap-1">
+                  <i class="fa-solid fa-play text-xs sm:text-[11px] ml-0.5 sm:ml-0"></i>
+                  <span class="hidden sm:inline">播放</span>
                 </button>
               </div>
             </div>
@@ -1043,34 +1062,41 @@
             <div 
               v-for="(song, idx) in selectedPlaylist.tracks" 
               :key="song.id"
-              class="px-4 py-3 flex items-center justify-between gap-4 transition hover:bg-zinc-800/40">
-              <div class="flex items-center gap-3.5 min-w-0">
-                <span class="text-xs text-zinc-600 w-5 text-right font-mono">{{ idx + 1 }}</span>
-                <img :src="song.cover || '/assets/branding/app_icon.png'" class="w-10 h-10 rounded-lg object-cover shrink-0">
-                <div class="min-w-0">
-                  <div class="text-sm font-medium text-zinc-200 truncate">{{ song.title }}</div>
-                  <div class="text-xs text-zinc-400 truncate">{{ song.artist }} · {{ song.album || '单曲' }}</div>
+              @click="parseAndPlay(song)"
+              class="px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2.5 sm:gap-4 transition hover:bg-zinc-800/40 cursor-pointer group">
+              <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+                <span class="hidden sm:inline-block text-xs text-zinc-600 w-5 text-right font-mono shrink-0">{{ idx + 1 }}</span>
+                <img :src="song.cover || '/assets/branding/app_icon.png'" class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover shrink-0">
+                <div class="min-w-0 flex-1">
+                  <div class="text-xs sm:text-sm font-semibold text-zinc-200 truncate">{{ song.title }}</div>
+                  <div class="text-[11px] sm:text-xs text-zinc-400 truncate mt-0.5">{{ song.artist }} · {{ song.album || '单曲' }}</div>
                 </div>
               </div>
-              <div class="flex items-center gap-2 shrink-0">
+              <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <!-- Quality select -->
-                <select v-model="song.selectedQuality" @change="saveLocalFollowedPlaylists" class="bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-xs px-2 py-1.5 text-zinc-300 focus:outline-none">
+                <select 
+                  @click.stop
+                  v-model="song.selectedQuality" 
+                  @change="saveLocalFollowedPlaylists" 
+                  class="bg-zinc-800/80 border border-zinc-700/80 rounded-lg text-[10px] sm:text-xs px-1.5 py-1 text-zinc-300 focus:outline-none w-14 sm:w-auto cursor-pointer">
                   <option value="128k">128k</option>
                   <option value="320k">320k</option>
                   <option value="flac">FLAC</option>
                   <option value="flac24bit">Hi-Res</option>
                 </select>
                 <button 
-                  @click="toggleFavorite(song)" 
-                  class="p-1.5 text-xs transition" 
-                  :class="isFavorite(song) ? 'text-rose-500' : 'text-zinc-600 hover:text-zinc-400'">
-                  <i class="fa-solid fa-heart"></i>
+                  type="button"
+                  @click.stop="toggleFavorite(song)" 
+                  class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition" 
+                  :class="isFavorite(song) ? 'text-rose-500 bg-rose-500/10' : 'text-zinc-600 hover:text-zinc-400'">
+                  <i class="fa-solid fa-heart text-xs sm:text-sm"></i>
                 </button>
                 <button 
-                  @click="parseAndPlay(song)" 
-                  class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition flex items-center gap-1 shadow-sm">
-                  <i class="fa-solid fa-play"></i>
-                  <span>播放</span>
+                  type="button"
+                  @click.stop="parseAndPlay(song)" 
+                  class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium transition flex items-center justify-center gap-1 shadow-sm">
+                  <i class="fa-solid fa-play text-xs sm:text-[11px] ml-0.5 sm:ml-0"></i>
+                  <span class="hidden sm:inline">播放</span>
                 </button>
               </div>
             </div>
@@ -1095,37 +1121,40 @@
           <div 
             v-for="(song, idx) in playHistory" 
             :key="song.id"
-            class="px-5 py-3 flex items-center justify-between gap-4 transition hover:bg-zinc-800/40">
-            <div class="flex items-center gap-3.5 min-w-0">
-              <span class="text-xs text-zinc-600 w-6 text-right font-mono">{{ idx + 1 }}</span>
-              <img :src="song.cover || '/assets/branding/app_icon.png'" class="w-10 h-10 rounded-lg object-cover shrink-0">
-              <div class="min-w-0">
-                <div class="text-sm font-medium text-zinc-200 truncate flex items-center gap-2">
+            @click="parseAndPlay(song)"
+            class="px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-2.5 sm:gap-4 transition hover:bg-zinc-800/40 cursor-pointer group">
+            <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+              <span class="hidden sm:inline-block text-xs text-zinc-600 w-6 text-right font-mono shrink-0">{{ idx + 1 }}</span>
+              <img :src="song.cover || '/assets/branding/app_icon.png'" class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover shrink-0">
+              <div class="min-w-0 flex-1">
+                <div class="text-xs sm:text-sm font-semibold text-zinc-200 truncate flex items-center gap-1.5 sm:gap-2">
                   <span class="truncate">{{ song.title }}</span>
                   <span 
-                    class="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                    class="text-[9px] font-mono px-1.5 py-0.2 rounded shrink-0"
                     :class="song.source === 'wy' ? 'bg-red-950/60 text-red-400 border border-red-800/40' : (song.source === 'kw' ? 'bg-amber-950/60 text-amber-400 border border-amber-800/40' : 'bg-blue-950/60 text-blue-400 border border-blue-800/40')">
-                    {{ song.source === 'kw' ? '橙源 · 酷我' : (song.source === 'wy' ? '红源 · 网易' : '绿源 · QQ') }}
+                    {{ song.source === 'kw' ? '酷我' : (song.source === 'wy' ? '网易' : 'QQ') }}
                   </span>
                 </div>
-                <div class="text-xs text-zinc-400 truncate mt-0.5">{{ song.artist }}</div>
+                <div class="text-[11px] sm:text-xs text-zinc-400 truncate mt-0.5">{{ song.artist }}</div>
               </div>
             </div>
 
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <button 
-                @click="toggleFavorite(song)" 
+                type="button"
+                @click.stop="toggleFavorite(song)" 
                 :title="isFavorite(song) ? '已收藏' : '收藏'"
-                class="w-8 h-8 rounded-lg flex items-center justify-center transition"
+                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition"
                 :class="isFavorite(song) ? 'text-rose-500 bg-rose-500/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'">
-                <i class="fa-solid fa-heart text-sm"></i>
+                <i class="fa-solid fa-heart text-xs sm:text-sm"></i>
               </button>
 
               <button 
-                @click="parseAndPlay(song)" 
-                class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition flex items-center gap-1">
-                <i class="fa-solid fa-play"></i>
-                <span>播放</span>
+                type="button"
+                @click.stop="parseAndPlay(song)" 
+                class="w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition flex items-center justify-center gap-1">
+                <i class="fa-solid fa-play text-xs sm:text-[11px] ml-0.5 sm:ml-0"></i>
+                <span class="hidden sm:inline">播放</span>
               </button>
             </div>
           </div>
@@ -1692,9 +1721,14 @@
             <span class="font-bold text-zinc-200">TuneFree Next Web Client</span>
             <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-600/20 text-blue-400 border border-blue-500/30">v1.0.0</span>
           </div>
-          <button @click="activeTab = 'logs'" class="text-blue-400 hover:text-blue-300 text-[11px] flex items-center gap-1">
+          <button 
+            type="button"
+            @click="activeTab = 'logs'" 
+            class="px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-blue-400 hover:text-blue-300 text-xs transition flex items-center gap-1.5 border border-white/5">
+            <i class="fa-solid fa-terminal text-[11px]"></i>
             <span>开发者 API 日志</span>
-            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            <span v-if="logs.length" class="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-blue-900/40 text-blue-300 ml-1">{{ logs.length }}</span>
+            <i class="fa-solid fa-chevron-right text-[10px] ml-0.5"></i>
           </button>
         </div>
         <div class="text-[11px] text-zinc-500 leading-relaxed mt-1">
@@ -1706,7 +1740,16 @@
     <!-- TAB 4: API 实时日志 -->
     <main v-show="activeTab === 'logs'" class="flex-1 flex flex-col">
       <div class="flex justify-between items-center mb-3">
-        <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">最近 API 调用轨迹 (调试诊断)</h3>
+        <div class="flex items-center gap-3">
+          <button 
+            type="button"
+            @click="activeTab = 'settings'" 
+            class="px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 text-xs transition flex items-center gap-1.5 border border-white/5">
+            <i class="fa-solid fa-arrow-left text-[11px]"></i>
+            <span>返回设置</span>
+          </button>
+          <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">最近 API 调用轨迹 (调试诊断)</h3>
+        </div>
         <button @click="logs = []" class="text-xs text-zinc-500 hover:text-zinc-300 transition">清空日志</button>
       </div>
 
@@ -2090,10 +2133,6 @@
       <button type="button" @click="activeTab = 'settings'" :class="activeTab === 'settings' ? 'text-blue-400 font-bold' : 'text-zinc-500'" class="flex flex-col items-center gap-1 text-[10px] py-1">
         <i class="fa-solid fa-gear text-base"></i>
         <span>设置</span>
-      </button>
-      <button type="button" @click="activeTab = 'logs'" :class="activeTab === 'logs' ? 'text-cyan-400 font-bold' : 'text-zinc-500'" class="flex flex-col items-center gap-1 text-[10px] py-1">
-        <i class="fa-solid fa-terminal text-base"></i>
-        <span>日志</span>
       </button>
     </nav>
 
