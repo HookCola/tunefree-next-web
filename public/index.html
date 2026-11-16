@@ -137,6 +137,16 @@
             <span>VIP 订阅</span>
           </button>
 
+          <!-- 系统设置 -->
+          <button 
+            type="button"
+            @click="activeTab = 'settings'"
+            :class="activeTab === 'settings' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5' : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border-transparent'"
+            class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl border transition-all text-left">
+            <i class="fa-solid fa-gear w-5 text-center text-base" :class="activeTab === 'settings' ? 'text-blue-400' : 'text-zinc-500'"></i>
+            <span>系统设置</span>
+          </button>
+
           <!-- API 日志 -->
           <button 
             type="button"
@@ -1412,6 +1422,268 @@
       </div>
     </main>
 
+    <!-- TAB: 系统设置 (Settings - App 4.3.7 Style) -->
+    <main v-show="activeTab === 'settings'" class="flex-1 max-w-4xl mx-auto w-full flex flex-col gap-6">
+      
+      <!-- Settings Header -->
+      <div class="flex items-center justify-between pb-2 border-b border-white/5">
+        <div>
+          <h2 class="text-xl font-bold tracking-tight text-white flex items-center gap-2.5">
+            <i class="fa-solid fa-gear text-blue-400"></i>
+            <span>系统设置</span>
+          </h2>
+          <p class="text-xs text-zinc-400 mt-1">定制音频解析偏好、播放行为、视效外观与本地乐库备份</p>
+        </div>
+      </div>
+
+      <!-- Section 1: 音频与播放 -->
+      <section class="bg-white/[0.02] border border-white/10 rounded-2xl p-5 backdrop-blur-xl flex flex-col gap-4">
+        <div class="flex items-center gap-2 text-sm font-semibold text-zinc-200">
+          <i class="fa-solid fa-music text-blue-400"></i>
+          <span>音频解析与播放偏好</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <!-- 默认解析音质 -->
+          <div class="bg-white/[0.02] p-4 rounded-xl border border-white/5 flex flex-col gap-2.5">
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-zinc-300">默认解析音质</span>
+              <span class="text-[10px] text-zinc-500 font-mono">全局记忆</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button 
+                type="button"
+                @click="defaultQuality = '128k'; onDefaultQualityChange()"
+                :class="defaultQuality === '128k' ? 'bg-blue-600 text-white font-semibold shadow' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'"
+                class="py-2 px-2.5 rounded-lg text-center transition">
+                128k (标准)
+              </button>
+              <button 
+                type="button"
+                @click="defaultQuality = '320k'; onDefaultQualityChange()"
+                :class="defaultQuality === '320k' ? 'bg-blue-600 text-white font-semibold shadow' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'"
+                class="py-2 px-2.5 rounded-lg text-center transition">
+                320k (高品质)
+              </button>
+              <button 
+                type="button"
+                @click="defaultQuality = 'flac'; onDefaultQualityChange()"
+                :class="defaultQuality === 'flac' ? 'bg-blue-600 text-white font-semibold shadow' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'"
+                class="py-2 px-2.5 rounded-lg text-center transition">
+                FLAC (无损)
+              </button>
+              <button 
+                type="button"
+                @click="defaultQuality = 'flac24bit'; onDefaultQualityChange()"
+                :class="defaultQuality === 'flac24bit' ? 'bg-blue-600 text-white font-semibold shadow' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'"
+                class="py-2 px-2.5 rounded-lg text-center transition">
+                Hi-Res (24bit)
+              </button>
+            </div>
+            <p class="text-[11px] text-zinc-500 leading-relaxed">
+              试听或收藏歌曲时默认优先请求的音质规格。若音源不支持对应格式，将自动降级为最高可用音质。
+            </p>
+          </div>
+
+          <!-- 默认搜索聚合源 -->
+          <div class="bg-white/[0.02] p-4 rounded-xl border border-white/5 flex flex-col gap-2.5">
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-zinc-300">默认搜索与解析引擎</span>
+              <span class="text-[10px] text-emerald-400 font-mono">双通道</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button 
+                type="button"
+                @click="searchSource = 'qq'"
+                :class="searchSource === 'qq' ? 'bg-emerald-600 text-white font-semibold shadow' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'"
+                class="py-2 px-2.5 rounded-lg text-center transition flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-music"></i>
+                <span>绿源 (QQ)</span>
+              </button>
+              <button 
+                type="button"
+                @click="searchSource = 'wy'"
+                :class="searchSource === 'wy' ? 'bg-rose-600 text-white font-semibold shadow' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'"
+                class="py-2 px-2.5 rounded-lg text-center transition flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-cloud"></i>
+                <span>橙源 (网易云)</span>
+              </button>
+            </div>
+            <p class="text-[11px] text-zinc-500 leading-relaxed">
+              进入搜索页时预选的数据源平台，随时可以在搜索框上方一键即时切换。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: 界面与视效外观 -->
+      <section class="bg-white/[0.02] border border-white/10 rounded-2xl p-5 backdrop-blur-xl flex flex-col gap-4">
+        <div class="flex items-center gap-2 text-sm font-semibold text-zinc-200">
+          <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i>
+          <span>全屏视效与皮肤材质</span>
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <div class="text-xs text-zinc-400">默认动效皮肤预览与选择：</div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <!-- Classic -->
+            <div 
+              @click="switchSkin('classic')"
+              :class="currentSkin === 'classic' ? 'ring-2 ring-blue-500 bg-white/[0.06]' : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.04]'"
+              class="p-2.5 rounded-xl border cursor-pointer transition flex flex-col gap-2">
+              <img src="/assets/player/previews/classic.webp" class="w-full aspect-video rounded-lg object-cover">
+              <div class="text-xs font-medium text-zinc-200 text-center">经典拟真黑胶</div>
+            </div>
+            <!-- Nebbia -->
+            <div 
+              @click="switchSkin('nebbia')"
+              :class="currentSkin === 'nebbia' ? 'ring-2 ring-blue-500 bg-white/[0.06]' : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.04]'"
+              class="p-2.5 rounded-xl border cursor-pointer transition flex flex-col gap-2">
+              <img src="/assets/player/previews/nebbia.webp" class="w-full aspect-video rounded-lg object-cover">
+              <div class="text-xs font-medium text-zinc-200 text-center">水雾雨滴 (Nebbia)</div>
+            </div>
+            <!-- Lumiere -->
+            <div 
+              @click="switchSkin('lumiere')"
+              :class="currentSkin === 'lumiere' ? 'ring-2 ring-blue-500 bg-white/[0.06]' : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.04]'"
+              class="p-2.5 rounded-xl border cursor-pointer transition flex flex-col gap-2">
+              <img src="/assets/player/previews/lumiere.webp" class="w-full aspect-video rounded-lg object-cover">
+              <div class="text-xs font-medium text-zinc-200 text-center">极光流影 (Lumiere)</div>
+            </div>
+            <!-- Hanabi -->
+            <div 
+              @click="switchSkin('hanabi')"
+              :class="currentSkin === 'hanabi' ? 'ring-2 ring-blue-500 bg-white/[0.06]' : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.04]'"
+              class="p-2.5 rounded-xl border cursor-pointer transition flex flex-col gap-2">
+              <img src="/assets/player/previews/hanabi.webp" class="w-full aspect-video rounded-lg object-cover">
+              <div class="text-xs font-medium text-zinc-200 text-center">花火粒子 (Hanabi)</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: 本地乐库数据与备份 -->
+      <section class="bg-white/[0.02] border border-white/10 rounded-2xl p-5 backdrop-blur-xl flex flex-col gap-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 text-sm font-semibold text-zinc-200">
+            <i class="fa-solid fa-database text-emerald-400"></i>
+            <span>乐库数据与备份管理</span>
+          </div>
+          <div class="text-xs text-zinc-400 flex items-center gap-3">
+            <span>收藏: <strong class="text-zinc-200">{{ favoriteTracks.length }}</strong> 首</span>
+            <span>自建: <strong class="text-zinc-200">{{ customPlaylists.length }}</strong> 个</span>
+            <span>订阅: <strong class="text-zinc-200">{{ followedPlaylists.length }}</strong> 个</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <!-- 导出备份 -->
+          <button 
+            type="button"
+            @click="exportDataBackup"
+            class="p-3.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/5 transition flex items-center justify-between text-left group">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center text-sm border border-blue-500/30">
+                <i class="fa-solid fa-file-export"></i>
+              </div>
+              <div>
+                <div class="font-semibold text-zinc-200 group-hover:text-blue-400 transition">导出本地数据备份</div>
+                <div class="text-[10px] text-zinc-500">将收藏与歌单导出为 JSON 备份文件</div>
+              </div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-zinc-600 group-hover:text-zinc-400 transition"></i>
+          </button>
+
+          <!-- 导入备份 -->
+          <label class="p-3.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/5 transition flex items-center justify-between text-left group cursor-pointer">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center text-sm border border-emerald-500/30">
+                <i class="fa-solid fa-file-import"></i>
+              </div>
+              <div>
+                <div class="font-semibold text-zinc-200 group-hover:text-emerald-400 transition">导入并恢复数据备份</div>
+                <div class="text-[10px] text-zinc-500">选择 JSON 备份文件一键恢复</div>
+              </div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-zinc-600 group-hover:text-zinc-400 transition"></i>
+            <input type="file" accept=".json" @change="importDataBackup" class="hidden">
+          </label>
+        </div>
+
+        <div class="pt-3 border-t border-white/5 flex items-center justify-between text-xs">
+          <div class="text-zinc-500 text-[11px]">
+            数据保存在当前浏览器 LocalStorage，支持随时导出与多端迁移。
+          </div>
+          <div class="flex items-center gap-2">
+            <button 
+              type="button"
+              @click="clearHistory" 
+              class="px-3 py-1.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-zinc-400 hover:text-zinc-200 transition">
+              清空历史 ({{ playHistory.length }})
+            </button>
+            <button 
+              type="button"
+              @click="resetAllData" 
+              class="px-3 py-1.5 rounded-xl bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-500/20 transition">
+              重置本地数据
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: 检索与网络 -->
+      <section class="bg-white/[0.02] border border-white/10 rounded-2xl p-5 backdrop-blur-xl flex flex-col gap-4">
+        <div class="flex items-center gap-2 text-sm font-semibold text-zinc-200">
+          <i class="fa-solid fa-network-wired text-cyan-400"></i>
+          <span>检索与网络服务</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div class="bg-white/[0.02] p-4 rounded-xl border border-white/5 flex flex-col gap-2">
+            <span class="font-medium text-zinc-300">搜索每页展示数量</span>
+            <div class="flex items-center gap-2">
+              <button 
+                type="button"
+                v-for="size in [20, 50, 100]" 
+                :key="size"
+                @click="searchPageSize = size; onPageSizeChange()"
+                :class="searchPageSize === size ? 'bg-blue-600 text-white font-semibold' : 'bg-white/[0.04] text-zinc-400'"
+                class="px-3 py-1.5 rounded-lg transition">
+                {{ size }} 条/页
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-white/[0.02] p-4 rounded-xl border border-white/5 flex flex-col gap-1.5">
+            <span class="font-medium text-zinc-300">上游 API 服务节点</span>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="font-mono text-zinc-300">tunefree.sayqz.com (V4 官方协议)</span>
+            </div>
+            <span class="text-[10px] text-emerald-400">服务正常连通</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5: 关于 TuneFree Next -->
+      <section class="p-5 rounded-2xl bg-white/[0.01] border border-white/5 text-xs text-zinc-400 flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <img src="/assets/branding/app_icon.png" class="w-6 h-6 rounded-lg object-cover">
+            <span class="font-bold text-zinc-200">TuneFree Next Web Client</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-600/20 text-blue-400 border border-blue-500/30">v1.0.0</span>
+          </div>
+          <button @click="activeTab = 'logs'" class="text-blue-400 hover:text-blue-300 text-[11px] flex items-center gap-1">
+            <span>开发者 API 日志</span>
+            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </button>
+        </div>
+        <div class="text-[11px] text-zinc-500 leading-relaxed mt-1">
+          本客户端依据 TuneFree Next Android 4.3.7-build-11 架构与通讯规范实现。仅供个人音乐学习与无损解析体验，所有音频素材著作权归原音乐版权方所有。
+        </div>
+      </section>
+    </main>
+
     <!-- TAB 4: API 实时日志 -->
     <main v-show="activeTab === 'logs'" class="flex-1 flex flex-col">
       <div class="flex justify-between items-center mb-3">
@@ -1776,6 +2048,10 @@
       <button type="button" @click="activeTab = 'account'" :class="activeTab === 'account' ? 'text-blue-400 font-bold' : 'text-zinc-500'" class="flex flex-col items-center gap-1 text-[10px] py-1">
         <i class="fa-solid fa-user text-base"></i>
         <span>我的</span>
+      </button>
+      <button type="button" @click="activeTab = 'settings'" :class="activeTab === 'settings' ? 'text-blue-400 font-bold' : 'text-zinc-500'" class="flex flex-col items-center gap-1 text-[10px] py-1">
+        <i class="fa-solid fa-gear text-base"></i>
+        <span>设置</span>
       </button>
       <button type="button" @click="activeTab = 'logs'" :class="activeTab === 'logs' ? 'text-cyan-400 font-bold' : 'text-zinc-500'" class="flex flex-col items-center gap-1 text-[10px] py-1">
         <i class="fa-solid fa-terminal text-base"></i>
@@ -3212,6 +3488,63 @@
           return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
 
+        function exportDataBackup() {
+          const data = {
+            version: '4.3.7-web',
+            exportTime: new Date().toISOString(),
+            favoriteTracks: favoriteTracks.value,
+            customPlaylists: customPlaylists.value,
+            followedPlaylists: followedPlaylists.value,
+            playHistory: playHistory.value,
+            defaultQuality: defaultQuality.value
+          };
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `TuneFree_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+
+        function importDataBackup(event) {
+          const file = event.target.files?.[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const data = JSON.parse(e.target.result);
+              if (Array.isArray(data.favoriteTracks)) favoriteTracks.value = data.favoriteTracks;
+              if (Array.isArray(data.customPlaylists)) customPlaylists.value = data.customPlaylists;
+              if (Array.isArray(data.followedPlaylists)) followedPlaylists.value = data.followedPlaylists;
+              if (Array.isArray(data.playHistory)) playHistory.value = data.playHistory;
+              if (data.defaultQuality) defaultQuality.value = data.defaultQuality;
+              saveLocalFavorites();
+              saveLocalPlaylists();
+              saveLocalFollowedPlaylists();
+              saveLocalHistory();
+              localStorage.setItem('tunefree_default_quality', defaultQuality.value);
+              alert(`【数据恢复成功！】\n已恢复红心收藏 ${favoriteTracks.value.length} 首，自建歌单 ${customPlaylists.value.length} 个，订阅歌单 ${followedPlaylists.value.length} 个。`);
+            } catch (err) {
+              alert('导入失败：无效的 JSON 备份文件！');
+            }
+          };
+          reader.readAsText(file);
+        }
+
+        function resetAllData() {
+          if (!confirm('确定要清空本地所有歌单、收藏与历史记录吗？此操作不可逆！')) return;
+          favoriteTracks.value = [];
+          customPlaylists.value = [];
+          followedPlaylists.value = [];
+          playHistory.value = [];
+          saveLocalFavorites();
+          saveLocalPlaylists();
+          saveLocalFollowedPlaylists();
+          saveLocalHistory();
+          alert('已清空本地数据！');
+        }
+
         return {
           activeTab,
           searchSource,
@@ -3293,7 +3626,10 @@
           copyLogJson,
           reparseFromLog,
           onDefaultQualityChange,
-          formatTime
+          formatTime,
+          exportDataBackup,
+          importDataBackup,
+          resetAllData
         };
       }
     }).mount('#app');
