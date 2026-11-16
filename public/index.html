@@ -2316,10 +2316,9 @@
         <i class="fa-solid fa-magnifying-glass text-base"></i>
         <span>搜索</span>
       </button>
-      <button type="button" @click="activeTab = 'library'" :class="activeTab === 'library' ? 'text-rose-400 font-bold' : 'text-zinc-500'" class="flex flex-col items-center gap-1 text-[10px] py-1 relative">
+      <button type="button" @click="activeTab = 'library'" :class="activeTab === 'library' ? 'text-rose-400 font-bold' : 'text-zinc-500'" class="flex flex-col items-center gap-1 text-[10px] py-1">
         <i class="fa-solid fa-heart text-base"></i>
         <span>乐库</span>
-        <span v-if="favoriteTracks.length" class="absolute -top-1 right-1 w-2 h-2 rounded-full bg-rose-500"></span>
       </button>
       <button type="button" @click="activeTab = 'account'" :class="activeTab === 'account' ? 'text-blue-400 font-bold' : 'text-zinc-500'" class="flex flex-col items-center gap-1 text-[10px] py-1">
         <i class="fa-solid fa-user text-base"></i>
