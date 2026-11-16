@@ -542,31 +542,65 @@
           </div>
 
           <div class="flex items-center gap-2 sm:gap-3">
-            <!-- Page Size Setting Picker -->
-            <label class="flex items-center gap-1.5 cursor-pointer text-zinc-400">
-              <span class="text-[11px]">每页:</span>
-              <select 
-                v-model.number="searchPageSize" 
-                @change="onPageSizeChange"
-                class="bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 hover:border-white/20 rounded-xl px-2.5 py-1 text-zinc-200 focus:outline-none cursor-pointer text-xs shadow-inner transition-all">
-                <option :value="20">20 首</option>
-                <option :value="30">30 首</option>
-                <option :value="50">50 首</option>
-                <option :value="100">100 首</option>
-              </select>
-            </label>
+            <!-- Page Size Setting Picker (Custom Liquid Glass Dropdown) -->
+            <div class="relative page-size-picker-container">
+              <button 
+                type="button"
+                @click.stop="showPageSizeDropdown = !showPageSizeDropdown"
+                class="flex items-center gap-1.5 text-xs text-zinc-300 bg-zinc-950/80 hover:bg-zinc-900 px-2.5 py-1.5 rounded-xl border border-white/10 shadow-inner cursor-pointer transition">
+                <span class="text-zinc-500 text-[11px]">每页:</span>
+                <span class="font-mono font-medium text-zinc-100">{{ searchPageSize }} 首</span>
+                <i class="fa-solid fa-chevron-down text-zinc-500 text-[10px] ml-0.5 transition-transform duration-200" :class="{ 'rotate-180': showPageSizeDropdown }"></i>
+              </button>
 
-            <!-- Default Quality Picker -->
-            <label class="flex items-center gap-1.5 cursor-pointer text-zinc-400">
-              <i class="fa-solid fa-sliders text-blue-400 text-xs"></i>
-              <span class="hidden sm:inline text-[11px]">默认音质:</span>
-              <select v-model="defaultQuality" @change="onDefaultQualityChange" class="bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 hover:border-blue-500/40 rounded-xl px-2.5 py-1 text-zinc-200 focus:outline-none cursor-pointer text-xs font-mono shadow-inner transition-all">
-                <option value="128k">128k</option>
-                <option value="320k">320k</option>
-                <option value="flac">FLAC</option>
-                <option value="flac24bit">Hi-Res</option>
-              </select>
-            </label>
+              <!-- Dropdown Popover -->
+              <div 
+                v-show="showPageSizeDropdown"
+                class="absolute right-0 top-full mt-1.5 z-40 w-32 bg-zinc-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl p-1.5 space-y-1 ring-1 ring-black/50 animate-fade-in">
+                <button 
+                  v-for="size in [20, 30, 50, 100]" 
+                  :key="size"
+                  type="button"
+                  @click="selectPageSize(size)"
+                  class="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs transition"
+                  :class="searchPageSize === size ? 'bg-blue-600/20 text-blue-300 font-semibold border border-blue-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
+                  <span class="font-mono">{{ size }} 首</span>
+                  <i v-if="searchPageSize === size" class="fa-solid fa-check text-blue-400 text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Default Quality Picker (Custom Liquid Glass Dropdown) -->
+            <div class="relative quality-picker-container">
+              <button 
+                type="button"
+                @click.stop="showSearchQualityDropdown = !showSearchQualityDropdown"
+                class="flex items-center gap-1.5 text-xs text-zinc-300 bg-zinc-950/80 hover:bg-zinc-900 px-2.5 py-1.5 rounded-xl border border-white/10 shadow-inner cursor-pointer transition">
+                <i class="fa-solid fa-sliders text-blue-400 text-xs"></i>
+                <span class="hidden sm:inline text-zinc-400 text-[11px]">音质:</span>
+                <span class="font-mono font-semibold text-zinc-100 uppercase">{{ defaultQuality === 'flac24bit' ? 'Hi-Res' : defaultQuality }}</span>
+                <i class="fa-solid fa-chevron-down text-zinc-500 text-[10px] ml-0.5 transition-transform duration-200" :class="{ 'rotate-180': showSearchQualityDropdown }"></i>
+              </button>
+
+              <!-- Dropdown Popover -->
+              <div 
+                v-show="showSearchQualityDropdown"
+                class="absolute right-0 top-full mt-1.5 z-40 w-44 bg-zinc-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl p-1.5 space-y-1 ring-1 ring-black/50 animate-fade-in">
+                <button 
+                  v-for="item in qualityOptions" 
+                  :key="item.value"
+                  type="button"
+                  @click="selectDefaultQuality(item.value)"
+                  class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition"
+                  :class="defaultQuality === item.value ? 'bg-blue-600/20 text-blue-300 font-semibold border border-blue-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono font-bold">{{ item.label }}</span>
+                    <span class="text-[10px] text-zinc-500 font-sans">{{ item.badge }}</span>
+                  </div>
+                  <i v-if="defaultQuality === item.value" class="fa-solid fa-check text-blue-400 text-xs"></i>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -637,16 +671,32 @@
                 {{ formatTime(song.duration) }}
               </span>
 
-              <!-- Individual Quality Pick -->
-              <select 
-                @click.stop 
-                v-model="song.selectedQuality" 
-                class="bg-zinc-950/80 hover:bg-zinc-900 focus:bg-zinc-900 border border-white/10 hover:border-blue-500/40 rounded-xl text-[10px] sm:text-xs px-2 py-1 text-zinc-200 focus:outline-none font-mono shadow-inner cursor-pointer transition-all duration-200">
-                <option value="128k">128k</option>
-                <option value="320k">320k</option>
-                <option value="flac">FLAC</option>
-                <option value="flac24bit">Hi-Res</option>
-              </select>
+              <!-- Individual Quality Pick (Liquid Glass Popover) -->
+              <div class="relative track-quality-picker-container">
+                <button 
+                  type="button"
+                  @click.stop="activeQualityMenuTrackId = (activeQualityMenuTrackId === song.id ? null : song.id)"
+                  class="bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 hover:border-blue-500/40 rounded-xl text-[10px] sm:text-xs px-2 py-1 text-zinc-200 font-mono shadow-inner cursor-pointer transition flex items-center gap-1">
+                  <span>{{ (song.selectedQuality || defaultQuality || '320k') === 'flac24bit' ? 'Hi-Res' : (song.selectedQuality || defaultQuality || '320k').toUpperCase() }}</span>
+                  <i class="fa-solid fa-chevron-down text-[8px] text-zinc-500 transition-transform duration-200" :class="{ 'rotate-180': activeQualityMenuTrackId === song.id }"></i>
+                </button>
+
+                <!-- Dropdown Popover (图 2 同款) -->
+                <div 
+                  v-show="activeQualityMenuTrackId === song.id"
+                  class="absolute right-0 top-full mt-1.5 z-40 w-32 bg-zinc-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl p-1.5 space-y-1 ring-1 ring-black/50 animate-fade-in">
+                  <button 
+                    v-for="item in qualityOptions" 
+                    :key="item.value"
+                    type="button"
+                    @click.stop="selectTrackQuality(song, item.value)"
+                    class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition"
+                    :class="(song.selectedQuality || defaultQuality) === item.value ? 'bg-blue-600/20 text-blue-300 font-semibold border border-blue-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
+                    <span class="font-mono font-medium">{{ item.label }}</span>
+                    <span class="text-[9px] text-zinc-500 font-sans">{{ item.badge }}</span>
+                  </button>
+                </div>
+              </div>
 
               <!-- Parse & Play Button (Icon only on Mobile, Text on Desktop) -->
               <button 
@@ -882,19 +932,36 @@
 
         <!-- Sync Actions & Create Playlist -->
         <div class="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
-          <!-- Global Default Quality for Library -->
-          <div class="flex items-center gap-1.5 text-xs text-zinc-400 bg-zinc-950/80 px-2.5 py-1.5 rounded-xl border border-white/10 shadow-inner">
-            <i class="fa-solid fa-sliders text-blue-400"></i>
-            <span class="hidden sm:inline">默认音质:</span>
-            <select 
-              v-model="defaultQuality" 
-              @change="onDefaultQualityChange"
-              class="bg-zinc-900/90 hover:bg-zinc-900 border border-white/10 hover:border-blue-500/40 rounded-lg px-2 py-0.5 text-zinc-200 text-xs focus:outline-none cursor-pointer font-mono shadow-inner transition">
-              <option value="128k">128k</option>
-              <option value="320k">320k</option>
-              <option value="flac">FLAC</option>
-              <option value="flac24bit">Hi-Res</option>
-            </select>
+          <!-- Global Default Quality for Library (Liquid Glass Custom Dropdown) -->
+          <div class="relative quality-picker-container">
+            <button 
+              type="button"
+              @click.stop="showDefaultQualityDropdown = !showDefaultQualityDropdown"
+              class="flex items-center gap-1.5 text-xs text-zinc-300 bg-zinc-950/80 hover:bg-zinc-900 px-3 py-1.5 rounded-xl border border-white/10 shadow-inner cursor-pointer transition">
+              <i class="fa-solid fa-sliders text-blue-400"></i>
+              <span class="hidden sm:inline text-zinc-400">默认音质:</span>
+              <span class="font-mono font-semibold text-zinc-100 uppercase">{{ defaultQuality === 'flac24bit' ? 'Hi-Res' : defaultQuality }}</span>
+              <i class="fa-solid fa-chevron-down text-zinc-500 text-[10px] ml-0.5 transition-transform duration-200" :class="{ 'rotate-180': showDefaultQualityDropdown }"></i>
+            </button>
+
+            <!-- Custom Liquid Glass Dropdown Popover (图 2 同款极致暗黑圆角) -->
+            <div 
+              v-show="showDefaultQualityDropdown"
+              class="absolute right-0 top-full mt-1.5 z-40 w-44 bg-zinc-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl p-1.5 space-y-1 ring-1 ring-black/50 animate-fade-in">
+              <button 
+                v-for="item in qualityOptions" 
+                :key="item.value"
+                type="button"
+                @click="selectDefaultQuality(item.value)"
+                class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition"
+                :class="defaultQuality === item.value ? 'bg-blue-600/20 text-blue-300 font-semibold border border-blue-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
+                <div class="flex items-center gap-2">
+                  <span class="font-mono font-bold">{{ item.label }}</span>
+                  <span class="text-[10px] text-zinc-500 font-sans">{{ item.badge }}</span>
+                </div>
+                <i v-if="defaultQuality === item.value" class="fa-solid fa-check text-blue-400 text-xs"></i>
+              </button>
+            </div>
           </div>
 
           <div class="flex items-center gap-1.5 sm:gap-2">
@@ -1023,17 +1090,32 @@
                 {{ formatTime(song.duration) }}
               </span>
 
-              <!-- Quality select -->
-              <select 
-                @click.stop
-                v-model="song.selectedQuality" 
-                @change="saveLocalFavorites" 
-                class="bg-zinc-950/80 hover:bg-zinc-900 focus:bg-zinc-900 border border-white/10 hover:border-rose-500/40 rounded-xl text-[10px] sm:text-xs px-2 py-1 text-zinc-200 focus:outline-none font-mono shadow-inner cursor-pointer transition-all duration-200">
-                <option value="128k">128k</option>
-                <option value="320k">320k</option>
-                <option value="flac">FLAC</option>
-                <option value="flac24bit">Hi-Res</option>
-              </select>
+              <!-- Quality select (Liquid Glass Popover) -->
+              <div class="relative track-quality-picker-container">
+                <button 
+                  type="button"
+                  @click.stop="activeQualityMenuTrackId = (activeQualityMenuTrackId === song.id ? null : song.id)"
+                  class="bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 hover:border-rose-500/40 rounded-xl text-[10px] sm:text-xs px-2 py-1 text-zinc-200 font-mono shadow-inner cursor-pointer transition flex items-center gap-1">
+                  <span>{{ (song.selectedQuality || defaultQuality || '320k') === 'flac24bit' ? 'Hi-Res' : (song.selectedQuality || defaultQuality || '320k').toUpperCase() }}</span>
+                  <i class="fa-solid fa-chevron-down text-[8px] text-zinc-500 transition-transform duration-200" :class="{ 'rotate-180': activeQualityMenuTrackId === song.id }"></i>
+                </button>
+
+                <!-- Dropdown Popover (图 2 同款) -->
+                <div 
+                  v-show="activeQualityMenuTrackId === song.id"
+                  class="absolute right-0 top-full mt-1.5 z-40 w-32 bg-zinc-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl p-1.5 space-y-1 ring-1 ring-black/50 animate-fade-in">
+                  <button 
+                    v-for="item in qualityOptions" 
+                    :key="item.value"
+                    type="button"
+                    @click.stop="selectTrackQuality(song, item.value, saveLocalFavorites)"
+                    class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition"
+                    :class="(song.selectedQuality || defaultQuality) === item.value ? 'bg-rose-600/20 text-rose-300 font-semibold border border-rose-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
+                    <span class="font-mono font-medium">{{ item.label }}</span>
+                    <span class="text-[9px] text-zinc-500 font-sans">{{ item.badge }}</span>
+                  </button>
+                </div>
+              </div>
 
               <!-- Play Button (Icon only on Mobile, Text on Desktop) -->
               <button 
@@ -1156,17 +1238,32 @@
                 </div>
               </div>
               <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                <!-- Quality select -->
-                <select 
-                  @click.stop
-                  v-model="song.selectedQuality" 
-                  @change="saveLocalPlaylists" 
-                  class="bg-zinc-950/80 hover:bg-zinc-900 focus:bg-zinc-900 border border-white/10 hover:border-blue-500/40 rounded-xl text-[10px] sm:text-xs px-2 py-1 text-zinc-200 focus:outline-none font-mono shadow-inner cursor-pointer transition-all duration-200">
-                  <option value="128k">128k</option>
-                  <option value="320k">320k</option>
-                  <option value="flac">FLAC</option>
-                  <option value="flac24bit">Hi-Res</option>
-                </select>
+                <!-- Quality select (Liquid Glass Popover) -->
+                <div class="relative track-quality-picker-container">
+                  <button 
+                    type="button"
+                    @click.stop="activeQualityMenuTrackId = (activeQualityMenuTrackId === song.id ? null : song.id)"
+                    class="bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 hover:border-blue-500/40 rounded-xl text-[10px] sm:text-xs px-2 py-1 text-zinc-200 font-mono shadow-inner cursor-pointer transition flex items-center gap-1">
+                    <span>{{ (song.selectedQuality || defaultQuality || '320k') === 'flac24bit' ? 'Hi-Res' : (song.selectedQuality || defaultQuality || '320k').toUpperCase() }}</span>
+                    <i class="fa-solid fa-chevron-down text-[8px] text-zinc-500 transition-transform duration-200" :class="{ 'rotate-180': activeQualityMenuTrackId === song.id }"></i>
+                  </button>
+
+                  <!-- Dropdown Popover (图 2 同款) -->
+                  <div 
+                    v-show="activeQualityMenuTrackId === song.id"
+                    class="absolute right-0 top-full mt-1.5 z-40 w-32 bg-zinc-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl p-1.5 space-y-1 ring-1 ring-black/50 animate-fade-in">
+                    <button 
+                      v-for="item in qualityOptions" 
+                      :key="item.value"
+                      type="button"
+                      @click.stop="selectTrackQuality(song, item.value, saveLocalPlaylists)"
+                      class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition"
+                      :class="(song.selectedQuality || defaultQuality) === item.value ? 'bg-blue-600/20 text-blue-300 font-semibold border border-blue-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
+                      <span class="font-mono font-medium">{{ item.label }}</span>
+                      <span class="text-[9px] text-zinc-500 font-sans">{{ item.badge }}</span>
+                    </button>
+                  </div>
+                </div>
                 <button 
                   type="button"
                   @click.stop="removeTrackFromPlaylist(selectedPlaylist, song.id)" 
@@ -1302,17 +1399,32 @@
                 </div>
               </div>
               <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                <!-- Quality select -->
-                <select 
-                  @click.stop
-                  v-model="song.selectedQuality" 
-                  @change="saveLocalFollowedPlaylists" 
-                  class="bg-zinc-950/80 hover:bg-zinc-900 focus:bg-zinc-900 border border-white/10 hover:border-amber-500/40 rounded-xl text-[10px] sm:text-xs px-2 py-1 text-zinc-200 focus:outline-none font-mono shadow-inner cursor-pointer transition-all duration-200">
-                  <option value="128k">128k</option>
-                  <option value="320k">320k</option>
-                  <option value="flac">FLAC</option>
-                  <option value="flac24bit">Hi-Res</option>
-                </select>
+                <!-- Quality select (Liquid Glass Popover) -->
+                <div class="relative track-quality-picker-container">
+                  <button 
+                    type="button"
+                    @click.stop="activeQualityMenuTrackId = (activeQualityMenuTrackId === song.id ? null : song.id)"
+                    class="bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 hover:border-amber-500/40 rounded-xl text-[10px] sm:text-xs px-2 py-1 text-zinc-200 font-mono shadow-inner cursor-pointer transition flex items-center gap-1">
+                    <span>{{ (song.selectedQuality || defaultQuality || '320k') === 'flac24bit' ? 'Hi-Res' : (song.selectedQuality || defaultQuality || '320k').toUpperCase() }}</span>
+                    <i class="fa-solid fa-chevron-down text-[8px] text-zinc-500 transition-transform duration-200" :class="{ 'rotate-180': activeQualityMenuTrackId === song.id }"></i>
+                  </button>
+
+                  <!-- Dropdown Popover (图 2 同款) -->
+                  <div 
+                    v-show="activeQualityMenuTrackId === song.id"
+                    class="absolute right-0 top-full mt-1.5 z-40 w-32 bg-zinc-900/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl p-1.5 space-y-1 ring-1 ring-black/50 animate-fade-in">
+                    <button 
+                      v-for="item in qualityOptions" 
+                      :key="item.value"
+                      type="button"
+                      @click.stop="selectTrackQuality(song, item.value, saveLocalFollowedPlaylists)"
+                      class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition"
+                      :class="(song.selectedQuality || defaultQuality) === item.value ? 'bg-amber-600/20 text-amber-300 font-semibold border border-amber-500/30' : 'text-zinc-300 hover:bg-white/[0.05] border border-transparent'">
+                      <span class="font-mono font-medium">{{ item.label }}</span>
+                      <span class="text-[9px] text-zinc-500 font-sans">{{ item.badge }}</span>
+                    </button>
+                  </div>
+                </div>
                 <button 
                   type="button"
                   @click.stop="toggleFavorite(song)" 
@@ -2378,6 +2490,16 @@
         const searching = ref(false);
         const songList = ref([]);
         const defaultQuality = ref(localStorage.getItem('tunefree_default_quality') || '320k');
+        const showDefaultQualityDropdown = ref(false);
+        const showSearchQualityDropdown = ref(false);
+        const showPageSizeDropdown = ref(false);
+        const activeQualityMenuTrackId = ref(null);
+        const qualityOptions = [
+          { value: '128k', label: '128k', badge: '标准' },
+          { value: '320k', label: '320k', badge: '极高' },
+          { value: 'flac', label: 'FLAC', badge: '无损' },
+          { value: 'flac24bit', label: 'Hi-Res', badge: '臻品' }
+        ];
         const parsingId = ref(null);
         const currentTrack = ref(null);
         const audioPlayer = ref(null);
@@ -2813,6 +2935,16 @@
             }
             if (!e.target.closest('#mobile-library-tab-picker')) {
               showMobileLibraryTabDropdown.value = false;
+            }
+            if (!e.target.closest('.quality-picker-container')) {
+              showDefaultQualityDropdown.value = false;
+              showSearchQualityDropdown.value = false;
+            }
+            if (!e.target.closest('.page-size-picker-container')) {
+              showPageSizeDropdown.value = false;
+            }
+            if (!e.target.closest('.track-quality-picker-container')) {
+              activeQualityMenuTrackId.value = null;
             }
           });
         });
@@ -3877,6 +4009,27 @@
           alert('已清空本地数据！');
         }
 
+        function selectDefaultQuality(q) {
+          defaultQuality.value = q;
+          onDefaultQualityChange();
+          showDefaultQualityDropdown.value = false;
+          showSearchQualityDropdown.value = false;
+        }
+
+        function selectPageSize(size) {
+          searchPageSize.value = size;
+          onPageSizeChange();
+          showPageSizeDropdown.value = false;
+        }
+
+        function selectTrackQuality(song, q, saveCb) {
+          song.selectedQuality = q;
+          activeQualityMenuTrackId.value = null;
+          if (saveCb && typeof saveCb === 'function') {
+            saveCb();
+          }
+        }
+
         return {
           activeTab,
           searchSource,
@@ -3885,6 +4038,17 @@
           searching,
           songList,
           defaultQuality,
+          showDefaultQualityDropdown,
+          showSearchQualityDropdown,
+          showPageSizeDropdown,
+          activeQualityMenuTrackId,
+          qualityOptions,
+          selectDefaultQuality,
+          selectPageSize,
+          selectTrackQuality,
+          saveLocalFavorites,
+          saveLocalPlaylists,
+          saveLocalFollowedPlaylists,
           parsingId,
           currentTrack,
           audioPlayer,
