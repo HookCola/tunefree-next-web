@@ -52,18 +52,24 @@
       --bg-main: #090a0f;
     }
 
-    /* Light Theme Styling */
+    /* ============================================================
+       LIGHT MODE HIGH-CONTRAST REFINED THEME (WCAG AAA Contrast)
+       ============================================================ */
     html.light body {
-      background-color: #f8fafc !important;
+      background-color: #f1f5f9 !important;
       color: #0f172a !important;
     }
 
+    /* Surface & Container Backgrounds */
+    html.light aside,
+    html.light header,
+    html.light footer,
     html.light .bg-zinc-950,
     html.light .bg-zinc-950\/70,
     html.light .bg-zinc-950\/80,
     html.light .bg-zinc-950\/90 {
-      background-color: rgba(255, 255, 255, 0.94) !important;
-      border-color: rgba(226, 232, 240, 0.8) !important;
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
     }
 
     html.light .bg-zinc-900,
@@ -72,20 +78,26 @@
     html.light .bg-zinc-900\/80,
     html.light .bg-zinc-900\/90,
     html.light .bg-zinc-900\/95 {
-      background-color: rgba(255, 255, 255, 0.88) !important;
-      border-color: rgba(226, 232, 240, 0.8) !important;
-      box-shadow: 0 4px 15px -1px rgba(0, 0, 0, 0.05) !important;
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05) !important;
     }
 
     html.light .bg-zinc-800,
     html.light .bg-zinc-800\/80 {
-      background-color: rgba(241, 245, 249, 0.95) !important;
-      border-color: rgba(203, 213, 225, 0.8) !important;
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
     }
 
+    /* High-Contrast Typography */
+    html.light h1,
+    html.light h2,
+    html.light h3,
+    html.light .font-bold,
+    html.light .font-extrabold,
+    html.light .font-black,
     html.light .text-zinc-100,
-    html.light .text-zinc-200,
-    html.light .text-white {
+    html.light .text-zinc-200 {
       color: #0f172a !important;
     }
 
@@ -93,40 +105,100 @@
       color: #1e293b !important;
     }
 
+    /* Subtitles, Artists, Descriptions - High Contrast Slate */
     html.light .text-zinc-400 {
+      color: #475569 !important;
+    }
+
+    html.light .text-zinc-500,
+    html.light .text-zinc-600 {
       color: #64748b !important;
     }
 
-    html.light .text-zinc-500 {
+    /* CRITICAL: Keep text pure white on colored solid buttons & pills */
+    html.light .bg-blue-600,
+    html.light .bg-blue-600 *,
+    html.light .bg-blue-500,
+    html.light .bg-blue-500 *,
+    html.light .bg-rose-600,
+    html.light .bg-rose-600 *,
+    html.light .bg-amber-600,
+    html.light .bg-amber-600 *,
+    html.light .bg-emerald-600,
+    html.light .bg-emerald-600 *,
+    html.light button.bg-blue-600,
+    html.light button.bg-rose-600 {
+      color: #ffffff !important;
+    }
+
+    /* Inputs & Form Controls */
+    html.light input,
+    html.light textarea,
+    html.light select {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+
+    html.light input::placeholder {
       color: #94a3b8 !important;
     }
 
+    /* Borders */
     html.light .border-white\/5,
     html.light .border-white\/10,
     html.light .border-white\/15,
     html.light .border-zinc-800,
     html.light .border-zinc-800\/60,
-    html.light .border-zinc-800\/80 {
-      border-color: rgba(226, 232, 240, 0.9) !important;
+    html.light .border-zinc-800\/80,
+    html.light .border-zinc-800\/90 {
+      border-color: #e2e8f0 !important;
     }
 
+    /* Subtle Glass Card Layers */
     html.light .bg-white\/\[0\.02\],
     html.light .bg-white\/\[0\.03\],
     html.light .bg-white\/\[0\.04\],
     html.light .bg-white\/\[0\.05\],
     html.light .bg-white\/\[0\.06\],
     html.light .bg-white\/10 {
-      background-color: rgba(241, 245, 249, 0.75) !important;
-      border-color: rgba(226, 232, 240, 0.8) !important;
+      background-color: rgba(248, 250, 252, 0.9) !important;
+      border-color: #e2e8f0 !important;
     }
 
+    /* Hover States in Light Mode */
     html.light .hover\:bg-zinc-800:hover,
+    html.light .hover\:bg-zinc-800\/40:hover,
     html.light .hover\:bg-zinc-800\/80:hover,
+    html.light .hover\:bg-white\/\[0\.04\]:hover,
     html.light .hover\:bg-white\/\[0\.06\]:hover {
-      background-color: rgba(226, 232, 240, 0.7) !important;
+      background-color: #f1f5f9 !important;
     }
 
-    /* Monet Dynamic Theming */
+    /* Playlist Immersive Backdrop Gradient in Light Mode */
+    html.light .playlist-cover-gradient {
+      background: linear-gradient(to bottom, rgba(241, 245, 249, 0.15), rgba(241, 245, 249, 0.85), #f1f5f9) !important;
+    }
+
+    /* Hero Banner on Explore Page */
+    html.light .bg-gradient-to-r.from-blue-900\/40 {
+      background: linear-gradient(to right, #eff6ff, #eef2ff, #f8fafc) !important;
+      border-color: #bfdbfe !important;
+    }
+
+    /* Audio Player in Light Mode */
+    html.light audio {
+      filter: none !important;
+    }
+
+    /* Light Scrollbar */
+    html.light ::-webkit-scrollbar-track { background: #f1f5f9; }
+    html.light ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    html.light ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* ============================================================
+       MONET DYNAMIC ACCENT ENGINE
+       ============================================================ */
     .monet-enabled .bg-blue-600 {
       background-color: var(--monet-primary) !important;
     }
@@ -145,11 +217,11 @@
       background-color: rgba(var(--monet-rgb), 0.16) !important;
     }
     .monet-glow-ambient {
-      background-color: rgba(var(--monet-rgb), 0.15) !important;
+      background-color: rgba(var(--monet-rgb), 0.14) !important;
       transition: background-color 0.8s ease;
     }
 
-    /* Custom Scrollbar */
+    /* Custom Scrollbar Defaults (Dark) */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #18181b; }
     ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
@@ -165,24 +237,26 @@
     /* TuneFree Liquid Glass Dark Select & Option Theming */
     select {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2394a3b8'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
-      background-position: right 0.45rem center;
+      background-position: right 0.5rem center;
       background-repeat: no-repeat;
-      background-size: 1em 1em;
-      padding-right: 1.5rem !important;
+      background-size: 1.25em 1.25em;
+      padding-right: 2rem;
       -webkit-appearance: none;
       -moz-appearance: none;
       appearance: none;
-      color-scheme: dark !important;
     }
-    select:focus {
-      border-color: rgba(59, 130, 246, 0.6) !important;
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.25) !important;
-    }
+
     select option {
-      background-color: #0d0e14 !important;
+      background: #18181b !important;
       color: #f4f4f5 !important;
-      padding: 9px 12px !important;
+      padding: 8px 12px;
     }
+
+    html.light select option {
+      background: #ffffff !important;
+      color: #0f172a !important;
+    }
+
     select option:hover,
     select option:focus,
     select option:checked {
@@ -192,7 +266,7 @@
 
     /* Force dark color scheme for native inputs */
     input[type="checkbox"], input[type="radio"] {
-      color-scheme: dark !important;
+      color-scheme: light dark;
       accent-color: #2563eb;
     }
 
@@ -1147,7 +1221,7 @@
           <img 
             :src="currentPlaylistCover" 
             class="w-full h-full object-cover filter blur-3xl opacity-35 scale-125 saturate-150 transform -translate-y-4" />
-          <div class="absolute inset-0 bg-gradient-to-b from-[#090a0f]/15 via-[#090a0f]/80 to-[#090a0f]"></div>
+          <div class="absolute inset-0 playlist-cover-gradient bg-gradient-to-b from-[#090a0f]/15 via-[#090a0f]/80 to-[#090a0f]"></div>
         </div>
 
         <!-- 顶部导航栏 (清爽留白，与上方账号框彻底隔离) -->
