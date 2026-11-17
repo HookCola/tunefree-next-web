@@ -294,6 +294,29 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  // Image proxy for Monet color extraction (CORS bypass)
+  if (pathname === '/api/proxy-image') {
+    const imgTarget = reqUrl.searchParams.get('url');
+    if (!imgTarget) {
+      res.writeHead(400, { 'Content-Type': 'text/plain' });
+      return res.end('Missing url');
+    }
+    const client = imgTarget.startsWith('https') ? https : http;
+    const imgReq = client.get(imgTarget, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (imgRes) => {
+      res.writeHead(imgRes.statusCode || 200, {
+        'Content-Type': imgRes.headers['content-type'] || 'image/jpeg',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=86400'
+      });
+      imgRes.pipe(res);
+    });
+    imgReq.on('error', (err) => {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('Image proxy error: ' + err.message);
+    });
+    return;
+  }
+
   // 2. Proxy TuneFree V1 APIs (/v1/*)
   if (pathname.startsWith('/v1/')) {
     const targetUrl = new URL(TUNEFREE_TARGET);
