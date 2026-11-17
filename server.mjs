@@ -411,7 +411,11 @@ const server = http.createServer(async (req, res) => {
       '.otf': 'font/otf',
     };
     const contentType = mimeTypes[ext] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': contentType });
+    const headers = { 'Content-Type': contentType };
+    if (ext !== '.html') {
+      headers['Cache-Control'] = 'public, max-age=31536000, immutable';
+    }
+    res.writeHead(200, headers);
     res.end(content);
   } catch (err) {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
