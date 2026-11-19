@@ -192,6 +192,24 @@
       box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.08) !important;
     }
 
+    /* Favorites Featured Card in Light Mode: Soft Rose-Tinted Frosted Glass */
+    html.light .favorites-featured-card {
+      background: linear-gradient(135deg, rgba(255, 241, 242, 0.85), rgba(255, 255, 255, 0.75)) !important;
+      border-color: rgba(254, 205, 211, 0.85) !important;
+      box-shadow: 0 8px 24px -4px rgba(244, 63, 94, 0.08), 0 2px 6px 0 rgba(0, 0, 0, 0.02) !important;
+    }
+    html.light .favorites-cover-box {
+      background: linear-gradient(135deg, rgba(254, 205, 211, 0.4), rgba(255, 228, 230, 0.2)) !important;
+      border-color: rgba(253, 164, 175, 0.6) !important;
+    }
+    html.light .favorites-featured-card .text-zinc-100 {
+      color: #0f172a !important;
+    }
+    html.light .favorites-featured-card .text-zinc-400 {
+      color: #e11d48 !important;
+      font-weight: 600 !important;
+    }
+
     /* Audio Player in Light Mode */
     html.light audio {
       filter: none !important;
@@ -1098,8 +1116,8 @@
             <!-- 喜欢的音乐首个大卡片 -->
             <div 
               @click="openFavoritesView"
-              class="group bg-gradient-to-br from-rose-950/40 to-zinc-900/80 border border-rose-500/20 hover:border-rose-500/40 rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-md backdrop-blur-xl">
-              <div class="aspect-square w-full rounded-xl bg-gradient-to-br from-rose-600/30 to-rose-900/50 border border-rose-500/30 flex items-center justify-center overflow-hidden mb-2.5 relative">
+              class="favorites-featured-card group bg-zinc-900/60 hover:bg-zinc-800/80 border border-rose-500/20 hover:border-rose-500/40 rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-md backdrop-blur-xl">
+              <div class="favorites-cover-box aspect-square w-full rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center overflow-hidden mb-2.5 relative">
                 <img v-if="favoriteTracks[0]?.cover" :src="favoriteTracks[0]?.cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 <i v-else class="fa-solid fa-heart text-4xl text-rose-500 drop-shadow-lg"></i>
                 <div class="absolute inset-0 bg-black/15"></div>
