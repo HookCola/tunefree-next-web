@@ -16,7 +16,7 @@
       } catch (e) {}
     })();
   </script>
-  <title>Apple Music - Web Player (TuneFree Next)</title>
+  <title>TuneFree Next - 自由畅享纯净音乐</title>
   <!-- Apple SF Pro Font System -->
   <link rel="stylesheet" href="//www.apple.com/wss/fonts?families=SF+Pro,v4%7CSF+Pro+Icons,v1&display=swap">
   <!-- Tailwind CSS -->
@@ -94,6 +94,27 @@
       padding-right: 0 !important;
       border-width: 0 !important;
       pointer-events: none;
+    }
+
+    /* ============================================================
+       LYRIC THEME & PREVIEW STAGE (Immune to light mode text overrides)
+       ============================================================ */
+    .lyric-stage-box,
+    html.light .lyric-stage-box {
+      background: radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.7) 0%, rgba(13, 14, 21, 0.96) 100%), #0d0e15 !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35) !important;
+    }
+    .lyric-preview-inactive,
+    html.light .lyric-preview-inactive {
+      color: rgba(255, 255, 255, 0.45) !important;
+    }
+    .lyric-preview-active,
+    html.light .lyric-preview-active,
+    .lyric-line-active,
+    html.light .lyric-line-active {
+      color: var(--lyric-highlight-clr, #ffffff) !important;
+      text-shadow: 0 0 16px var(--lyric-glow-clr, rgba(255, 255, 255, 0.45)), 0 2px 6px rgba(0, 0, 0, 0.7) !important;
     }
 
     /* ============================================================
@@ -533,20 +554,17 @@
     <div class="ambient-orb-tertiary absolute -bottom-[20%] left-[25%] w-[550px] h-[550px] rounded-full bg-cyan-500/[0.06] blur-[140px] transition-all duration-700"></div>
   </div>
 
-  <div id="app" :class="{ 'monet-enabled': enableMonet }" class="relative z-10 flex flex-col md:flex-row min-h-screen w-full">
+  <div id="app" :class="{ 'monet-enabled': enableMonet }" :style="{ '--lyric-highlight-clr': lyricHighlightColor, '--lyric-glow-clr': lyricHighlightColor + 'aa' }" class="relative z-10 flex flex-col md:flex-row min-h-screen w-full">
 
-    <!-- APPLE MUSIC OFFICIAL SIDEBAR -->
+    <!-- SIDEBAR -->
     <aside class="hidden md:flex flex-col w-60 shrink-0 h-screen sticky top-0 bg-white/95 dark:bg-zinc-950/90 backdrop-blur-2xl border-r border-zinc-200/80 dark:border-white/10 p-5 justify-between select-none z-30 overflow-y-auto">
       <div class="flex flex-col gap-5">
-        <!-- Apple Music Logo -->
-        <div class="flex items-center gap-2 px-2 py-1 text-zinc-900 dark:text-white cursor-pointer select-none" @click="activeTab = 'explore'">
-          <svg class="w-6 h-6 fill-current text-zinc-900 dark:text-white shrink-0" viewBox="0 0 170 170">
-            <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.5-7.73-11.43-14.07-5.33-8.6-9.67-18.42-13.01-29.47-3.34-11.05-5.01-21.72-5.01-32 0-14.78 3.81-27.14 11.43-37.07 7.62-9.93 17.15-14.97 28.6-15.13 4.46 0 9.49 1.16 15.08 3.49 5.59 2.33 9.4 3.56 11.43 3.69 1.63 0 5.67-1.34 12.11-4.02 6.44-2.68 11.83-3.88 16.16-3.6 12.83.65 23.04 5.37 30.63 14.15-11.19 6.74-16.68 16.19-16.48 28.34.2 9.57 3.92 17.58 11.16 24.03 7.24 6.45 15.7 10.15 25.39 11.1-2.06 6.31-4.67 13.57-7.83 21.77zM119.22 31.84c0-7.39 2.66-14.41 7.99-21.05 5.33-6.64 11.96-10.59 19.89-11.85.22 1.09.33 2.18.33 3.27 0 7.39-2.77 14.47-8.31 21.23-5.54 6.76-12.23 10.63-20.08 11.61-.11-1.09-.17-2.18-.17-3.21z"/>
-          </svg>
-          <span class="font-bold text-xl tracking-tight text-zinc-900 dark:text-white">Music</span>
+        <!-- App Brand Logo (保留Logo在上头) -->
+        <div class="flex items-center px-1 py-1 cursor-pointer select-none" @click="activeTab = 'explore'" title="TuneFree Next">
+          <img src="/assets/branding/app_icon.png" class="w-10 h-10 rounded-2xl object-cover shadow-sm ring-1 ring-zinc-200 dark:ring-white/10 hover:scale-105 transition active:scale-95" alt="TuneFree Next">
         </div>
 
-        <!-- Navigation Menu (Apple Music Modern Sidebar) -->
+        <!-- Navigation Menu -->
         <nav class="flex flex-col gap-1 text-sm font-medium">
           <!-- 搜索 -->
           <button 
@@ -568,15 +586,6 @@
             <span>主页</span>
           </button>
 
-          <!-- 新发现 (类别与榜单) -->
-          <button 
-            type="button"
-            @click="activeTab = 'explore'"
-            class="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5">
-            <i class="fa-solid fa-border-all w-5 text-center text-sm text-zinc-400"></i>
-            <span>新发现</span>
-          </button>
-
           <!-- 我的乐库 -->
           <button 
             type="button"
@@ -590,16 +599,6 @@
             <span v-if="favoriteTracks.length" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-500 font-bold">
               {{ favoriteTracks.length }}
             </span>
-          </button>
-
-          <!-- VIP 订阅 -->
-          <button 
-            type="button"
-            @click="activeTab = 'products'"
-            :class="activeTab === 'products' ? 'bg-zinc-200/90 dark:bg-white/15 text-zinc-900 dark:text-white font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5'"
-            class="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left">
-            <i class="fa-solid fa-gem w-5 text-center text-sm" :class="activeTab === 'products' ? 'text-amber-500' : 'text-zinc-400'"></i>
-            <span>VIP 订阅</span>
           </button>
 
           <!-- 系统设置 -->
@@ -616,12 +615,15 @@
 
       <!-- Bottom User & App Action -->
       <div class="pt-4 flex flex-col gap-3">
-        <div class="flex items-center justify-between px-1">
-          <a href="https://music.apple.com" target="_blank" class="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1 transition">
-            <span>在“音乐”中打开</span>
-            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-          </a>
+        <div class="flex items-center justify-end px-1">
           <button 
+            type="button"
+            @click="setThemeMode(themeMode === 'dark' ? 'light' : (themeMode === 'light' ? 'auto' : 'dark'))" 
+            :title="`当前主题: ${themeMode === 'auto' ? '跟随系统' : (themeMode === 'dark' ? '深色' : '浅色')}`" 
+            class="w-7 h-7 rounded-full bg-zinc-100 dark:bg-white/10 flex items-center justify-center text-xs text-zinc-700 dark:text-zinc-300 hover:scale-105 transition">
+            <i class="fa-solid" :class="{ 'fa-moon text-indigo-400': themeMode === 'dark', 'fa-sun text-amber-500': themeMode === 'light', 'fa-circle-half-stroke text-blue-400': themeMode === 'auto' }"></i>
+          </button>
+        </div>
             type="button"
             @click="setThemeMode(themeMode === 'dark' ? 'light' : (themeMode === 'light' ? 'auto' : 'dark'))" 
             :title="`当前主题: ${themeMode === 'auto' ? '跟随系统' : (themeMode === 'dark' ? '深色' : '浅色')}`" 
@@ -667,7 +669,7 @@
         </div>
       </header>
 
-      <!-- Apple Music Unified Top Search & Source Bar -->
+      <!-- Unified Top Search & Source Bar -->
       <div class="sticky top-0 z-20 pt-3.5 pb-2 px-3 sm:px-8 bg-inherit backdrop-blur-xl">
         <div class="max-w-2xl mx-auto flex items-center justify-center gap-2 sm:gap-2.5 transition-all duration-300">
           
@@ -734,7 +736,7 @@
         <!-- TAB 0: 探索发现 (Explore) -->
         <main v-show="activeTab === 'explore'" class="flex-1 flex flex-col gap-8">
           
-          <!-- Apple Music Category Tiles (类别浏览) -->
+          <!-- Category Tiles (类别浏览) -->
           <section class="flex flex-col gap-3.5">
             <div class="flex items-center justify-between">
               <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
@@ -751,7 +753,7 @@
                 class="relative h-28 sm:h-32 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:shadow-xl shadow-sm select-none group bg-gradient-to-br"
                 :class="cat.bg">
                 <div class="flex items-center justify-between z-10">
-                  <span class="text-[10px] font-bold text-white/80 uppercase tracking-widest">Apple Music</span>
+                  <span class="text-[10px] font-bold text-white/80 uppercase tracking-widest">精选专区</span>
                   <i class="fa-solid fa-play text-white/0 group-hover:text-white/95 transition-all text-xs"></i>
                 </div>
                 <div class="z-10 font-bold text-sm sm:text-base text-white tracking-tight leading-tight">
@@ -1857,6 +1859,66 @@
             </button>
           </div>
         </div>
+
+        <!-- VIP 订阅与会员特权专区 (加进用户页面) -->
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center text-sm shadow-sm">
+                <i class="fa-solid fa-crown"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-zinc-100 flex items-center gap-2">
+                  <span>VIP 会员订阅计划</span>
+                  <span v-if="isMember" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-normal">尊贵会员生效中</span>
+                </h3>
+                <p class="text-[11px] text-zinc-400">解锁 FLAC / Hi-Res 24bit 超高清无损音质与专属高速通道</p>
+              </div>
+            </div>
+            <button 
+              type="button" 
+              @click="fetchProducts" 
+              class="text-xs text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1">
+              <i class="fa-solid fa-rotate text-[10px]"></i>
+              <span>刷新套餐</span>
+            </button>
+          </div>
+
+          <!-- 产品套餐列表 -->
+          <div v-if="products.length" class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+            <div 
+              v-for="p in products" 
+              :key="p.id" 
+              class="bg-zinc-950/80 border border-zinc-800/80 hover:border-amber-500/40 rounded-xl p-4 flex flex-col justify-between transition group shadow-sm">
+              <div>
+                <div class="flex justify-between items-start mb-2">
+                  <div>
+                    <div class="font-bold text-sm text-zinc-100 group-hover:text-amber-400 transition">{{ p.name }}</div>
+                    <span class="text-[10px] font-mono text-zinc-500">SKU: {{ p.sku }}</span>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-xs text-amber-500 font-bold">¥</span>
+                    <span class="text-xl font-bold font-mono text-amber-500">{{ (p.priceCents / 100).toFixed(2) }}</span>
+                    <div v-if="p.durationDays" class="text-[10px] text-zinc-500">{{ p.durationDays }} 天</div>
+                  </div>
+                </div>
+                <p class="text-[11px] text-zinc-400 line-clamp-2 mb-3">{{ p.description || '解锁无损 FLAC 音质与云端多端同步' }}</p>
+              </div>
+
+              <button 
+                type="button"
+                @click="createOrder(p)" 
+                :disabled="orderLoading"
+                class="w-full py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/10 active:scale-95">
+                <i class="fa-solid fa-qrcode text-[11px]"></i>
+                <span>微信扫码订阅</span>
+              </button>
+            </div>
+          </div>
+          <div v-else class="text-center py-6 text-xs text-zinc-500">
+            暂无上架套餐，请稍后刷新
+          </div>
+        </div>
       </div>
 
       <!-- Auth Form (Not logged in) -->
@@ -2015,66 +2077,62 @@
           <span>{{ authMessage }}</span>
         </div>
       </div>
-    </main>
-
-    <!-- TAB 3: 订阅套餐 (Products) -->
-    <main v-show="activeTab === 'products'" class="flex-1 max-w-4xl mx-auto w-full">
-      <div class="text-center mb-8">
-        <h2 class="text-xl font-bold text-zinc-100">TuneFree 会员订阅计划</h2>
-        <p class="text-xs text-zinc-400 mt-1">解锁无损音质（FLAC / Hi-Res）解析与全平台云同步特权</p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div 
-          v-for="p in products" 
-          :key="p.id" 
-          class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col justify-between hover:border-blue-500/50 transition relative overflow-hidden group">
-          
-          <div class="absolute -top-12 -right-12 w-28 h-28 bg-blue-600/10 rounded-full blur-2xl group-hover:bg-blue-600/20 transition"></div>
-
-          <div>
-            <div class="flex justify-between items-start mb-4">
-              <div>
-                <h3 class="text-base font-bold text-zinc-100">{{ p.name }}</h3>
-                <span class="text-[10px] font-mono text-blue-400 px-2 py-0.5 rounded bg-blue-950/40 border border-blue-800/40 mt-1 inline-block">
-                  SKU: {{ p.sku }}
-                </span>
+        <!-- VIP 订阅与会员特权专区 (加进用户页面) -->
+        <div class="mt-6 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center text-sm shadow-sm">
+                <i class="fa-solid fa-crown"></i>
               </div>
-              <div class="text-right">
-                <div class="text-2xl font-bold font-mono text-zinc-100">
-                  <span class="text-xs text-zinc-400">¥</span>{{ (p.priceCents / 100).toFixed(2) }}
-                </div>
-                <div v-if="p.durationDays" class="text-[10px] text-zinc-500">时长 {{ p.durationDays }} 天</div>
+              <div>
+                <h3 class="text-sm font-bold text-zinc-100">VIP 会员订阅计划</h3>
+                <p class="text-[11px] text-zinc-400">解锁 FLAC / Hi-Res 24bit 超高清无损音质与专属高速通道</p>
               </div>
             </div>
-
-            <p class="text-xs text-zinc-400 mb-6 leading-relaxed">{{ p.description || '官方正版会员特权，即买即用' }}</p>
-
-            <ul class="text-xs text-zinc-300 space-y-2 mb-6">
-              <li class="flex items-center gap-2">
-                <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                <span>解锁 320k / FLAC / Hi-Res 24bit 超高清音质</span>
-              </li>
-              <li class="flex items-center gap-2">
-                <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                <span>全平台歌曲收藏与歌单双向云同步</span>
-              </li>
-              <li class="flex items-center gap-2">
-                <i class="fa-solid fa-check text-emerald-400 text-xs"></i>
-                <span>独立设备会话与专属高速解析通道</span>
-              </li>
-            </ul>
+            <button 
+              type="button" 
+              @click="fetchProducts" 
+              class="text-xs text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1">
+              <i class="fa-solid fa-rotate text-[10px]"></i>
+              <span>刷新套餐</span>
+            </button>
           </div>
 
-          <button 
-            @click="createOrder(p)" 
-            :disabled="orderLoading"
-            class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/20">
-            <i class="fa-solid fa-qrcode"></i>
-            <span>立即购买 (微信扫码)</span>
-          </button>
+          <!-- 产品套餐列表 -->
+          <div v-if="products.length" class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+            <div 
+              v-for="p in products" 
+              :key="p.id" 
+              class="bg-zinc-950/80 border border-zinc-800/80 hover:border-amber-500/40 rounded-xl p-4 flex flex-col justify-between transition group shadow-sm">
+              <div>
+                <div class="flex justify-between items-start mb-2">
+                  <div>
+                    <div class="font-bold text-sm text-zinc-100 group-hover:text-amber-400 transition">{{ p.name }}</div>
+                    <span class="text-[10px] font-mono text-zinc-500">SKU: {{ p.sku }}</span>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-xs text-amber-500 font-bold">¥</span>
+                    <span class="text-xl font-bold font-mono text-amber-500">{{ (p.priceCents / 100).toFixed(2) }}</span>
+                    <div v-if="p.durationDays" class="text-[10px] text-zinc-500">{{ p.durationDays }} 天</div>
+                  </div>
+                </div>
+                <p class="text-[11px] text-zinc-400 line-clamp-2 mb-3">{{ p.description || "官方正版会员特权，即买即用" }}</p>
+              </div>
+
+              <button 
+                type="button"
+                @click="createOrder(p)" 
+                :disabled="orderLoading"
+                class="w-full py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/10 active:scale-95">
+                <i class="fa-solid fa-qrcode text-[11px]"></i>
+                <span>微信扫码订阅</span>
+              </button>
+            </div>
+          </div>
+          <div v-else class="text-center py-6 text-xs text-zinc-500">
+            暂无上架套餐，请稍后刷新
+          </div>
         </div>
-      </div>
     </main>
 
     <!-- TAB: 系统设置 (Settings) -->
@@ -2346,17 +2404,17 @@
           </div>
 
           <!-- 歌词实时视效预览窗 (Live Preview Box) -->
-          <div class="relative w-full py-5 px-6 rounded-2xl bg-zinc-950/90 border border-white/10 flex flex-col items-center justify-center gap-2 overflow-hidden shadow-2xl text-center select-none">
+          <div class="lyric-stage-box relative w-full py-6 px-6 rounded-2xl flex flex-col items-center justify-center gap-2.5 overflow-hidden text-center select-none shadow-2xl">
             <!-- Ambient backdrop glow matching current lyric color -->
-            <div class="absolute inset-0 opacity-15 blur-2xl pointer-events-none transition-all duration-500" :style="{ backgroundColor: lyricHighlightColor }"></div>
+            <div class="absolute inset-0 opacity-20 blur-2xl pointer-events-none transition-all duration-500" :style="{ backgroundColor: lyricHighlightColor }"></div>
             
-            <div class="text-zinc-500 text-xs transition-opacity duration-300">已经习惯有你在我的周围帮我擦掉那颗眼角的泪</div>
+            <div class="lyric-preview-inactive text-xs transition-opacity duration-300">已经习惯有你在我的周围帮我擦掉那颗眼角的泪</div>
             <div 
-              class="text-sm sm:text-base font-bold scale-105 transition-all duration-300 py-1.5 px-4 rounded-xl relative z-10"
-              :style="{ color: lyricHighlightColor, textShadow: '0 0 20px ' + lyricHighlightColor + 'aa, 0 2px 8px rgba(0,0,0,0.85)' }">
+              class="lyric-preview-active text-base sm:text-lg font-bold scale-105 transition-all duration-300 py-1 px-4 rounded-xl relative z-10"
+              :style="{ color: lyricHighlightColor + ' !important', textShadow: '0 0 16px ' + lyricHighlightColor + 'aa, 0 2px 6px rgba(0,0,0,0.85) !important' }">
               今年当雪花再来临的时候在你右边的人会是谁
             </div>
-            <div class="text-zinc-500 text-xs transition-opacity duration-300">已经做好所有该做的准备却还是这样的方式结尾</div>
+            <div class="lyric-preview-inactive text-xs transition-opacity duration-300">已经做好所有该做的准备却还是这样的方式结尾</div>
           </div>
 
           <!-- 色彩预设与自定义选色器 -->
@@ -2618,7 +2676,7 @@
       </div> <!-- End of max-w-6xl container -->
     </div> <!-- End of RIGHT MAIN CONTENT WORKSPACE -->
 
-    <!-- Apple Music Floating Pill Player Dock (最新现代版悬浮胶囊播放岛) -->
+    <!-- Floating Pill Player Dock (最新现代版悬浮胶囊播放岛) -->
     <div 
       class="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-[94%] sm:w-[88%] md:w-[760px] lg:w-[860px] select-none transition-all duration-300">
       
@@ -2637,7 +2695,7 @@
       <div 
         class="apple-player-dock flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 rounded-full backdrop-blur-3xl bg-white/85 dark:bg-zinc-900/85 border border-black/[0.08] dark:border-white/15 shadow-[0_12px_36px_rgba(0,0,0,0.16)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.65)]">
         
-        <!-- Left Section: Playback Controls (Apple Music style) -->
+        <!-- Left Section: Playback Controls -->
         <div class="flex items-center gap-1 sm:gap-2 shrink-0">
           <button 
             type="button"
@@ -2714,8 +2772,8 @@
 
           <!-- When idle (No track playing) -->
           <div v-else class="flex items-center gap-2 py-1 text-zinc-400 dark:text-zinc-500">
-            <i class="fa-brands fa-apple text-lg"></i>
-            <span class="text-xs font-medium">Apple Music · 就绪</span>
+            <i class="fa-solid fa-music text-sm text-red-500"></i>
+            <span class="text-xs font-medium">TuneFree · 随心听</span>
           </div>
         </div>
 
@@ -2832,8 +2890,8 @@
               v-for="(line, idx) in parsedLyrics" 
               :key="idx"
               :id="`overlay-line-${idx}`"
-              :class="currentLyricIndex === idx ? 'font-bold scale-105 drop-shadow-lg py-3' : 'text-zinc-400/60 text-xs md:text-sm hover:text-zinc-200 py-2'"
-              :style="currentLyricIndex === idx ? { color: lyricHighlightColor, textShadow: '0 0 20px ' + lyricHighlightColor + 'aa, 0 2px 8px rgba(0,0,0,0.85)', fontSize: '1.25rem' } : {}"
+              :class="currentLyricIndex === idx ? 'lyric-line-active font-bold scale-105 drop-shadow-lg py-3' : 'lyric-line-inactive text-zinc-400/60 text-xs md:text-sm hover:text-zinc-200 py-2'"
+              :style="currentLyricIndex === idx ? { color: lyricHighlightColor + ' !important', textShadow: '0 0 20px ' + lyricHighlightColor + 'aa, 0 2px 8px rgba(0,0,0,0.85) !important', fontSize: '1.25rem' } : {}"
               class="transition-all duration-300 cursor-pointer select-none leading-relaxed"
               @click="seekTo(line.startTime)">
               {{ line.fullText }}
@@ -2919,8 +2977,8 @@
               v-for="(line, idx) in parsedLyrics" 
               :key="idx"
               :id="`classic-line-${idx}`"
-              :class="currentLyricIndex === idx ? 'font-bold scale-105 drop-shadow-md py-3' : 'text-zinc-400 text-xs md:text-sm hover:text-zinc-200 py-2'"
-              :style="currentLyricIndex === idx ? { color: lyricHighlightColor, textShadow: '0 0 20px ' + lyricHighlightColor + 'aa, 0 2px 8px rgba(0,0,0,0.85)', fontSize: '1.25rem' } : {}"
+              :class="currentLyricIndex === idx ? 'lyric-line-active font-bold scale-105 drop-shadow-md py-3' : 'lyric-line-inactive text-zinc-400 text-xs md:text-sm hover:text-zinc-200 py-2'"
+              :style="currentLyricIndex === idx ? { color: lyricHighlightColor + ' !important', textShadow: '0 0 20px ' + lyricHighlightColor + 'aa, 0 2px 8px rgba(0,0,0,0.85) !important', fontSize: '1.25rem' } : {}"
               class="transition-all duration-300 cursor-pointer select-none leading-relaxed"
               @click="seekTo(line.startTime)">
               {{ line.fullText }}
@@ -3169,14 +3227,14 @@
           localStorage.setItem('tunefree_lyric_color', color);
         }
 
-        // Apple Music Categories Data (25 Modern Editorial Tiles)
+        // Categories Data (25 Modern Editorial Tiles)
         const appleCategories = [
           { name: '国语流行', bg: 'from-[#e11d48] to-[#be123c]', query: '国语流行' },
           { name: 'K-Pop', bg: 'from-[#f472b6] to-[#db2777]', query: 'K-Pop' },
           { name: '国际流行', bg: 'from-[#ec4899] to-[#be185d]', query: '欧美流行' },
           { name: '粤语流行', bg: 'from-[#b91c1c] to-[#881337]', query: '粤语流行' },
           { name: '嘻哈/说唱', bg: 'from-[#2563eb] to-[#1d4ed8]', query: '说唱' },
-          { name: 'Apple Music 独家', bg: 'from-[#f43f5e] to-[#e11d48]', query: '热歌' },
+          { name: '编辑精选', bg: 'from-[#f43f5e] to-[#e11d48]', query: '热歌' },
           { name: 'C-Pop', bg: 'from-[#fb7185] to-[#f43f5e]', query: '华语' },
           { name: 'R&B', bg: 'from-[#7c3aed] to-[#6d28d9]', query: 'R&B' },
           { name: '睡觉 / 减压', bg: 'from-[#818cf8] to-[#6366f1]', query: '助眠' },
