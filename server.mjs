@@ -209,7 +209,7 @@ const server = http.createServer(async (req, res) => {
 
     try {
       if (source === 'qq') {
-        const resp = await fetch(`https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg?type=1&json=1&utf8=1&onlysong=0&disstid=${encodeURIComponent(id)}&loginUin=0&hostUin=0&format=json&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq.json&needNewCode=0`, {
+        const resp = await fetch(`https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg?type=1&json=1&utf8=1&onlysong=0&disstid=${encodeURIComponent(id)}&loginUin=0&hostUin=0&format=json&inCharset=utf8&outCharset=utf-8&notice=0&platform=yqq.json&needNewCode=0&song_begin=0&song_num=500`, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Referer': 'https://y.qq.com/'
@@ -250,7 +250,7 @@ const server = http.createServer(async (req, res) => {
         return;
       } else {
         // Default to Netease Cloud Music (wy)
-        const resp = await fetch(`https://music.163.com/api/v6/playlist/detail?id=${encodeURIComponent(id)}&n=500`, {
+        const resp = await fetch(`https://music.163.com/api/v6/playlist/detail?id=${encodeURIComponent(id)}&n=1000`, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Referer': 'https://music.163.com/'
@@ -258,7 +258,30 @@ const server = http.createServer(async (req, res) => {
         });
         const data = await resp.json();
         const pl = data.playlist || {};
-        const tracks = (pl.tracks || []).map(t => {
+        let rawTracks = pl.tracks || [];
+
+        // NetEase's /api/v6/playlist/detail truncates tracks to 10 by default; full IDs are in trackIds
+        const trackIds = (pl.trackIds || []).map(t => ({ id: t.id }));
+        if (trackIds.length > rawTracks.length) {
+          try {
+            // Batch fetch full details in chunks of up to 500
+            const batchIds = trackIds.slice(0, 500);
+            const songResp = await fetch(`https://music.163.com/api/v3/song/detail?c=${encodeURIComponent(JSON.stringify(batchIds))}`, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Referer': 'https://music.163.com/'
+              }
+            });
+            const songData = await songResp.json();
+            if (songData.songs && songData.songs.length) {
+              rawTracks = songData.songs;
+            }
+          } catch (batchErr) {
+            console.warn('[server.mjs] failed to batch fetch netease song detail:', batchErr.message);
+          }
+        }
+
+        const tracks = rawTracks.map(t => {
           const ar = (t.ar || []).map(a => a.name).join(' / ');
           const cover = (t.al && t.al.picUrl) ? t.al.picUrl : '/assets/branding/app_icon.png';
           const dur = t.dt ? Math.floor(t.dt / 1000) : 0;
