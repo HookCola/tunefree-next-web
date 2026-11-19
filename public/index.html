@@ -333,14 +333,68 @@
       background-color: rgba(var(--monet-rgb), 0.16) !important;
     }
 
-    /* Sidebar Active Tab Monet Glow */
+    /* Sidebar Active Tab Monet & High-Contrast Typography */
     .monet-enabled nav button[class*="bg-blue-600/15"] {
       background-color: rgba(var(--monet-rgb), 0.16) !important;
-      border-color: rgba(var(--monet-rgb), 0.35) !important;
+      border-color: rgba(var(--monet-rgb), 0.4) !important;
       box-shadow: 0 4px 18px -2px rgba(var(--monet-rgb), 0.22) !important;
     }
-    .monet-enabled nav button[class*="bg-blue-600/15"] * {
+    .monet-enabled nav button[class*="bg-blue-600/15"] i {
       color: var(--monet-primary) !important;
+    }
+
+    /* Universal High-Contrast Sidebar Nav Option Text */
+    aside nav button {
+      color: #e4e4e7;
+      font-weight: 500;
+    }
+    aside nav button span {
+      color: #e4e4e7;
+    }
+    aside nav button:hover {
+      color: #ffffff;
+    }
+    aside nav button:hover span {
+      color: #ffffff;
+    }
+    aside nav button[class*="bg-blue-600/15"] {
+      color: #ffffff !important;
+      font-weight: 600 !important;
+    }
+    aside nav button[class*="bg-blue-600/15"] span {
+      color: #ffffff !important;
+      font-weight: 600 !important;
+    }
+
+    /* In Light Mode: Nav text matches former TuneFree Next title's crisp slate `#0f172a` */
+    html.light aside nav button,
+    html.light aside nav button span {
+      color: #0f172a !important;
+      font-weight: 600 !important;
+    }
+    html.light aside nav button:hover {
+      background-color: rgba(255, 255, 255, 0.9) !important;
+      color: #0f172a !important;
+    }
+    html.light aside nav button:hover span {
+      color: #0f172a !important;
+    }
+    html.light aside nav button[class*="bg-blue-600/15"],
+    html.light.monet-enabled aside nav button[class*="bg-blue-600/15"] {
+      background-color: rgba(var(--monet-rgb, 59, 130, 246), 0.14) !important;
+      border-color: rgba(var(--monet-rgb, 59, 130, 246), 0.35) !important;
+    }
+    html.light aside nav button[class*="bg-blue-600/15"] span,
+    html.light.monet-enabled aside nav button[class*="bg-blue-600/15"] span {
+      color: #0f172a !important;
+      font-weight: 700 !important;
+    }
+    html.light aside nav button[class*="bg-blue-600/15"] i,
+    html.light.monet-enabled aside nav button[class*="bg-blue-600/15"] i {
+      color: var(--monet-primary, #2563eb) !important;
+    }
+    html.light aside nav button .font-mono {
+      font-weight: 700 !important;
     }
 
     /* Bottom Player Bar & Volume/Progress Monet Dynamic Theming */
@@ -437,21 +491,12 @@
 
   <div id="app" :class="{ 'monet-enabled': enableMonet }" class="relative z-10 flex flex-col md:flex-row min-h-screen w-full">
 
-    <!-- DESKTOP SIDESTAGE RAIL (App 4.3.7 Native Layout) -->
+    <!-- DESKTOP SIDESTAGE RAIL -->
     <aside class="hidden md:flex flex-col w-64 shrink-0 h-screen sticky top-0 bg-zinc-950/70 backdrop-blur-2xl border-r border-white/5 p-4 justify-between select-none z-30 overflow-y-auto overflow-x-hidden">
-      <!-- Top Branding -->
+      <!-- Top Branding: Logo Only -->
       <div class="flex flex-col gap-4">
-        <div class="flex items-center gap-3 px-1">
-          <img src="/assets/branding/app_icon.png" alt="TuneFree" class="w-10 h-10 rounded-2xl shadow-xl shadow-blue-500/25 object-cover ring-1 ring-white/10">
-          <div>
-            <div class="font-bold text-base tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent flex items-center gap-1.5">
-              <span>TuneFree Next</span>
-            </div>
-            <div class="text-[10px] text-zinc-400 flex items-center gap-1.5 mt-0.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span class="font-mono text-zinc-300">v4.3.7 原生体验</span>
-            </div>
-          </div>
+        <div class="flex items-center justify-center py-2 px-1">
+          <img src="/assets/branding/app_icon.png" alt="TuneFree" class="w-12 h-12 rounded-2xl shadow-xl shadow-blue-500/20 object-cover ring-1 ring-white/10 hover:scale-105 transition-transform duration-300 cursor-pointer" @click="activeTab = 'explore'" title="TuneFree Next">
         </div>
 
         <!-- Navigation Menu -->
@@ -460,9 +505,9 @@
           <button 
             type="button"
             @click="activeTab = 'explore'"
-            :class="activeTab === 'explore' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5' : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border-transparent'"
+            :class="activeTab === 'explore' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5 font-semibold' : 'text-zinc-200 hover:text-white hover:bg-white/[0.04] border-transparent'"
             class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl border transition-all text-left">
-            <i class="fa-solid fa-compass w-5 text-center text-base" :class="activeTab === 'explore' ? 'text-blue-400' : 'text-zinc-500'"></i>
+            <i class="fa-solid fa-compass w-5 text-center text-base" :class="activeTab === 'explore' ? 'text-blue-400' : 'text-zinc-400'"></i>
             <span>探索发现</span>
           </button>
 
@@ -470,9 +515,9 @@
           <button 
             type="button"
             @click="activeTab = 'search'"
-            :class="activeTab === 'search' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5' : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border-transparent'"
+            :class="activeTab === 'search' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5 font-semibold' : 'text-zinc-200 hover:text-white hover:bg-white/[0.04] border-transparent'"
             class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl border transition-all text-left">
-            <i class="fa-solid fa-magnifying-glass w-5 text-center text-base" :class="activeTab === 'search' ? 'text-blue-400' : 'text-zinc-500'"></i>
+            <i class="fa-solid fa-magnifying-glass w-5 text-center text-base" :class="activeTab === 'search' ? 'text-blue-400' : 'text-zinc-400'"></i>
             <span>聚合搜索</span>
           </button>
 
@@ -480,13 +525,13 @@
           <button 
             type="button"
             @click="activeTab = 'library'"
-            :class="activeTab === 'library' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5' : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border-transparent'"
+            :class="activeTab === 'library' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5 font-semibold' : 'text-zinc-200 hover:text-white hover:bg-white/[0.04] border-transparent'"
             class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl border transition-all text-left">
             <div class="flex items-center gap-3">
-              <i class="fa-solid fa-heart w-5 text-center text-base" :class="activeTab === 'library' ? 'text-rose-500' : 'text-zinc-500'"></i>
+              <i class="fa-solid fa-heart w-5 text-center text-base" :class="activeTab === 'library' ? 'text-rose-500' : 'text-zinc-400'"></i>
               <span>我的乐库</span>
             </div>
-            <span v-if="favoriteTracks.length" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/20">
+            <span v-if="favoriteTracks.length" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/20 font-bold">
               {{ favoriteTracks.length }}
             </span>
           </button>
@@ -495,10 +540,10 @@
           <button 
             type="button"
             @click="activeTab = 'account'"
-            :class="activeTab === 'account' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5' : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border-transparent'"
+            :class="activeTab === 'account' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5 font-semibold' : 'text-zinc-200 hover:text-white hover:bg-white/[0.04] border-transparent'"
             class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl border transition-all text-left">
             <div class="flex items-center gap-3">
-              <i class="fa-solid fa-user w-5 text-center text-base" :class="activeTab === 'account' ? 'text-blue-400' : 'text-zinc-500'"></i>
+              <i class="fa-solid fa-user w-5 text-center text-base" :class="activeTab === 'account' ? 'text-blue-400' : 'text-zinc-400'"></i>
               <span>个人中心</span>
             </div>
             <span v-if="!user" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
@@ -508,9 +553,9 @@
           <button 
             type="button"
             @click="activeTab = 'products'"
-            :class="activeTab === 'products' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5' : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border-transparent'"
+            :class="activeTab === 'products' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5 font-semibold' : 'text-zinc-200 hover:text-white hover:bg-white/[0.04] border-transparent'"
             class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl border transition-all text-left">
-            <i class="fa-solid fa-gem w-5 text-center text-base" :class="activeTab === 'products' ? 'text-amber-400' : 'text-zinc-500'"></i>
+            <i class="fa-solid fa-gem w-5 text-center text-base" :class="activeTab === 'products' ? 'text-amber-400' : 'text-zinc-400'"></i>
             <span>VIP 订阅</span>
           </button>
 
@@ -518,9 +563,9 @@
           <button 
             type="button"
             @click="activeTab = 'settings'"
-            :class="activeTab === 'settings' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5' : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border-transparent'"
+            :class="activeTab === 'settings' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5 font-semibold' : 'text-zinc-200 hover:text-white hover:bg-white/[0.04] border-transparent'"
             class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl border transition-all text-left">
-            <i class="fa-solid fa-gear w-5 text-center text-base" :class="activeTab === 'settings' ? 'text-blue-400' : 'text-zinc-500'"></i>
+            <i class="fa-solid fa-gear w-5 text-center text-base" :class="activeTab === 'settings' ? 'text-blue-400' : 'text-zinc-400'"></i>
             <span>系统设置</span>
           </button>
 
@@ -528,13 +573,13 @@
           <button 
             type="button"
             @click="activeTab = 'logs'"
-            :class="activeTab === 'logs' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5' : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border-transparent'"
+            :class="activeTab === 'logs' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5 font-semibold' : 'text-zinc-200 hover:text-white hover:bg-white/[0.04] border-transparent'"
             class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl border transition-all text-left">
             <div class="flex items-center gap-3">
-              <i class="fa-solid fa-terminal w-5 text-center text-base" :class="activeTab === 'logs' ? 'text-cyan-400' : 'text-zinc-500'"></i>
+              <i class="fa-solid fa-terminal w-5 text-center text-base" :class="activeTab === 'logs' ? 'text-cyan-400' : 'text-zinc-400'"></i>
               <span>API 日志</span>
             </div>
-            <span v-if="logs.length" class="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400">
+            <span v-if="logs.length" class="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-bold">
               {{ logs.length }}
             </span>
           </button>
@@ -594,10 +639,7 @@
       <header class="md:hidden flex items-center justify-between px-4 py-3 bg-zinc-950/80 backdrop-blur-2xl border-b border-white/5 sticky top-0 z-30">
         <div class="flex items-center gap-2.5">
           <img src="/assets/branding/app_icon.png" class="w-8 h-8 rounded-xl object-cover ring-1 ring-white/10">
-          <div>
-            <div class="font-bold text-sm tracking-tight text-white leading-tight">TuneFree Next</div>
-            <div class="text-[9px] text-zinc-400 font-mono">v4.3.7 Style</div>
-          </div>
+          <div class="font-bold text-sm tracking-tight text-white leading-tight">TuneFree Next</div>
         </div>
         <div class="flex items-center gap-2">
           <button 
@@ -620,7 +662,7 @@
       <!-- MAIN CONTAINER -->
       <div class="max-w-6xl w-full mx-auto p-3 sm:p-4 md:p-8 flex-1 flex flex-col min-w-0 overflow-x-hidden">
 
-        <!-- TAB 0: 探索发现 (Explore - App 4.3.7 Native Style) -->
+        <!-- TAB 0: 探索发现 (Explore) -->
         <main v-show="activeTab === 'explore'" class="flex-1 flex flex-col gap-8">
           <!-- Hero Banner / Daily Mix -->
           <div class="relative overflow-hidden rounded-3xl p-6 md:p-8 bg-gradient-to-r from-blue-900/40 via-indigo-900/30 to-zinc-900/40 border border-white/10 shadow-2xl backdrop-blur-xl">
@@ -1710,7 +1752,7 @@
       </div>
     </div>
     
-    <!-- Global Track Action Sheet (Native Android 4.3.7 Style) -->
+    <!-- Global Track Action Sheet -->
     <div 
       v-if="showActionSheet && activeActionSheetTrack" 
       class="fixed inset-0 z-50 flex flex-col justify-end">
@@ -2094,7 +2136,7 @@
       </div>
     </main>
 
-    <!-- TAB: 系统设置 (Settings - App 4.3.7 Style) -->
+    <!-- TAB: 系统设置 (Settings) -->
     <main v-show="activeTab === 'settings'" class="flex-1 max-w-4xl mx-auto w-full flex flex-col gap-6">
       
       <!-- Settings Header -->
@@ -2338,8 +2380,72 @@
             </div>
 
             <p class="text-[11px] text-zinc-400 leading-relaxed">
-              开启后，每次切歌将自动从专辑封面提取主色与辅色，全站背景光晕、卡片边框、按钮与播放器高光均会动态优雅晕染（深浅色模式均完美适配，还原原生 Android 客户端顶级质感）。
+              开启后，每次切歌将自动从专辑封面提取主色与辅色，全站背景光晕、卡片边框、按钮与播放器高光均会动态优雅晕染（深浅色模式均完美适配）。
             </p>
+          </div>
+        </div>
+
+        <!-- 歌词高亮视觉与实时预览卡片 (Lyric Highlight Customization & Live Preview Card) -->
+        <div class="bg-white/[0.03] p-5 rounded-2xl border border-white/10 backdrop-blur-xl flex flex-col gap-4 text-xs shadow-sm">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-align-center text-rose-400 text-sm"></i>
+              <div>
+                <span class="font-bold text-sm text-zinc-100">歌词高亮色彩与实时预览</span>
+                <span class="ml-2 text-[10px] font-mono text-zinc-400">独立视觉设定，默认纯白极简清晰</span>
+              </div>
+            </div>
+            <button 
+              type="button"
+              @click="setLyricHighlightColor('#ffffff')" 
+              class="text-[11px] text-zinc-400 hover:text-white px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition active:scale-95 flex items-center gap-1.5">
+              <i class="fa-solid fa-rotate-left text-[10px]"></i>
+              <span>恢复默认纯白</span>
+            </button>
+          </div>
+
+          <!-- 歌词实时视效预览窗 (Live Preview Box) -->
+          <div class="relative w-full py-5 px-6 rounded-2xl bg-zinc-950/90 border border-white/10 flex flex-col items-center justify-center gap-2 overflow-hidden shadow-2xl text-center select-none">
+            <!-- Ambient backdrop glow matching current lyric color -->
+            <div class="absolute inset-0 opacity-15 blur-2xl pointer-events-none transition-all duration-500" :style="{ backgroundColor: lyricHighlightColor }"></div>
+            
+            <div class="text-zinc-500 text-xs transition-opacity duration-300">已经习惯有你在我的周围帮我擦掉那颗眼角的泪</div>
+            <div 
+              class="text-sm sm:text-base font-bold scale-105 transition-all duration-300 py-1.5 px-4 rounded-xl relative z-10"
+              :style="{ color: lyricHighlightColor, textShadow: '0 0 20px ' + lyricHighlightColor + 'aa, 0 2px 8px rgba(0,0,0,0.85)' }">
+              今年当雪花再来临的时候在你右边的人会是谁
+            </div>
+            <div class="text-zinc-500 text-xs transition-opacity duration-300">已经做好所有该做的准备却还是这样的方式结尾</div>
+          </div>
+
+          <!-- 色彩预设与自定义选色器 -->
+          <div class="flex flex-col gap-2.5">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-zinc-400">预选色彩或调色板精细微调：</span>
+              <span class="font-mono text-zinc-300 font-semibold px-2 py-0.5 rounded bg-white/5 border border-white/10">{{ lyricHighlightColor }}</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button 
+                v-for="preset in lyricColorPresets" 
+                :key="preset.color"
+                type="button"
+                @click="setLyricHighlightColor(preset.color)"
+                :class="lyricHighlightColor.toLowerCase() === preset.color.toLowerCase() ? 'ring-2 ring-blue-500 bg-white/[0.09] shadow-sm' : 'bg-white/[0.03] hover:bg-white/[0.06] opacity-80 hover:opacity-100'"
+                class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-white/10 text-xs transition-all active:scale-95">
+                <span class="w-3.5 h-3.5 rounded-full border border-white/20 shrink-0 shadow-inner" :style="{ backgroundColor: preset.color }"></span>
+                <span class="text-[11px] text-zinc-200">{{ preset.name }}</span>
+              </button>
+
+              <!-- Custom Color Picker Input -->
+              <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs cursor-pointer transition active:scale-95 shadow-sm">
+                <input 
+                  type="color" 
+                  :value="lyricHighlightColor" 
+                  @input="setLyricHighlightColor($event.target.value)" 
+                  class="w-4 h-4 rounded cursor-pointer border-0 bg-transparent p-0">
+                <span class="text-[11px] text-zinc-300">自定义调色盘</span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -2504,7 +2610,7 @@
           </button>
         </div>
         <div class="text-[11px] text-zinc-500 leading-relaxed mt-1">
-          本客户端依据 TuneFree Next Android 4.3.7-build-11 架构与通讯规范实现。仅供个人音乐学习与无损解析体验，所有音频素材著作权归原音乐版权方所有。
+          网页版基于 TuneFree Next V4 API，借鉴部分 App 功能但作为单独版本开发。仅供个人音乐学习与无损解析体验，所有音频素材著作权归原音乐版权方所有。
         </div>
       </section>
     </main>
@@ -2571,7 +2677,7 @@
       </div> <!-- End of max-w-6xl container -->
     </div> <!-- End of RIGHT MAIN CONTENT WORKSPACE -->
 
-    <!-- Floating Audio Player Bar (App 4.3.7 Liquid Glass Dock) -->
+    <!-- Floating Audio Player Bar (Liquid Glass Dock) -->
     <footer v-if="currentTrack" class="fixed bottom-14 md:bottom-0 md:left-64 left-0 right-0 bg-zinc-950/90 backdrop-blur-2xl border-t border-white/10 p-2.5 md:p-3 z-30 shadow-2xl transition-all duration-300">
       <div class="max-w-5xl mx-auto flex items-center justify-between gap-2.5 md:gap-4">
         <!-- Track Info (Click to open full-screen visualizer & lyrics) -->
@@ -2738,7 +2844,8 @@
               v-for="(line, idx) in parsedLyrics" 
               :key="idx"
               :id="`overlay-line-${idx}`"
-              :class="currentLyricIndex === idx ? 'text-white text-base md:text-xl font-bold scale-110 drop-shadow-lg text-blue-400 py-3' : 'text-zinc-400/60 text-xs md:text-sm hover:text-zinc-200 py-2'"
+              :class="currentLyricIndex === idx ? 'font-bold scale-105 drop-shadow-lg py-3' : 'text-zinc-400/60 text-xs md:text-sm hover:text-zinc-200 py-2'"
+              :style="currentLyricIndex === idx ? { color: lyricHighlightColor, textShadow: '0 0 20px ' + lyricHighlightColor + 'aa, 0 2px 8px rgba(0,0,0,0.85)', fontSize: '1.25rem' } : {}"
               class="transition-all duration-300 cursor-pointer select-none leading-relaxed"
               @click="seekTo(line.startTime)">
               {{ line.fullText }}
@@ -2824,7 +2931,8 @@
               v-for="(line, idx) in parsedLyrics" 
               :key="idx"
               :id="`classic-line-${idx}`"
-              :class="currentLyricIndex === idx ? 'text-white text-base md:text-xl font-bold scale-110 text-blue-400 drop-shadow-md py-3' : 'text-zinc-500 text-xs md:text-sm hover:text-zinc-300 py-2'"
+              :class="currentLyricIndex === idx ? 'font-bold scale-105 drop-shadow-md py-3' : 'text-zinc-400 text-xs md:text-sm hover:text-zinc-200 py-2'"
+              :style="currentLyricIndex === idx ? { color: lyricHighlightColor, textShadow: '0 0 20px ' + lyricHighlightColor + 'aa, 0 2px 8px rgba(0,0,0,0.85)', fontSize: '1.25rem' } : {}"
               class="transition-all duration-300 cursor-pointer select-none leading-relaxed"
               @click="seekTo(line.startTime)">
               {{ line.fullText }}
@@ -3052,6 +3160,25 @@
           };
           document.documentElement.style.setProperty('--monet-primary', '#2563eb');
           document.documentElement.style.setProperty('--monet-rgb', '37, 99, 235');
+        }
+
+        // Lyric Highlight Color & Customization
+        const lyricHighlightColor = ref(localStorage.getItem('tunefree_lyric_color') || '#ffffff');
+        const lyricColorPresets = [
+          { name: '纯净白 (默认)', color: '#ffffff' },
+          { name: '经典蓝', color: '#3b82f6' },
+          { name: '荧光绿', color: '#10b981' },
+          { name: '极光青', color: '#06b6d4' },
+          { name: '樱花粉', color: '#f43f5e' },
+          { name: '活力橙', color: '#f97316' },
+          { name: '暮光紫', color: '#a855f7' },
+          { name: '金芒黄', color: '#eab308' }
+        ];
+
+        function setLyricHighlightColor(color) {
+          if (!color) return;
+          lyricHighlightColor.value = color;
+          localStorage.setItem('tunefree_lyric_color', color);
         }
 
         function rgbToHsl(r, g, b) {
@@ -4758,6 +4885,9 @@
           enableMonet,
           toggleMonet,
           monetPalette,
+          lyricHighlightColor,
+          lyricColorPresets,
+          setLyricHighlightColor,
           activeTab,
           searchSource,
           showMobileSearchSourceDropdown,
