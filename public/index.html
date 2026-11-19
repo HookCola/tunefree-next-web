@@ -55,6 +55,10 @@
       --bg-main: #090a0f;
     }
 
+    [v-cloak] {
+      display: none !important;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "SF Pro Text", "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
     }
@@ -554,7 +558,7 @@
     <div class="ambient-orb-tertiary absolute -bottom-[20%] left-[25%] w-[550px] h-[550px] rounded-full bg-cyan-500/[0.06] blur-[140px] transition-all duration-700"></div>
   </div>
 
-  <div id="app" :class="{ 'monet-enabled': enableMonet }" :style="{ '--lyric-highlight-clr': lyricHighlightColor, '--lyric-glow-clr': lyricHighlightColor + 'aa' }" class="relative z-10 flex flex-col md:flex-row min-h-screen w-full">
+  <div id="app" v-cloak :class="{ 'monet-enabled': enableMonet }" :style="{ '--lyric-highlight-clr': lyricHighlightColor, '--lyric-glow-clr': lyricHighlightColor + 'aa' }" class="relative z-10 flex flex-col md:flex-row min-h-screen w-full">
 
     <!-- SIDEBAR -->
     <aside class="hidden md:flex flex-col w-60 shrink-0 h-screen sticky top-0 bg-white/95 dark:bg-zinc-950/90 backdrop-blur-2xl border-r border-zinc-200/80 dark:border-white/10 p-5 justify-between select-none z-30 overflow-y-auto">
@@ -624,15 +628,8 @@
             <i class="fa-solid" :class="{ 'fa-moon text-indigo-400': themeMode === 'dark', 'fa-sun text-amber-500': themeMode === 'light', 'fa-circle-half-stroke text-blue-400': themeMode === 'auto' }"></i>
           </button>
         </div>
-            type="button"
-            @click="setThemeMode(themeMode === 'dark' ? 'light' : (themeMode === 'light' ? 'auto' : 'dark'))" 
-            :title="`当前主题: ${themeMode === 'auto' ? '跟随系统' : (themeMode === 'dark' ? '深色' : '浅色')}`" 
-            class="w-7 h-7 rounded-full bg-zinc-100 dark:bg-white/10 flex items-center justify-center text-xs text-zinc-700 dark:text-zinc-300 hover:scale-105 transition">
-            <i class="fa-solid" :class="{ 'fa-moon text-indigo-400': themeMode === 'dark', 'fa-sun text-amber-500': themeMode === 'light', 'fa-circle-half-stroke text-blue-400': themeMode === 'auto' }"></i>
-          </button>
-        </div>
         
-        <!-- User Pill Button (Apple style: Black capsule button) -->
+        <!-- User Pill Button (Black capsule button) -->
         <button 
           @click="activeTab = 'account'" 
           class="w-full py-2.5 px-4 rounded-full bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-semibold text-xs shadow-md transition flex items-center justify-center gap-2 active:scale-95">
