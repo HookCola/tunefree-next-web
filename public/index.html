@@ -55,10 +55,6 @@
       --bg-main: #090a0f;
     }
 
-    [v-cloak] {
-      display: none !important;
-    }
-
     body {
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "SF Pro Text", "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
     }
@@ -575,7 +571,7 @@
     <div class="ambient-orb-tertiary absolute -bottom-[20%] left-[25%] w-[550px] h-[550px] rounded-full bg-cyan-500/[0.06] blur-[140px] transition-all duration-700"></div>
   </div>
 
-  <div id="app" v-cloak :class="{ 'monet-enabled': enableMonet }" :style="{ '--lyric-highlight-clr': lyricHighlightColor, '--lyric-glow-clr': lyricHighlightColor + 'aa' }" class="relative z-10 flex flex-col md:flex-row min-h-screen w-full">
+  <div id="app" :class="{ 'monet-enabled': enableMonet }" :style="{ '--lyric-highlight-clr': lyricHighlightColor, '--lyric-glow-clr': lyricHighlightColor + 'aa' }" class="relative z-10 flex flex-col md:flex-row min-h-screen w-full">
 
     <!-- SIDEBAR -->
     <aside class="hidden md:flex flex-col w-60 shrink-0 h-screen sticky top-0 bg-white/95 dark:bg-zinc-950/90 backdrop-blur-2xl border-r border-zinc-200/80 dark:border-white/10 p-5 justify-between select-none z-30 overflow-y-auto">
@@ -766,7 +762,7 @@
       <div class="max-w-6xl w-full mx-auto p-3 sm:p-4 md:p-8 flex-1 flex flex-col min-w-0 overflow-x-hidden">
 
         <!-- TAB 0: 探索发现 (Explore) -->
-        <main v-show="activeTab === 'explore'" :key="activeTab === 'explore' ? 'explore-tab' : ''" class="apple-page-enter flex-1 flex flex-col gap-8">
+        <main v-show="activeTab === 'explore'"  class="apple-page-enter flex-1 flex flex-col gap-8">
           
           <!-- Category Tiles (类别浏览) -->
           <section class="flex flex-col gap-3.5">
@@ -895,7 +891,7 @@
         </main>
 
         <!-- TAB 1: 音乐搜索与解析 -->
-        <main v-show="activeTab === 'search'" :key="activeTab === 'search' ? 'search-tab' : ''" class="apple-page-enter flex-1 flex flex-col">
+        <main v-show="activeTab === 'search'"  class="apple-page-enter flex-1 flex flex-col">
       <!-- Notice when not logged in -->
       <div v-if="!user" class="bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs p-3.5 rounded-xl mb-4 flex items-center justify-between">
         <div class="flex items-center gap-2">
@@ -1293,7 +1289,7 @@
     </main>
 
     <!-- TAB 1.5: 我的音乐库 (Library: 收藏与歌单) -->
-    <main v-show="activeTab === 'library'" :key="activeTab === 'library' ? 'library-tab' : ''" class="apple-page-enter flex-1 flex flex-col">
+    <main v-show="activeTab === 'library'"  class="apple-page-enter flex-1 flex flex-col">
       <!-- 1. 资料库总览主页 (librarySubView === 'index') -->
       <div v-if="librarySubView === 'index'" class="space-y-6">
         <!-- 资料库顶部 Header -->
@@ -1840,7 +1836,7 @@
         </button>
       </div>
     </div>
-    <main v-show="activeTab === 'account'" :key="activeTab === 'account' ? 'account-tab' : ''" class="apple-page-enter flex-1 max-w-2xl mx-auto w-full">
+    <main v-show="activeTab === 'account'"  class="apple-page-enter flex-1 max-w-2xl mx-auto w-full">
       <!-- Logged In State -->
       <div v-if="user" class="space-y-6">
         <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-sm">
@@ -2109,7 +2105,7 @@
     </main>
 
     <!-- TAB: 系统设置 (Settings) -->
-    <main v-show="activeTab === 'settings'" :key="activeTab === 'settings' ? 'settings-tab' : ''" class="apple-page-enter flex-1 max-w-4xl mx-auto w-full flex flex-col gap-6">
+    <main v-show="activeTab === 'settings'"  class="apple-page-enter flex-1 max-w-4xl mx-auto w-full flex flex-col gap-6">
       
       <!-- Settings Header -->
       <div class="flex items-center justify-between pb-2 border-b border-white/5">
@@ -2588,7 +2584,7 @@
     </main>
 
     <!-- TAB 4: API 实时日志 -->
-    <main v-show="activeTab === 'logs'" :key="activeTab === 'logs' ? 'logs-tab' : ''" class="apple-page-enter flex-1 flex flex-col">
+    <main v-show="activeTab === 'logs'"  class="apple-page-enter flex-1 flex flex-col">
       <div class="flex justify-between items-center mb-3">
         <div class="flex items-center gap-3">
           <button 
@@ -3078,6 +3074,18 @@
 
     createApp({
       setup() {
+        // Account / Auth
+        const authMode = ref('login');
+        const authLoading = ref(false);
+        const authMessage = ref('');
+        const authSuccess = ref(false);
+        const user = ref(null);
+        const listeningStats = ref({});
+        const deviceId = ref('');
+        const loginForm = ref({ email: '', password: '', rememberMe: true });
+        const registerForm = ref({ email: '', password: '', displayName: '' });
+        const verifyToken = ref('');
+
         const activeTab = ref('explore');
         const searchSource = ref(localStorage.getItem('tunefree_default_search_source') || 'qq');
         const keyword = ref('');
@@ -3701,18 +3709,6 @@
           }
           animFrameId = requestAnimationFrame(loop);
         }
-
-        // Account / Auth
-        const authMode = ref('login');
-        const authLoading = ref(false);
-        const authMessage = ref('');
-        const authSuccess = ref(false);
-        const user = ref(null);
-        const listeningStats = ref({});
-        const deviceId = ref('');
-        const loginForm = ref({ email: '', password: '', rememberMe: true });
-        const registerForm = ref({ email: '', password: '', displayName: '' });
-        const verifyToken = ref('');
 
         // Products & Orders
         const products = ref([]);
