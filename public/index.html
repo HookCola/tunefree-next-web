@@ -499,6 +499,12 @@
             </div>
           </div>
           <div class="flex items-center gap-1 shrink-0">
+            <button 
+              @click="setThemeMode(themeMode === 'dark' ? 'light' : (themeMode === 'light' ? 'auto' : 'dark'))" 
+              :title="`当前主题: ${themeMode === 'auto' ? '跟随系统' : (themeMode === 'dark' ? '深色' : '浅色')} (点击切换)`" 
+              class="text-zinc-400 hover:text-amber-400 p-1.5 transition text-xs">
+              <i class="fa-solid" :class="{ 'fa-moon text-indigo-400': themeMode === 'dark', 'fa-sun text-amber-500': themeMode === 'light', 'fa-circle-half-stroke text-blue-400': themeMode === 'auto' }"></i>
+            </button>
             <button @click="syncLibrary" title="云端双向同步" :disabled="syncing" class="text-zinc-400 hover:text-blue-400 p-1.5 transition text-xs">
               <i class="fa-solid fa-cloud-arrow-up" :class="{ 'animate-spin': syncing }"></i>
             </button>
@@ -507,10 +513,17 @@
             </button>
           </div>
         </div>
-        <div v-else>
-          <button @click="activeTab = 'account'" class="w-full py-2.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
+        <div v-else class="flex items-center gap-2">
+          <button @click="activeTab = 'account'" class="flex-1 py-2.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
             <i class="fa-solid fa-user"></i>
             <span>登录 / 注册</span>
+          </button>
+          <button 
+            type="button"
+            @click="setThemeMode(themeMode === 'dark' ? 'light' : (themeMode === 'light' ? 'auto' : 'dark'))" 
+            :title="`当前主题: ${themeMode === 'auto' ? '跟随系统' : (themeMode === 'dark' ? '深色' : '浅色')} (点击切换)`" 
+            class="p-2.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-300 transition text-xs">
+            <i class="fa-solid" :class="{ 'fa-moon text-indigo-400': themeMode === 'dark', 'fa-sun text-amber-500': themeMode === 'light', 'fa-circle-half-stroke text-blue-400': themeMode === 'auto' }"></i>
           </button>
         </div>
       </div>
@@ -529,6 +542,13 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
+          <button 
+            type="button"
+            @click="setThemeMode(themeMode === 'dark' ? 'light' : (themeMode === 'light' ? 'auto' : 'dark'))" 
+            :title="`当前主题: ${themeMode === 'auto' ? '跟随系统' : (themeMode === 'dark' ? '深色' : '浅色')}`" 
+            class="w-8 h-8 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-xs text-zinc-300 active:scale-95 transition">
+            <i class="fa-solid" :class="{ 'fa-moon text-indigo-400': themeMode === 'dark', 'fa-sun text-amber-500': themeMode === 'light', 'fa-circle-half-stroke text-blue-400': themeMode === 'auto' }"></i>
+          </button>
           <button v-if="user" @click="activeTab = 'account'" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 text-xs text-zinc-300">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             <span class="truncate max-w-[90px]">{{ user.displayName }}</span>
@@ -3431,6 +3451,7 @@
 
         // Initialize deviceId & Persistent Session
         onMounted(async () => {
+          applyTheme(themeMode.value);
           let savedId = localStorage.getItem('tunefree_device_id');
           if (!savedId) {
             savedId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
@@ -3593,6 +3614,11 @@
 
               // Add to Play History
               addToPlayHistory(song);
+
+              // Dynamically extract Monet colors if enabled
+              if (enableMonet.value && song.cover) {
+                extractMonetColors(song.cover);
+              }
             } else {
               const msg = data.error?.message || '解析失败，可能需要先登录或开通会员权益';
               alert(`[解析失败] ${msg}`);
@@ -4644,6 +4670,12 @@
         }
 
         return {
+          themeMode,
+          setThemeMode,
+          applyTheme,
+          enableMonet,
+          toggleMonet,
+          monetPalette,
           activeTab,
           searchSource,
           showMobileSearchSourceDropdown,
