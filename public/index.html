@@ -663,11 +663,11 @@
         </div>
       </header>
 
-      <!-- Unified Top Search & Header Bar (含右上角独立头像与模式切换) -->
-      <div class="sticky top-0 z-30 pt-3.5 pb-2.5 px-3 sm:px-8 bg-inherit backdrop-blur-xl flex items-center justify-between gap-3 sm:gap-6 border-b border-zinc-200/40 dark:border-white/5">
+      <!-- Unified Top Search & Header Bar (含右上角独立头像与模式切换，无底部分割线，整体绝对居中) -->
+      <div class="sticky top-0 z-30 pt-3.5 pb-2.5 px-3 sm:px-8 bg-inherit backdrop-blur-xl relative flex items-center justify-center">
         
-        <!-- Left/Center: 搜索框与平滑展开音源胶囊 -->
-        <div class="flex-1 max-w-2xl flex items-center gap-2 sm:gap-2.5 transition-all duration-300 min-w-0">
+        <!-- Center: 唯一主搜索框与平滑展开音源胶囊 (正中水平对齐) -->
+        <div class="w-full max-w-2xl flex items-center justify-center gap-2 sm:gap-2.5 transition-all duration-300 min-w-0 md:px-16 lg:px-0">
           
           <!-- 音源切换胶囊 (点击侧栏搜索或处于搜索页时平滑从左侧滑出) -->
           <transition name="source-capsule">
@@ -725,8 +725,8 @@
           </div>
         </div>
 
-        <!-- Right: 模式切换 + 独立用户头像 (点击露出用户页面) -->
-        <div class="hidden md:flex items-center gap-2.5 shrink-0">
+        <!-- Right: 模式切换 + 独立用户头像 (绝对定位常驻右上角，点击露出用户页面) -->
+        <div class="absolute right-3 sm:right-8 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-2.5 shrink-0 z-20">
           <!-- 切换模式按钮 -->
           <button 
             type="button"
