@@ -180,7 +180,10 @@
       background-color: rgba(255, 255, 255, 0.92) !important;
     }
 
-    /* Playlist Immersive Backdrop Gradient in Light Mode: Frosted Light Aurora */
+    /* Playlist Immersive Backdrop Gradient */
+    .playlist-cover-gradient {
+      background: linear-gradient(to bottom, rgba(9, 10, 15, 0.2) 0%, rgba(9, 10, 15, 0.75) 55%, #090a0f 100%);
+    }
     html.light .playlist-cover-gradient {
       background: linear-gradient(to bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.75) 55%, rgba(248, 250, 252, 0.97) 100%) !important;
     }
@@ -192,22 +195,79 @@
       box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.08) !important;
     }
 
-    /* Favorites Featured Card in Light Mode: Soft Rose-Tinted Frosted Glass */
+    /* Favorites Featured Card & Row in Light Mode: Soft Rose-Tinted Frosted Glass */
     html.light .favorites-featured-card {
-      background: linear-gradient(135deg, rgba(255, 241, 242, 0.85), rgba(255, 255, 255, 0.75)) !important;
-      border-color: rgba(254, 205, 211, 0.85) !important;
-      box-shadow: 0 8px 24px -4px rgba(244, 63, 94, 0.08), 0 2px 6px 0 rgba(0, 0, 0, 0.02) !important;
+      background: linear-gradient(135deg, rgba(255, 241, 242, 0.95), rgba(255, 255, 255, 0.9)) !important;
+      border: 1px solid rgba(254, 205, 211, 0.9) !important;
+      box-shadow: 0 8px 24px -4px rgba(244, 63, 94, 0.1), 0 2px 6px 0 rgba(0, 0, 0, 0.02) !important;
+    }
+    html.light .favorites-featured-card:hover {
+      background: linear-gradient(135deg, rgba(255, 228, 230, 0.98), rgba(255, 255, 255, 0.95)) !important;
+      border-color: rgba(251, 113, 133, 0.9) !important;
     }
     html.light .favorites-cover-box {
-      background: linear-gradient(135deg, rgba(254, 205, 211, 0.4), rgba(255, 228, 230, 0.2)) !important;
-      border-color: rgba(253, 164, 175, 0.6) !important;
+      background: linear-gradient(135deg, rgba(254, 205, 211, 0.5), rgba(255, 228, 230, 0.3)) !important;
+      border-color: rgba(253, 164, 175, 0.7) !important;
     }
-    html.light .favorites-featured-card .text-zinc-100 {
+    html.light .favorites-featured-card .favorites-card-title {
       color: #0f172a !important;
     }
-    html.light .favorites-featured-card .text-zinc-400 {
+    html.light .favorites-featured-card .favorites-card-count {
       color: #e11d48 !important;
+      font-weight: 700 !important;
+    }
+
+    html.light .favorites-list-row {
+      background: linear-gradient(135deg, rgba(255, 241, 242, 0.85), rgba(255, 255, 255, 0.8)) !important;
+      border: 1px solid rgba(254, 205, 211, 0.8) !important;
+    }
+    html.light .favorites-list-row:hover {
+      background: linear-gradient(135deg, rgba(255, 228, 230, 0.95), rgba(255, 255, 255, 0.9)) !important;
+      border-color: rgba(251, 113, 133, 0.8) !important;
+    }
+    html.light .favorites-list-row .text-zinc-100 {
+      color: #0f172a !important;
+    }
+
+    /* Favorites Detail View Aurora Backdrop in Light Mode */
+    html.light .playlist-cover-gradient.favorites-detail-gradient {
+      background: radial-gradient(circle at 50% 15%, rgba(254, 205, 211, 0.55) 0%, rgba(241, 245, 249, 0.8) 50%, rgba(248, 250, 252, 0.98) 100%) !important;
+    }
+
+    /* Favorites Featured Card & Row in Dark Mode: Luminous Rose Velvet Glass */
+    .favorites-featured-card {
+      background: linear-gradient(135deg, rgba(225, 29, 72, 0.16) 0%, rgba(24, 24, 27, 0.75) 100%) !important;
+      border-color: rgba(244, 63, 94, 0.3) !important;
+      box-shadow: 0 4px 20px -2px rgba(225, 29, 72, 0.12) !important;
+    }
+    .favorites-featured-card:hover {
+      background: linear-gradient(135deg, rgba(225, 29, 72, 0.22) 0%, rgba(39, 39, 42, 0.85) 100%) !important;
+      border-color: rgba(244, 63, 94, 0.5) !important;
+    }
+    .favorites-cover-box {
+      background: linear-gradient(135deg, rgba(225, 29, 72, 0.25), rgba(244, 63, 94, 0.1)) !important;
+      border-color: rgba(244, 63, 94, 0.35) !important;
+    }
+    .favorites-featured-card .favorites-card-title {
+      color: #ffffff !important;
+    }
+    .favorites-featured-card .favorites-card-count {
+      color: #fda4af !important;
       font-weight: 600 !important;
+    }
+
+    .favorites-list-row {
+      background: linear-gradient(135deg, rgba(225, 29, 72, 0.1) 0%, rgba(24, 24, 27, 0.7) 100%) !important;
+      border-color: rgba(244, 63, 94, 0.22) !important;
+    }
+    .favorites-list-row:hover {
+      background: linear-gradient(135deg, rgba(225, 29, 72, 0.16) 0%, rgba(39, 39, 42, 0.8) 100%) !important;
+      border-color: rgba(244, 63, 94, 0.4) !important;
+    }
+
+    /* Favorites Detail View Aurora Backdrop in Dark Mode */
+    .playlist-cover-gradient.favorites-detail-gradient {
+      background: radial-gradient(circle at 50% 15%, rgba(225, 29, 72, 0.28) 0%, rgba(15, 23, 42, 0.65) 50%, #090a0f 100%) !important;
     }
 
     /* Audio Player in Light Mode */
@@ -704,11 +764,12 @@
               v-model="keyword"
               @keyup.enter="handleSearch"
               type="text" 
-              placeholder="搜索歌曲名、歌手、专辑 (如：晴天、七里香、周杰伦)..."
+              :placeholder="currentPlaceholder"
               class="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition">
             <button 
               v-if="keyword" 
-              @click="keyword = ''" 
+              @click="clearSearch" 
+              title="清空并返回榜单"
               class="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-sm">
               <i class="fa-solid fa-xmark"></i>
             </button>
@@ -727,11 +788,14 @@
 
         <!-- Quick Tags -->
         <div class="flex items-center gap-2 mt-3 text-xs text-zinc-400 flex-wrap">
-          <span class="text-zinc-500">热搜推荐:</span>
-          <button v-for="tag in ['晴天', '七里香', '孤勇者', '爱如火', '稻香', '夜曲']" 
+          <span class="text-zinc-500 flex items-center gap-1 shrink-0">
+            <i class="fa-solid fa-fire text-amber-500 text-xs"></i>
+            <span>实时热搜:</span>
+          </span>
+          <button v-for="tag in (hotKeywords.length ? hotKeywords.slice(0, 10) : ['晴天', '七里香', '周杰伦', '孤勇者'])" 
                   :key="tag"
                   @click="quickSearch(tag)" 
-                  class="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 hover:text-zinc-200 rounded-lg transition">
+                  class="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 hover:text-zinc-200 rounded-lg transition active:scale-95 text-xs">
             {{ tag }}
           </button>
         </div>
@@ -750,18 +814,62 @@
       <div class="bg-zinc-900/60 backdrop-blur-2xl border border-white/10 rounded-2xl overflow-hidden shadow-sm flex-1 flex flex-col">
         <div class="px-3.5 sm:px-5 py-3 border-b border-white/10 flex flex-wrap items-center justify-between gap-2.5 text-xs text-zinc-400">
           <div class="flex items-center gap-2">
-            <span class="font-medium text-zinc-300">搜索结果</span>
-            <span v-if="searchTotal > 0" class="px-2 py-0.5 rounded-full bg-blue-950/60 border border-blue-800/40 text-blue-300 text-[11px] font-mono">
-              {{ searchTotal.toLocaleString() }} 首 • {{ searchPage }}/{{ searchTotalPages }} 页
-            </span>
-            <span v-else-if="songList.length" class="text-zinc-500 font-mono">
-              ({{ songList.length }} 首)
-            </span>
+            <!-- 榜单模式标题 -->
+            <div v-if="!hasSearched" class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full animate-pulse" :class="{
+                'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]': searchSource === 'qq',
+                'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]': searchSource === 'wy',
+                'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]': searchSource === 'kw'
+              }"></span>
+              <span class="font-bold text-sm sm:text-base text-zinc-100 flex items-center gap-1.5">
+                <i class="fa-solid fa-fire-flame-curved text-amber-500 text-sm"></i>
+                <span>{{ hotChartTitle }}</span>
+              </span>
+              <span v-if="hotChartTracks.length" class="px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-[11px] font-mono text-zinc-300">
+                Top {{ hotChartTracks.length }} 实时榜
+              </span>
+            </div>
+
+            <!-- 搜索结果模式状态 -->
+            <template v-else>
+              <button 
+                type="button" 
+                @click="clearSearch" 
+                class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white flex items-center gap-1.5 transition active:scale-95 text-xs mr-1">
+                <i class="fa-solid fa-arrow-left text-[11px]"></i>
+                <span>返回榜单</span>
+              </button>
+              <span class="font-medium text-zinc-300">搜索结果</span>
+              <span v-if="searchTotal > 0" class="px-2 py-0.5 rounded-full bg-blue-950/60 border border-blue-800/40 text-blue-300 text-[11px] font-mono">
+                {{ searchTotal.toLocaleString() }} 首 • {{ searchPage }}/{{ searchTotalPages }} 页
+              </span>
+              <span v-else-if="songList.length" class="text-zinc-500 font-mono">
+                ({{ songList.length }} 首)
+              </span>
+            </template>
           </div>
 
           <div class="flex items-center gap-2 sm:gap-3">
-            <!-- Page Size Setting Picker (Custom Liquid Glass Dropdown) -->
-            <div class="relative page-size-picker-container">
+            <!-- 榜单模式快速操作 -->
+            <template v-if="!hasSearched && hotChartTracks.length">
+              <button 
+                type="button"
+                @click="playAllHotChart"
+                class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs flex items-center gap-1.5 shadow-sm active:scale-95 transition">
+                <i class="fa-solid fa-play text-[10px]"></i>
+                <span>全部播放</span>
+              </button>
+              <button 
+                type="button"
+                @click="playRandomTracks(hotChartTracks)"
+                class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white font-medium text-xs flex items-center gap-1.5 active:scale-95 transition">
+                <i class="fa-solid fa-shuffle text-[10px]"></i>
+                <span class="hidden sm:inline">随机播放</span>
+              </button>
+            </template>
+
+            <!-- Page Size Setting Picker (Custom Liquid Glass Dropdown, when hasSearched) -->
+            <div v-if="hasSearched" class="relative page-size-picker-container">
               <button 
                 type="button"
                 @click.stop="showPageSizeDropdown = !showPageSizeDropdown"
@@ -822,20 +930,123 @@
           </div>
         </div>
 
-        <!-- Empty state -->
-        <div v-if="!songList.length && !searching" class="py-20 text-center text-zinc-500 flex-1 flex flex-col items-center justify-center">
-          <i class="fa-solid fa-music text-4xl mb-3 text-zinc-700"></i>
-          <p class="text-sm">输入歌名或歌手，开启无损音乐探索之旅</p>
-        </div>
+        <!-- 1. Real-time Chart Mode (When NOT searched) -->
+        <template v-if="!hasSearched">
+          <!-- Loading state -->
+          <div v-if="loadingHot" class="py-24 text-center text-zinc-400 flex-1 flex flex-col items-center justify-center">
+            <i class="fa-solid fa-spinner animate-spin text-3xl mb-3 text-blue-500"></i>
+            <p class="text-sm">正在获取 {{ hotChartTitle }} 实时排行...</p>
+          </div>
 
-        <!-- Loading state -->
-        <div v-if="searching" class="py-20 text-center text-zinc-400 flex-1 flex flex-col items-center justify-center">
-          <i class="fa-solid fa-spinner animate-spin text-3xl mb-3 text-blue-500"></i>
-          <p class="text-sm">正在检索音源数据 (第 {{ searchPage }} 页)...</p>
-        </div>
+          <!-- Empty state if failed to load chart -->
+          <div v-else-if="!hotChartTracks.length" class="py-20 text-center text-zinc-500 flex-1 flex flex-col items-center justify-center">
+            <i class="fa-solid fa-chart-line text-4xl mb-3 text-zinc-700"></i>
+            <p class="text-sm">暂未获取到榜单数据，请切换上方音源重试</p>
+            <button @click="fetchHotSearchAndChart(searchSource)" class="mt-3 px-4 py-1.5 rounded-xl bg-blue-600 text-white text-xs">重新加载</button>
+          </div>
 
-        <!-- Song list -->
-        <div v-if="songList.length && !searching" class="divide-y divide-zinc-800/60 overflow-y-auto max-h-[550px]">
+          <!-- Hot Chart Track list -->
+          <div v-else class="divide-y divide-zinc-800/60 overflow-y-auto max-h-[560px]">
+            <div 
+              v-for="(song, idx) in hotChartTracks" 
+              :key="song.id || idx"
+              @click="parseAndPlay(song)"
+              :class="currentTrack && currentTrack.id === song.id ? 'bg-blue-950/20' : 'hover:bg-zinc-800/40'"
+              class="px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-2.5 sm:gap-4 transition group cursor-pointer">
+              
+              <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+                <!-- Rank Badge: Gold / Silver / Bronze for top 3 -->
+                <div class="w-7 sm:w-8 flex items-center justify-center shrink-0">
+                  <span v-if="idx === 0" class="w-6 h-6 rounded-lg bg-gradient-to-br from-amber-300 via-amber-400 to-amber-600 text-black font-black text-xs flex items-center justify-center shadow-md shadow-amber-500/20">
+                    1
+                  </span>
+                  <span v-else-if="idx === 1" class="w-6 h-6 rounded-lg bg-gradient-to-br from-slate-100 via-slate-300 to-zinc-400 text-black font-black text-xs flex items-center justify-center shadow-md shadow-slate-400/20">
+                    2
+                  </span>
+                  <span v-else-if="idx === 2" class="w-6 h-6 rounded-lg bg-gradient-to-br from-amber-600 via-orange-600 to-amber-800 text-white font-bold text-xs flex items-center justify-center shadow-md shadow-orange-500/20">
+                    3
+                  </span>
+                  <span v-else class="text-xs text-zinc-500 font-mono font-bold w-6 text-center">
+                    {{ idx + 1 }}
+                  </span>
+                </div>
+
+                <!-- Album Cover Thumbnail -->
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-zinc-800 shrink-0 overflow-hidden relative shadow-sm group/img">
+                  <img :src="song.cover || '/assets/branding/app_icon.png'" class="w-full h-full object-cover">
+                  <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                    <i class="fa-solid fa-play text-xs text-white"></i>
+                  </div>
+                  <div v-if="parsingId === song.id" class="absolute inset-0 bg-black/60 flex items-center justify-center">
+                    <i class="fa-solid fa-spinner fa-spin text-blue-400 text-xs"></i>
+                  </div>
+                </div>
+
+                <!-- Song Info -->
+                <div class="min-w-0 flex-1">
+                  <div class="text-xs sm:text-sm font-semibold text-zinc-200 truncate flex items-center gap-1.5 sm:gap-2" :class="currentTrack && currentTrack.id === song.id ? 'text-blue-400 font-bold' : 'group-hover:text-white'">
+                    <span class="truncate">{{ song.title }}</span>
+                    <span v-if="idx < 3" class="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 shrink-0">HOT</span>
+                  </div>
+                  <div class="text-[11px] sm:text-xs text-zinc-400 truncate flex items-center gap-1.5 mt-0.5">
+                    <span class="truncate font-medium">{{ song.artist }}</span>
+                    <span v-if="song.album" class="text-zinc-600 hidden sm:inline">•</span>
+                    <span v-if="song.album" class="text-zinc-500 truncate hidden sm:inline">{{ song.album }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mobile: Single ··· Action Sheet Button -->
+              <div class="sm:hidden flex items-center shrink-0">
+                <button 
+                  type="button"
+                  @click.stop="openTrackActionSheet(song)"
+                  class="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 active:scale-90 transition">
+                  <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
+                </button>
+              </div>
+
+              <!-- Desktop: Actions -->
+              <div class="hidden sm:flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <button 
+                  type="button"
+                  @click.stop="toggleFavorite(song)" 
+                  :title="isFavorite(song) ? '取消收藏' : '添加至我喜欢的音乐'"
+                  class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition"
+                  :class="isFavorite(song) ? 'text-rose-500 bg-rose-500/10 hover:bg-rose-500/20' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'">
+                  <i class="fa-solid fa-heart text-xs sm:text-sm" :class="isFavorite(song) ? 'text-rose-500' : 'text-zinc-500'"></i>
+                </button>
+                <span v-if="song.duration" class="text-xs text-zinc-500 font-mono hidden md:inline mr-1">
+                  {{ formatTime(song.duration) }}
+                </span>
+                <button 
+                  type="button"
+                  @click.stop="openTrackActionSheet(song)"
+                  class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition">
+                  <i class="fa-solid fa-ellipsis-vertical text-xs sm:text-sm"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- 2. Search Mode (When hasSearched is true) -->
+        <template v-else>
+          <!-- Loading state -->
+          <div v-if="searching" class="py-20 text-center text-zinc-400 flex-1 flex flex-col items-center justify-center">
+            <i class="fa-solid fa-spinner animate-spin text-3xl mb-3 text-blue-500"></i>
+            <p class="text-sm">正在检索音源数据 (第 {{ searchPage }} 页)...</p>
+          </div>
+
+          <!-- Empty search results -->
+          <div v-else-if="!songList.length" class="py-20 text-center text-zinc-500 flex-1 flex flex-col items-center justify-center">
+            <i class="fa-solid fa-magnifying-glass text-4xl mb-3 text-zinc-700"></i>
+            <p class="text-sm">未找到与“{{ keyword }}”相关的歌曲</p>
+            <button @click="clearSearch" class="mt-3 px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-zinc-300 text-xs transition">返回实时热歌榜</button>
+          </div>
+
+          <!-- Search Results List -->
+          <div v-else class="divide-y divide-zinc-800/60 overflow-y-auto max-h-[550px]">
           <div 
             v-for="(song, idx) in songList" 
             :key="song.id"
@@ -982,6 +1193,7 @@
             </button>
           </div>
         </div>
+        </template>
       </div>
     </main>
 
@@ -1055,7 +1267,7 @@
           <!-- 3. 喜欢的音乐 -->
           <div 
             @click="openFavoritesView"
-            class="group p-3.5 sm:p-4 rounded-2xl bg-zinc-900/60 hover:bg-zinc-800/80 border border-white/5 hover:border-rose-500/30 backdrop-blur-xl transition-all cursor-pointer shadow-sm flex items-center justify-between active:scale-[0.99]">
+            class="favorites-list-row group p-3.5 sm:p-4 rounded-2xl border backdrop-blur-xl transition-all cursor-pointer shadow-sm flex items-center justify-between active:scale-[0.99]">
             <div class="flex items-center gap-3.5">
               <div class="w-11 h-11 rounded-2xl bg-rose-500/15 border border-rose-500/20 flex items-center justify-center text-rose-500 text-lg shadow-inner">
                 <i class="fa-solid fa-heart"></i>
@@ -1116,8 +1328,8 @@
             <!-- 喜欢的音乐首个大卡片 -->
             <div 
               @click="openFavoritesView"
-              class="favorites-featured-card group bg-zinc-900/60 hover:bg-zinc-800/80 border border-rose-500/20 hover:border-rose-500/40 rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-md backdrop-blur-xl">
-              <div class="favorites-cover-box aspect-square w-full rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center overflow-hidden mb-2.5 relative">
+              class="favorites-featured-card group border rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all hover:scale-[1.02] shadow-md backdrop-blur-xl">
+              <div class="favorites-cover-box aspect-square w-full rounded-xl flex items-center justify-center overflow-hidden mb-2.5 relative">
                 <img v-if="favoriteTracks[0]?.cover" :src="favoriteTracks[0]?.cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 <i v-else class="fa-solid fa-heart text-4xl text-rose-500 drop-shadow-lg"></i>
                 <div class="absolute inset-0 bg-black/15"></div>
@@ -1126,8 +1338,8 @@
                 </div>
               </div>
               <div>
-                <div class="text-xs sm:text-sm font-bold text-zinc-100 group-hover:text-rose-300 truncate">我喜欢的音乐</div>
-                <div class="text-[11px] text-zinc-400 mt-0.5 font-mono">{{ favoriteTracks.length }} 首</div>
+                <div class="favorites-card-title text-xs sm:text-sm font-bold truncate">我喜欢的音乐</div>
+                <div class="favorites-card-count text-[11px] mt-0.5 font-mono">{{ favoriteTracks.length }} 首</div>
               </div>
             </div>
 
@@ -1247,7 +1459,7 @@
           <img 
             :src="currentPlaylistCover" 
             class="w-full h-full object-cover filter blur-3xl opacity-35 scale-125 saturate-150 transform -translate-y-4" />
-          <div class="absolute inset-0 playlist-cover-gradient bg-gradient-to-b from-[#090a0f]/15 via-[#090a0f]/80 to-[#090a0f]"></div>
+          <div class="absolute inset-0 playlist-cover-gradient" :class="{ 'favorites-detail-gradient': librarySubView === 'favorites' }"></div>
         </div>
 
         <!-- 顶部导航栏 (清爽留白，与上方账号框彻底隔离) -->
@@ -2607,7 +2819,54 @@
       setup() {
         const activeTab = ref('explore');
         const searchSource = ref(localStorage.getItem('tunefree_default_search_source') || 'qq');
-        const keyword = ref('晴天');
+        const keyword = ref('');
+        const hasSearched = ref(false);
+        const hotKeywords = ref([]);
+        const hotChartTracks = ref([]);
+        const hotChartTitle = ref('实时热歌榜');
+        const loadingHot = ref(false);
+        const currentPlaceholderIndex = ref(0);
+        let placeholderTimer = null;
+
+        const currentPlaceholder = computed(() => {
+          if (hotKeywords.value && hotKeywords.value.length > 0) {
+            const kw = hotKeywords.value[currentPlaceholderIndex.value % hotKeywords.value.length];
+            return `大家都在搜：${kw}`;
+          }
+          return '搜索歌曲名、歌手、专辑 (如：晴天、七里香、周杰伦)...';
+        });
+
+        async function fetchHotSearchAndChart(source) {
+          loadingHot.value = true;
+          try {
+            const s = source || searchSource.value || 'qq';
+            const res = await fetch(`/api/search/hot?source=${s}`);
+            const data = await res.json();
+            if (data.success) {
+              hotKeywords.value = data.hotKeywords || [];
+              hotChartTracks.value = (data.chartTracks || []).map(item => ({
+                ...item,
+                selectedQuality: defaultQuality.value
+              }));
+              hotChartTitle.value = data.chartTitle || '实时热歌榜';
+            }
+          } catch (e) {
+            console.error('Fetch hot error', e);
+          } finally {
+            loadingHot.value = false;
+          }
+        }
+
+        function clearSearch() {
+          keyword.value = '';
+          hasSearched.value = false;
+          songList.value = [];
+        }
+
+        function playAllHotChart() {
+          if (!hotChartTracks.value || !hotChartTracks.value.length) return;
+          parseAndPlay(hotChartTracks.value[0]);
+        }
         const searching = ref(false);
         const songList = ref([]);
         const defaultQuality = ref(localStorage.getItem('tunefree_default_quality') || '320k');
@@ -3215,6 +3474,16 @@
           // Start visualizer sync loop
           startVisualizerLoop();
 
+          // Placeholder rotation interval (cycles every 3.5s)
+          placeholderTimer = setInterval(() => {
+            if (hotKeywords.value && hotKeywords.value.length > 0) {
+              currentPlaceholderIndex.value = (currentPlaceholderIndex.value + 1) % hotKeywords.value.length;
+            }
+          }, 3500);
+
+          // Initial fetch for real-time hot keywords & Top 30 chart
+          fetchHotSearchAndChart(searchSource.value);
+
           // Global click outside listener to collapse custom mobile dropdowns
           document.addEventListener('click', (e) => {
             if (!e.target.closest('#mobile-search-source-picker')) {
@@ -3238,7 +3507,14 @@
 
         // 1. Search Logic
         async function handleSearch(resetPage = true) {
-          if (!keyword.value.trim()) return;
+          if (!keyword.value.trim()) {
+            if (hotKeywords.value && hotKeywords.value.length > 0) {
+              keyword.value = hotKeywords.value[currentPlaceholderIndex.value % hotKeywords.value.length];
+            } else {
+              return;
+            }
+          }
+          hasSearched.value = true;
           if (resetPage) {
             searchPage.value = 1;
           }
@@ -3277,6 +3553,7 @@
 
         function quickSearch(tag) {
           keyword.value = tag;
+          hasSearched.value = true;
           searchPage.value = 1;
           handleSearch(true);
         }
@@ -3592,6 +3869,10 @@
         function onSearchSourceChange(source) {
           searchSource.value = source;
           localStorage.setItem('tunefree_default_search_source', source);
+          fetchHotSearchAndChart(source);
+          if (hasSearched.value && keyword.value.trim()) {
+            handleSearch(true);
+          }
         }
 
         function onDefaultQualityChange() {
@@ -4367,6 +4648,15 @@
           searchSource,
           showMobileSearchSourceDropdown,
           keyword,
+          hasSearched,
+          hotKeywords,
+          hotChartTracks,
+          hotChartTitle,
+          loadingHot,
+          currentPlaceholder,
+          clearSearch,
+          playAllHotChart,
+          fetchHotSearchAndChart,
           searching,
           songList,
           defaultQuality,

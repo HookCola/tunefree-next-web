@@ -8,6 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PORT = process.env.PORT || 7101;
 const TUNEFREE_TARGET = 'https://tunefree.sayqz.com';
+const chartsCache = {};
 
 const server = http.createServer(async (req, res) => {
   // CORS headers
@@ -23,6 +24,117 @@ const server = http.createServer(async (req, res) => {
 
   const reqUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = reqUrl.pathname;
+
+  // 1.0. Hot Search & Chart API (/api/search/hot)
+  if (pathname === '/api/search/hot') {
+    const source = reqUrl.searchParams.get('source') || 'qq';
+    const cacheKey = `hot_${source}`;
+    const now = Date.now();
+
+    if (chartsCache[cacheKey] && (now - chartsCache[cacheKey].time < 10 * 60 * 1000)) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(chartsCache[cacheKey].data));
+      return;
+    }
+
+    try {
+      let hotKeywords = [];
+      let chartTracks = [];
+      let chartTitle = '实时热歌榜';
+
+      if (source === 'wy') {
+        chartTitle = '网易云热歌榜';
+        const resp = await fetch('https://music.163.com/api/playlist/detail?id=3778678', {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Referer': 'https://music.163.com/' }
+        });
+        const d = await resp.json();
+        const tracks = d.result?.tracks || [];
+        chartTracks = tracks.slice(0, 30).map((t, idx) => ({
+          id: String(t.id),
+          sourceId: String(t.id),
+          title: t.name,
+          artist: (t.artists || []).map(a => a.name).join(' / '),
+          album: t.album?.name || '',
+          cover: t.album?.picUrl ? t.album.picUrl.replace('http://', 'https://') : '/assets/branding/app_icon.png',
+          source: 'wy',
+          duration: t.duration ? Math.floor(t.duration / 1000) : 0,
+          rank: idx + 1
+        }));
+        hotKeywords = chartTracks.slice(0, 15).map(t => t.title);
+      } else if (source === 'kw') {
+        chartTitle = '酷我热歌榜';
+        const resp = await fetch('http://kbangserver.kuwo.cn/ksong.s?from=pc&fmt=json&type=bang&data=content&id=16&pn=0&rn=30', {
+          headers: { 'User-Agent': 'okhttp/3.10.0' }
+        });
+        const d = await resp.json();
+        const list = d.musiclist || [];
+        chartTracks = list.slice(0, 30).map((m, idx) => ({
+          id: String(m.id),
+          sourceId: String(m.id),
+          title: m.name,
+          artist: m.artist,
+          album: m.album || '',
+          cover: '/assets/branding/app_icon.png',
+          source: 'kw',
+          duration: parseInt(m.song_duration || m.duration, 10) || 0,
+          rank: idx + 1
+        }));
+        hotKeywords = chartTracks.slice(0, 15).map(t => t.title);
+      } else {
+        // QQ Music
+        chartTitle = 'QQ音乐巅峰榜·热歌';
+        try {
+          const hotResp = await fetch('https://c.y.qq.com/splcloud/fcgi-bin/gethotkey.fcg?format=json', {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Referer': 'https://y.qq.com/' }
+          });
+          const hotData = await hotResp.json();
+          hotKeywords = (hotData.data?.hotkey || []).map(h => h.k.trim()).filter(Boolean).slice(0, 15);
+        } catch (e) {}
+
+        const topResp = await fetch('https://c.y.qq.com/v8/fcg-bin/fcg_v8_toplist_cp.fcg?topid=26&format=json', {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Referer': 'https://y.qq.com/' }
+        });
+        const topData = await topResp.json();
+        const songs = topData.songlist || [];
+        chartTracks = songs.slice(0, 30).map((s, idx) => {
+          const d = s.data || {};
+          const albumMid = d.albummid || '';
+          return {
+            id: d.songmid || String(d.songid),
+            sourceId: d.songmid || String(d.songid),
+            title: d.songname || '',
+            artist: (d.singer || []).map(a => a.name).join(' / '),
+            album: d.albumname || '',
+            cover: albumMid ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albumMid}.jpg` : '/assets/branding/app_icon.png',
+            source: 'qq',
+            duration: d.interval || 0,
+            rank: idx + 1
+          };
+        });
+        if (!hotKeywords.length) {
+          hotKeywords = chartTracks.slice(0, 15).map(t => t.title);
+        }
+      }
+
+      const result = {
+        success: true,
+        source,
+        chartTitle,
+        hotKeywords,
+        chartTracks
+      };
+
+      chartsCache[cacheKey] = { time: now, data: result };
+
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      console.error('Hot API error:', err);
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ success: false, error: err.message, hotKeywords: [], chartTracks: [] }));
+    }
+    return;
+  }
 
   // 1. Search API (/api/search)
   if (pathname === '/api/search') {
