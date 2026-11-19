@@ -283,28 +283,86 @@
     html.light ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
     /* ============================================================
-       MONET DYNAMIC ACCENT ENGINE
+       GLOBAL MONET DYNAMIC THEME ENGINE (Material You / 莫奈全界域取色)
        ============================================================ */
-    .monet-enabled .bg-blue-600 {
+    :root {
+      --monet-primary: #2563eb;
+      --monet-accent: #60a5fa;
+      --monet-rgb: 37, 99, 235;
+    }
+
+    /* Ambient Background Flow Glows (Both Dark and Light) */
+    .monet-enabled .ambient-orb-primary {
+      background-color: rgba(var(--monet-rgb), 0.18) !important;
+      transition: background-color 0.8s ease;
+    }
+    .monet-enabled .ambient-orb-secondary {
+      background-color: var(--monet-accent) !important;
+      opacity: 0.16 !important;
+      transition: all 0.8s ease;
+    }
+    .monet-enabled .ambient-orb-tertiary {
+      background-color: rgba(var(--monet-rgb), 0.12) !important;
+      transition: background-color 0.8s ease;
+    }
+
+    /* Solid Buttons & Primary Controls */
+    .monet-enabled .bg-blue-600,
+    .monet-enabled button.bg-blue-600 {
       background-color: var(--monet-primary) !important;
+      transition: background-color 0.4s ease, border-color 0.4s ease;
+    }
+    .monet-enabled .hover\:bg-blue-500:hover {
+      filter: brightness(1.12);
     }
     .monet-enabled .text-blue-400,
     .monet-enabled .text-blue-500 {
       color: var(--monet-primary) !important;
+      transition: color 0.4s ease;
     }
     .monet-enabled .border-blue-500,
     .monet-enabled .border-blue-500\/30,
     .monet-enabled .border-blue-400\/20 {
       border-color: var(--monet-primary) !important;
+      transition: border-color 0.4s ease;
     }
     .monet-enabled .bg-blue-600\/20,
     .monet-enabled .bg-blue-500\/15,
-    .monet-enabled .bg-blue-600\/15 {
+    .monet-enabled .bg-blue-600\/15,
+    .monet-enabled .bg-blue-950\/20 {
       background-color: rgba(var(--monet-rgb), 0.16) !important;
     }
-    .monet-glow-ambient {
-      background-color: rgba(var(--monet-rgb), 0.14) !important;
-      transition: background-color 0.8s ease;
+
+    /* Sidebar Active Tab Monet Glow */
+    .monet-enabled nav button[class*="bg-blue-600/15"] {
+      background-color: rgba(var(--monet-rgb), 0.16) !important;
+      border-color: rgba(var(--monet-rgb), 0.35) !important;
+      box-shadow: 0 4px 18px -2px rgba(var(--monet-rgb), 0.22) !important;
+    }
+    .monet-enabled nav button[class*="bg-blue-600/15"] * {
+      color: var(--monet-primary) !important;
+    }
+
+    /* Bottom Player Bar & Volume/Progress Monet Dynamic Theming */
+    .monet-enabled .bg-blue-500 {
+      background-color: var(--monet-primary) !important;
+    }
+    .monet-enabled input[type="range"]::-webkit-slider-thumb {
+      background-color: var(--monet-primary) !important;
+    }
+
+    /* Light Mode Global Monet Tinting */
+    html.light.monet-enabled body {
+      background: radial-gradient(at 0% 0%, rgba(var(--monet-rgb), 0.14) 0%, transparent 45%),
+                  radial-gradient(at 100% 0%, #fce7f3 0%, transparent 45%),
+                  radial-gradient(at 50% 100%, rgba(var(--monet-rgb), 0.12) 0%, transparent 50%),
+                  radial-gradient(at 0% 100%, #ede9fe 0%, transparent 45%),
+                  radial-gradient(at 100% 100%, #fef3c7 0%, transparent 35%),
+                  #f8fafc !important;
+      background-attachment: fixed !important;
+    }
+    html.light.monet-enabled .ambient-orb-primary {
+      background-color: rgba(var(--monet-rgb), 0.22) !important;
     }
 
     /* Custom Scrollbar Defaults (Dark) */
@@ -372,9 +430,9 @@
   
   <!-- Ambient Liquid Glass Backdrop Glows -->
   <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-    <div class="absolute -top-[15%] -left-[10%] w-[550px] h-[550px] rounded-full bg-blue-600/[0.07] blur-[140px]"></div>
-    <div class="absolute top-[35%] -right-[15%] w-[650px] h-[650px] rounded-full bg-indigo-600/[0.08] blur-[150px]"></div>
-    <div class="absolute -bottom-[20%] left-[25%] w-[550px] h-[550px] rounded-full bg-cyan-500/[0.06] blur-[140px]"></div>
+    <div class="ambient-orb-primary absolute -top-[15%] -left-[10%] w-[550px] h-[550px] rounded-full bg-blue-600/[0.07] blur-[140px] transition-all duration-700"></div>
+    <div class="ambient-orb-secondary absolute top-[35%] -right-[15%] w-[650px] h-[650px] rounded-full bg-indigo-600/[0.08] blur-[150px] transition-all duration-700"></div>
+    <div class="ambient-orb-tertiary absolute -bottom-[20%] left-[25%] w-[550px] h-[550px] rounded-full bg-cyan-500/[0.06] blur-[140px] transition-all duration-700"></div>
   </div>
 
   <div id="app" :class="{ 'monet-enabled': enableMonet }" class="relative z-10 flex flex-col md:flex-row min-h-screen w-full">
@@ -2195,73 +2253,92 @@
           <span>全屏视效与皮肤材质</span>
         </div>
 
-        <!-- 主题外观模式与莫奈动态取色卡片组 -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          <!-- 1. 主题模式切换 -->
-          <div class="bg-white/[0.02] p-4 rounded-xl border border-white/5 flex flex-col gap-2.5">
+        <!-- 外观与莫奈色彩体系整合卡片 (Unified Appearance & Monet Engine Card) -->
+        <div class="bg-white/[0.03] p-5 rounded-2xl border border-white/10 backdrop-blur-xl flex flex-col gap-4 text-xs shadow-sm">
+          
+          <!-- 上部：系统主题模式 -->
+          <div class="flex flex-col gap-2.5">
             <div class="flex items-center justify-between">
-              <span class="font-medium text-zinc-300">系统主题模式</span>
-              <span class="text-[10px] text-zinc-400 font-mono">{{ themeMode === 'auto' ? '跟随系统' : (themeMode === 'dark' ? '深色' : '浅色') }}</span>
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-circle-half-stroke text-blue-400 text-sm"></i>
+                <span class="font-bold text-sm text-zinc-100">系统主题模式</span>
+              </div>
+              <span class="text-[11px] text-zinc-400 font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10">
+                {{ themeMode === 'auto' ? '跟随系统' : (themeMode === 'dark' ? '深色模式' : '浅色模式') }}
+              </span>
             </div>
-            <div class="grid grid-cols-3 gap-2">
+
+            <!-- 3 联切换按钮 -->
+            <div class="grid grid-cols-3 gap-2.5">
               <button 
                 type="button"
                 @click="setThemeMode('auto')"
-                :class="themeMode === 'auto' ? 'bg-blue-600 text-white font-semibold shadow' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'"
-                class="py-2 px-2 rounded-lg text-center transition flex items-center justify-center gap-1.5">
+                :class="themeMode === 'auto' ? 'bg-blue-600 text-white font-semibold shadow-md' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.08]'"
+                class="py-2.5 px-3 rounded-xl text-center transition-all flex items-center justify-center gap-2 active:scale-95">
                 <i class="fa-solid fa-circle-half-stroke text-xs"></i>
                 <span>跟随系统</span>
               </button>
               <button 
                 type="button"
                 @click="setThemeMode('dark')"
-                :class="themeMode === 'dark' ? 'bg-blue-600 text-white font-semibold shadow' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'"
-                class="py-2 px-2 rounded-lg text-center transition flex items-center justify-center gap-1.5">
+                :class="themeMode === 'dark' ? 'bg-blue-600 text-white font-semibold shadow-md' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.08]'"
+                class="py-2.5 px-3 rounded-xl text-center transition-all flex items-center justify-center gap-2 active:scale-95">
                 <i class="fa-solid fa-moon text-xs"></i>
                 <span>深色模式</span>
               </button>
               <button 
                 type="button"
                 @click="setThemeMode('light')"
-                :class="themeMode === 'light' ? 'bg-blue-600 text-white font-semibold shadow' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'"
-                class="py-2 px-2 rounded-lg text-center transition flex items-center justify-center gap-1.5">
+                :class="themeMode === 'light' ? 'bg-blue-600 text-white font-semibold shadow-md' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.08]'"
+                class="py-2.5 px-3 rounded-xl text-center transition-all flex items-center justify-center gap-2 active:scale-95">
                 <i class="fa-solid fa-sun text-xs"></i>
                 <span>浅色模式</span>
               </button>
             </div>
-            <p class="text-[11px] text-zinc-500 leading-relaxed">
-              支持跟随浏览器和操作系统深浅色设置自动适应，或手动固定深色/浅色外观。
+            <p class="text-[11px] text-zinc-400 leading-relaxed">
+              支持跟随浏览器与系统深浅色设置自动适应，或手动锁定深色/浅色高对比外观。
             </p>
           </div>
 
-          <!-- 2. 莫奈动态取色 (Monet) -->
-          <div class="bg-white/[0.02] p-4 rounded-xl border border-white/5 flex flex-col gap-2.5">
+          <!-- 精致微光分割线 -->
+          <div class="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+          <!-- 下部：莫奈动态取色 (Monet) -->
+          <div class="flex flex-col gap-2.5">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <i class="fa-solid fa-palette text-indigo-400 text-sm"></i>
-                <span class="font-medium text-zinc-300">莫奈动态取色 (Monet)</span>
+                <div>
+                  <span class="font-bold text-sm text-zinc-100">全局莫奈动态取色 (Monet Engine)</span>
+                  <span class="ml-2 text-[10px] font-mono text-emerald-400 font-normal">全界面深度沉浸</span>
+                </div>
               </div>
               <!-- Toggle Switch -->
               <button 
                 type="button" 
                 @click="toggleMonet" 
-                class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner"
                 :class="enableMonet ? 'bg-blue-600' : 'bg-zinc-700'">
-                <span class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out"
-                  :class="enableMonet ? 'translate-x-4' : 'translate-x-0'"></span>
+                <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out"
+                  :class="enableMonet ? 'translate-x-5' : 'translate-x-0'"></span>
               </button>
             </div>
-            <!-- 动态提取色卡 -->
-            <div v-if="enableMonet" class="flex items-center gap-2 py-1">
-              <span class="text-[10px] text-zinc-400">封面提取色板：</span>
-              <div class="flex items-center gap-1.5">
-                <span class="w-4 h-4 rounded-full border border-white/20 shadow-sm" :style="{ backgroundColor: monetPalette.primary }"></span>
-                <span class="w-4 h-4 rounded-full border border-white/20 shadow-sm" :style="{ backgroundColor: monetPalette.accent }"></span>
-                <span class="text-[10px] font-mono text-zinc-300 font-semibold">{{ monetPalette.primaryHex || '#2563eb' }}</span>
+
+            <!-- 动态提取色卡展示 -->
+            <div v-if="enableMonet" class="flex flex-wrap items-center justify-between p-2.5 rounded-xl bg-white/[0.02] border border-white/5 gap-2">
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] text-zinc-400">实时封面提取色板：</span>
+                <div class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-full border border-white/20 shadow-sm" :style="{ backgroundColor: monetPalette.primary }" title="主色调"></span>
+                  <span class="w-5 h-5 rounded-full border border-white/20 shadow-sm" :style="{ backgroundColor: monetPalette.accent }" title="辅助强调色"></span>
+                  <span class="text-xs font-mono text-zinc-200 font-semibold">{{ monetPalette.primaryHex || '#2563eb' }}</span>
+                </div>
               </div>
+              <span class="text-[10px] text-zinc-500 font-mono">已应用至背景流光与所有高光控件</span>
             </div>
-            <p class="text-[11px] text-zinc-500 leading-relaxed">
-              开启后根据当前播放歌曲封面提取主色调，沉浸式动态晕染背景与播放高光（还原 Android 4.3.7 客户端体验）。
+
+            <p class="text-[11px] text-zinc-400 leading-relaxed">
+              开启后，每次切歌将自动从专辑封面提取主色与辅色，全站背景光晕、卡片边框、按钮与播放器高光均会动态优雅晕染（深浅色模式均完美适配，还原原生 Android 客户端顶级质感）。
             </p>
           </div>
         </div>
@@ -2958,6 +3035,7 @@
         function toggleMonet() {
           enableMonet.value = !enableMonet.value;
           localStorage.setItem('tunefree_enable_monet', enableMonet.value);
+          document.documentElement.classList.toggle('monet-enabled', enableMonet.value);
           if (enableMonet.value && currentTrack.value?.cover) {
             extractMonetColors(currentTrack.value.cover);
           } else {
@@ -3452,6 +3530,10 @@
         // Initialize deviceId & Persistent Session
         onMounted(async () => {
           applyTheme(themeMode.value);
+          document.documentElement.classList.toggle('monet-enabled', enableMonet.value);
+          if (enableMonet.value && currentTrack.value?.cover) {
+            extractMonetColors(currentTrack.value.cover);
+          }
           let savedId = localStorage.getItem('tunefree_device_id');
           if (!savedId) {
             savedId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
