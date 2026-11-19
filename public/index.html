@@ -616,27 +616,6 @@
           </button>
         </nav>
       </div>
-
-      <!-- Bottom User & App Action -->
-      <div class="pt-4 flex flex-col gap-3">
-        <div class="flex items-center justify-end px-1">
-          <button 
-            type="button"
-            @click="setThemeMode(themeMode === 'dark' ? 'light' : (themeMode === 'light' ? 'auto' : 'dark'))" 
-            :title="`当前主题: ${themeMode === 'auto' ? '跟随系统' : (themeMode === 'dark' ? '深色' : '浅色')}`" 
-            class="w-7 h-7 rounded-full bg-zinc-100 dark:bg-white/10 flex items-center justify-center text-xs text-zinc-700 dark:text-zinc-300 hover:scale-105 transition">
-            <i class="fa-solid" :class="{ 'fa-moon text-indigo-400': themeMode === 'dark', 'fa-sun text-amber-500': themeMode === 'light', 'fa-circle-half-stroke text-blue-400': themeMode === 'auto' }"></i>
-          </button>
-        </div>
-        
-        <!-- User Pill Button (Black capsule button) -->
-        <button 
-          @click="activeTab = 'account'" 
-          class="w-full py-2.5 px-4 rounded-full bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-semibold text-xs shadow-md transition flex items-center justify-center gap-2 active:scale-95">
-          <i class="fa-solid fa-user text-xs"></i>
-          <span>{{ user ? user.displayName : '登录' }}</span>
-        </button>
-      </div>
     </aside>
 
     <!-- RIGHT MAIN CONTENT WORKSPACE (桌面端独立视口滚动，彻底解耦侧边栏联动) -->
@@ -648,7 +627,7 @@
           <img src="/assets/branding/app_icon.png" class="w-8 h-8 rounded-xl object-cover ring-1 ring-white/10">
           <div class="font-bold text-sm tracking-tight text-white leading-tight">TuneFree Next</div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2.5">
           <button 
             type="button"
             @click="setThemeMode(themeMode === 'dark' ? 'light' : (themeMode === 'light' ? 'auto' : 'dark'))" 
@@ -656,19 +635,26 @@
             class="w-8 h-8 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-xs text-zinc-300 active:scale-95 transition">
             <i class="fa-solid" :class="{ 'fa-moon text-indigo-400': themeMode === 'dark', 'fa-sun text-amber-500': themeMode === 'light', 'fa-circle-half-stroke text-blue-400': themeMode === 'auto' }"></i>
           </button>
-          <button v-if="user" @click="activeTab = 'account'" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.05] border border-white/10 text-xs text-zinc-300">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            <span class="truncate max-w-[90px]">{{ user.displayName }}</span>
-          </button>
-          <button v-else @click="activeTab = 'account'" class="text-xs px-2.5 py-1 rounded-xl bg-blue-600 text-white font-medium">
-            登录
+          <button 
+            type="button"
+            @click="activeTab = 'account'" 
+            :title="user ? `${user.displayName} (个人中心)` : '前往登录'"
+            class="relative flex items-center justify-center active:scale-95 transition">
+            <div v-if="user" class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold ring-1 ring-white/20">
+              {{ user.displayName ? user.displayName.slice(0, 1).toUpperCase() : 'U' }}
+            </div>
+            <div v-else class="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-zinc-300 text-xs">
+              <i class="fa-solid fa-user"></i>
+            </div>
           </button>
         </div>
       </header>
 
-      <!-- Unified Top Search & Source Bar -->
-      <div class="sticky top-0 z-20 pt-3.5 pb-2 px-3 sm:px-8 bg-inherit backdrop-blur-xl">
-        <div class="max-w-2xl mx-auto flex items-center justify-center gap-2 sm:gap-2.5 transition-all duration-300">
+      <!-- Unified Top Search & Header Bar (含右上角独立头像与模式切换) -->
+      <div class="sticky top-0 z-30 pt-3.5 pb-2.5 px-3 sm:px-8 bg-inherit backdrop-blur-xl flex items-center justify-between gap-3 sm:gap-6 border-b border-zinc-200/40 dark:border-white/5">
+        
+        <!-- Left/Center: 搜索框与平滑展开音源胶囊 -->
+        <div class="flex-1 max-w-2xl flex items-center gap-2 sm:gap-2.5 transition-all duration-300 min-w-0">
           
           <!-- 音源切换胶囊 (点击侧栏搜索或处于搜索页时平滑从左侧滑出) -->
           <transition name="source-capsule">
@@ -725,6 +711,38 @@
             </div>
           </div>
         </div>
+
+        <!-- Right: 模式切换 + 独立用户头像 (点击露出用户页面) -->
+        <div class="hidden md:flex items-center gap-2.5 shrink-0">
+          <!-- 切换模式按钮 -->
+          <button 
+            type="button"
+            @click="setThemeMode(themeMode === 'dark' ? 'light' : (themeMode === 'light' ? 'auto' : 'dark'))" 
+            :title="`当前主题: ${themeMode === 'auto' ? '跟随系统' : (themeMode === 'dark' ? '深色' : '浅色')}`" 
+            class="w-9 h-9 rounded-full bg-zinc-100 hover:bg-zinc-200 dark:bg-white/10 dark:hover:bg-white/15 border border-zinc-200/80 dark:border-white/10 flex items-center justify-center text-xs text-zinc-700 dark:text-zinc-300 transition shadow-sm active:scale-95">
+            <i class="fa-solid" :class="{ 'fa-moon text-indigo-400': themeMode === 'dark', 'fa-sun text-amber-500': themeMode === 'light', 'fa-circle-half-stroke text-blue-400': themeMode === 'auto' }"></i>
+          </button>
+
+          <!-- 用户独立头像 (点击露出用户页面) -->
+          <button 
+            type="button"
+            @click="activeTab = 'account'" 
+            :title="user ? `${user.displayName} (个人中心)` : '前往登录/注册'"
+            class="relative flex items-center justify-center transition active:scale-95 group focus:outline-none">
+            <!-- 已登录：首字母圆形渐变头像 + VIP皇冠 -->
+            <div v-if="user" class="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow ring-2 ring-white/30 dark:ring-white/15 group-hover:ring-red-500 transition">
+              {{ user.displayName ? user.displayName.slice(0, 1).toUpperCase() : 'U' }}
+              <span v-if="isMember" class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center text-[8px] shadow font-bold">
+                <i class="fa-solid fa-crown text-[7px]"></i>
+              </span>
+            </div>
+            <!-- 未登录：圆形灰色占位头像 -->
+            <div v-else class="w-9 h-9 rounded-full bg-zinc-100 hover:bg-zinc-200 dark:bg-white/10 dark:hover:bg-white/15 border border-zinc-200/80 dark:border-white/10 flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-xs shadow-sm group-hover:border-red-500/50 transition">
+              <i class="fa-solid fa-user"></i>
+            </div>
+          </button>
+        </div>
+
       </div>
 
       <!-- MAIN CONTAINER -->
@@ -1857,65 +1875,6 @@
           </div>
         </div>
 
-        <!-- VIP 订阅与会员特权专区 (加进用户页面) -->
-        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-sm space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center text-sm shadow-sm">
-                <i class="fa-solid fa-crown"></i>
-              </div>
-              <div>
-                <h3 class="text-sm font-bold text-zinc-100 flex items-center gap-2">
-                  <span>VIP 会员订阅计划</span>
-                  <span v-if="isMember" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-normal">尊贵会员生效中</span>
-                </h3>
-                <p class="text-[11px] text-zinc-400">解锁 FLAC / Hi-Res 24bit 超高清无损音质与专属高速通道</p>
-              </div>
-            </div>
-            <button 
-              type="button" 
-              @click="fetchProducts" 
-              class="text-xs text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1">
-              <i class="fa-solid fa-rotate text-[10px]"></i>
-              <span>刷新套餐</span>
-            </button>
-          </div>
-
-          <!-- 产品套餐列表 -->
-          <div v-if="products.length" class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-            <div 
-              v-for="p in products" 
-              :key="p.id" 
-              class="bg-zinc-950/80 border border-zinc-800/80 hover:border-amber-500/40 rounded-xl p-4 flex flex-col justify-between transition group shadow-sm">
-              <div>
-                <div class="flex justify-between items-start mb-2">
-                  <div>
-                    <div class="font-bold text-sm text-zinc-100 group-hover:text-amber-400 transition">{{ p.name }}</div>
-                    <span class="text-[10px] font-mono text-zinc-500">SKU: {{ p.sku }}</span>
-                  </div>
-                  <div class="text-right">
-                    <span class="text-xs text-amber-500 font-bold">¥</span>
-                    <span class="text-xl font-bold font-mono text-amber-500">{{ (p.priceCents / 100).toFixed(2) }}</span>
-                    <div v-if="p.durationDays" class="text-[10px] text-zinc-500">{{ p.durationDays }} 天</div>
-                  </div>
-                </div>
-                <p class="text-[11px] text-zinc-400 line-clamp-2 mb-3">{{ p.description || '解锁无损 FLAC 音质与云端多端同步' }}</p>
-              </div>
-
-              <button 
-                type="button"
-                @click="createOrder(p)" 
-                :disabled="orderLoading"
-                class="w-full py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/10 active:scale-95">
-                <i class="fa-solid fa-qrcode text-[11px]"></i>
-                <span>微信扫码订阅</span>
-              </button>
-            </div>
-          </div>
-          <div v-else class="text-center py-6 text-xs text-zinc-500">
-            暂无上架套餐，请稍后刷新
-          </div>
-        </div>
       </div>
 
       <!-- Auth Form (Not logged in) -->
@@ -2673,9 +2632,9 @@
       </div> <!-- End of max-w-6xl container -->
     </div> <!-- End of RIGHT MAIN CONTENT WORKSPACE -->
 
-    <!-- Floating Pill Player Dock (最新现代版悬浮胶囊播放岛) -->
+    <!-- FULL-WIDTH FIXED BOTTOM PLAYER BAR (固定底部全占，流媒体通栏布局) -->
     <div 
-      class="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-[94%] sm:w-[88%] md:w-[760px] lg:w-[860px] select-none transition-all duration-300">
+      class="fixed bottom-0 left-0 right-0 z-40 w-full h-20 select-none bg-white/95 dark:bg-zinc-950/95 backdrop-blur-2xl border-t border-zinc-200/80 dark:border-white/10 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-8px_32px_rgba(0,0,0,0.6)] flex items-center px-3 sm:px-6 lg:px-8">
       
       <!-- Invisible native audio element for continuous robust playback -->
       <audio 
@@ -2688,118 +2647,154 @@
         @ended="playNextTrack"
         class="hidden"></audio>
 
-      <!-- Frosted Glass Capsule Dock Container -->
-      <div 
-        class="apple-player-dock flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 rounded-full backdrop-blur-3xl bg-white/85 dark:bg-zinc-900/85 border border-black/[0.08] dark:border-white/15 shadow-[0_12px_36px_rgba(0,0,0,0.16)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.65)]">
-        
-        <!-- Left Section: Playback Controls -->
-        <div class="flex items-center gap-1 sm:gap-2 shrink-0">
-          <button 
-            type="button"
-            @click="playPrevTrack"
-            title="上一首"
-            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition active:scale-90">
-            <i class="fa-solid fa-backward-step text-xs sm:text-sm"></i>
-          </button>
-          
-          <button 
-            type="button"
-            @click="togglePlayPause"
-            :title="isPlaying ? '暂停' : '播放'"
-            class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shadow-md transition active:scale-90">
-            <i :class="isPlaying ? 'fa-solid fa-pause text-xs sm:text-sm' : 'fa-solid fa-play text-xs sm:text-sm ml-0.5'"></i>
-          </button>
+      <div class="w-full flex items-center justify-between gap-3 sm:gap-6">
 
-          <button 
-            type="button"
-            @click="playNextTrack"
-            title="下一首"
-            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition active:scale-90">
-            <i class="fa-solid fa-forward-step text-xs sm:text-sm"></i>
-          </button>
-        </div>
-
-        <!-- Center Section: Track Island / Apple Icon -->
-        <div class="flex-1 min-w-0 mx-2 sm:mx-4 flex items-center justify-center">
-          <!-- When a track is active -->
-          <div v-if="currentTrack" class="w-full flex items-center gap-2 sm:gap-3 min-w-0">
-            <!-- Cover art with lyrics click -->
+        <!-- 1. Left: Track Info & Favorite (左侧歌曲封面与信息) -->
+        <div class="flex items-center gap-2.5 sm:gap-3 w-1/4 min-w-[140px] sm:min-w-[200px] max-w-[280px]">
+          <template v-if="currentTrack">
+            <!-- Cover Art with Lyrics Click -->
             <div 
               @click="showVisualizer = true"
               title="点击打开全屏流光歌词"
-              class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-zinc-800 shrink-0 overflow-hidden shadow-sm border border-black/5 dark:border-white/10 cursor-pointer hover:scale-105 transition-transform relative group">
+              class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-zinc-800 shrink-0 overflow-hidden shadow-sm border border-black/5 dark:border-white/10 cursor-pointer hover:scale-105 transition-transform relative group">
               <img :src="currentTrack.cover || '/assets/branding/app_icon.png'" class="w-full h-full object-cover">
-              <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                <i class="fa-solid fa-quote-right text-white text-[10px]"></i>
+              <div class="absolute inset-0 bg-black/35 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                <i class="fa-solid fa-quote-right text-white text-xs"></i>
               </div>
             </div>
 
-            <!-- Title & Scrubber Column -->
+            <!-- Title & Artist -->
             <div class="min-w-0 flex-1 flex flex-col justify-center">
-              <div class="flex items-center justify-between gap-2 min-w-0">
-                <div class="flex items-center gap-1.5 min-w-0 truncate">
-                  <span class="font-bold text-xs sm:text-sm text-zinc-900 dark:text-white truncate">{{ currentTrack.title }}</span>
-                  <span class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate hidden sm:inline">- {{ currentTrack.artist }}</span>
-                </div>
-                <div class="flex items-center gap-1 shrink-0">
-                  <span class="text-[9px] font-mono px-1 py-0.2 rounded bg-red-500/10 text-red-600 dark:text-red-400 font-bold border border-red-500/20">
-                    {{ isHiResQuality ? 'Hi-Res' : (currentTrack.actualQuality || 'Lossless') }}
-                  </span>
-                  <span class="text-[10px] font-mono text-zinc-400 dark:text-zinc-500 hidden sm:inline">
-                    {{ formatDuration(playbackTime) }} / {{ formatDuration(playbackDuration) }}
-                  </span>
-                </div>
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span class="font-bold text-xs sm:text-sm text-zinc-900 dark:text-white truncate cursor-pointer hover:underline" @click="showVisualizer = true">
+                  {{ currentTrack.title }}
+                </span>
+                <span class="text-[9px] font-mono px-1 py-0.2 rounded bg-red-500/10 text-red-600 dark:text-red-400 font-bold border border-red-500/20 shrink-0 hidden sm:inline">
+                  {{ isHiResQuality ? 'Hi-Res' : (currentTrack.actualQuality || 'Lossless') }}
+                </span>
               </div>
-
-              <!-- Sleek Apple Progress Slider -->
-              <div class="relative w-full flex items-center mt-1">
-                <input 
-                  type="range" 
-                  min="0" 
-                  :max="playbackDuration || 100" 
-                  step="0.5"
-                  :value="playbackTime"
-                  @mousedown="isScrubbing = true"
-                  @input="onSeekInput"
-                  @change="onSeekChange"
-                  class="apple-scrubber w-full h-1 bg-zinc-200 dark:bg-zinc-700/80 rounded-full appearance-none cursor-pointer outline-none">
+              <div class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+                {{ currentTrack.artist }}
               </div>
             </div>
+
+            <!-- Favorite Heart Button -->
+            <button 
+              type="button"
+              @click="toggleFavorite(currentTrack)"
+              :title="isFavorite(currentTrack) ? '取消收藏' : '加入收藏'"
+              class="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-rose-500 transition active:scale-90 shrink-0">
+              <i class="fa-solid fa-heart text-sm" :class="isFavorite(currentTrack) ? 'text-rose-500' : 'text-zinc-400 hover:text-rose-500'"></i>
+            </button>
+          </template>
+
+          <!-- Idle State (无播放时) -->
+          <template v-else>
+            <div class="flex items-center gap-2.5 text-zinc-400 dark:text-zinc-500">
+              <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/5 flex items-center justify-center">
+                <i class="fa-solid fa-music text-red-500 text-sm"></i>
+              </div>
+              <div class="text-xs font-medium truncate">TuneFree · 随心听</div>
+            </div>
+          </template>
+        </div>
+
+        <!-- 2. Center: Playback Controls & Scrubber (中间控制器与进度条) -->
+        <div class="flex-1 max-w-2xl flex flex-col items-center justify-center gap-1 min-w-0">
+          <!-- Button Controls -->
+          <div class="flex items-center gap-3 sm:gap-6">
+            <!-- 播放模式切换 -->
+            <button 
+              type="button"
+              @click="togglePlayMode"
+              :title="`当前模式: ${playMode === 'random' ? '随机播放' : (playMode === 'single' ? '单曲循环' : '列表循环')}`"
+              class="w-7 h-7 rounded-full flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition active:scale-90">
+              <i class="fa-solid text-xs" :class="{
+                'fa-shuffle text-red-500': playMode === 'random',
+                'fa-repeat text-red-500': playMode === 'single',
+                'fa-arrows-rotate': playMode === 'loop'
+              }"></i>
+            </button>
+
+            <!-- 上一首 -->
+            <button 
+              type="button"
+              @click="playPrevTrack"
+              title="上一首"
+              class="w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition active:scale-90">
+              <i class="fa-solid fa-backward-step text-sm"></i>
+            </button>
+            
+            <!-- 播放 / 暂停 大按钮 -->
+            <button 
+              type="button"
+              @click="togglePlayPause"
+              :title="isPlaying ? '暂停' : '播放'"
+              class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-md shadow-red-500/25 transition active:scale-95">
+              <i :class="isPlaying ? 'fa-solid fa-pause text-sm' : 'fa-solid fa-play text-sm ml-0.5'"></i>
+            </button>
+
+            <!-- 下一首 -->
+            <button 
+              type="button"
+              @click="playNextTrack"
+              title="下一首"
+              class="w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition active:scale-90">
+              <i class="fa-solid fa-forward-step text-sm"></i>
+            </button>
+
+            <!-- 全屏歌词开关键 -->
+            <button 
+              type="button"
+              @click="showVisualizer = !showVisualizer"
+              title="全屏流光歌词"
+              class="w-7 h-7 rounded-full flex items-center justify-center transition active:scale-90"
+              :class="showVisualizer ? 'text-red-500' : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'">
+              <i class="fa-solid fa-quote-right text-xs"></i>
+            </button>
           </div>
 
-          <!-- When idle (No track playing) -->
-          <div v-else class="flex items-center gap-2 py-1 text-zinc-400 dark:text-zinc-500">
-            <i class="fa-solid fa-music text-sm text-red-500"></i>
-            <span class="text-xs font-medium">TuneFree · 随心听</span>
+          <!-- Progress Slider & Timestamps -->
+          <div class="w-full flex items-center gap-2.5 text-[10px] font-mono text-zinc-400 dark:text-zinc-500">
+            <span class="w-8 text-right shrink-0">{{ formatDuration(playbackTime) }}</span>
+            <div class="relative flex-1 flex items-center">
+              <input 
+                type="range" 
+                min="0" 
+                :max="playbackDuration || 100" 
+                step="0.5"
+                :value="playbackTime"
+                @mousedown="isScrubbing = true"
+                @input="onSeekInput"
+                @change="onSeekChange"
+                class="apple-scrubber w-full h-1 bg-zinc-200 dark:bg-zinc-700/80 rounded-full appearance-none cursor-pointer outline-none">
+            </div>
+            <span class="w-8 text-left shrink-0">{{ formatDuration(playbackDuration) }}</span>
           </div>
         </div>
 
-        <!-- Right Section: Tools (Lyrics, Favorite, Volume) -->
-        <div class="flex items-center gap-1 sm:gap-2 shrink-0">
-          <!-- Lyrics Toggle Button -->
+        <!-- 3. Right: Queue Drawer & Volume Slider (右侧列表与音量) -->
+        <div class="flex items-center justify-end gap-2.5 sm:gap-3 w-1/4 min-w-[110px] sm:min-w-[180px] max-w-[260px]">
+          <!-- 播放列表抽屉按钮 -->
           <button 
             type="button"
-            @click="showVisualizer = !showVisualizer"
-            :title="showVisualizer ? '关闭歌词' : '开启全屏流光歌词'"
-            :class="showVisualizer ? 'text-red-500 bg-red-500/10' : 'text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10'"
-            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition active:scale-90">
-            <i class="fa-solid fa-quote-right text-xs"></i>
+            @click="showQueueDrawer = !showQueueDrawer"
+            title="播放队列"
+            class="relative w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/10 transition active:scale-90">
+            <i class="fa-solid fa-bars-staggered text-xs"></i>
+            <span v-if="playbackQueue.length" class="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-red-500 text-white text-[9px] font-bold">
+              {{ playbackQueue.length }}
+            </span>
           </button>
 
-          <!-- Favorite Button -->
-          <button 
-            v-if="currentTrack"
-            type="button"
-            @click.stop="toggleFavorite(currentTrack)"
-            :title="isFavorite(currentTrack) ? '已收藏' : '添加到喜欢'"
-            :class="isFavorite(currentTrack) ? 'text-rose-500' : 'text-zinc-400 hover:text-rose-400'"
-            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition active:scale-90">
-            <i class="fa-solid fa-heart text-xs"></i>
-          </button>
-
-          <!-- Volume Slider (Desktop) -->
-          <div class="hidden sm:flex items-center gap-1.5 pl-1">
-            <i class="fa-solid fa-volume-high text-xs text-zinc-400 dark:text-zinc-500"></i>
+          <!-- 音量控制 (桌面端) -->
+          <div class="hidden sm:flex items-center gap-2">
+            <button 
+              type="button"
+              @click="setVolume(volume > 0 ? 0 : 0.8)"
+              class="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition">
+              <i class="fa-solid text-xs" :class="volume === 0 ? 'fa-volume-xmark text-zinc-400' : 'fa-volume-high'"></i>
+            </button>
             <input 
               type="range" 
               min="0" 
@@ -2807,9 +2802,10 @@
               step="0.01" 
               :value="volume" 
               @input="setVolume($event.target.value)"
-              class="apple-volume-slider w-16 h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full appearance-none cursor-pointer outline-none">
+              class="apple-volume-slider w-16 md:w-20 h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full appearance-none cursor-pointer outline-none">
           </div>
         </div>
+
       </div>
     </div>
 
