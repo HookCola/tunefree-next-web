@@ -16,7 +16,9 @@
       } catch (e) {}
     })();
   </script>
-  <title>TuneFree Web - 极简音乐工作台</title>
+  <title>Apple Music - Web Player (TuneFree Next)</title>
+  <!-- Apple SF Pro Font System -->
+  <link rel="stylesheet" href="//www.apple.com/wss/fonts?families=SF+Pro,v4%7CSF+Pro+Icons,v1&display=swap">
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -47,9 +49,31 @@
   <style>
     :root {
       color-scheme: light dark;
+      --apple-red: #fa243c;
       --monet-primary: #2563eb;
       --monet-rgb: 37, 99, 235;
       --bg-main: #090a0f;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "SF Pro Text", "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    /* Apple Sliders */
+    .apple-scrubber::-webkit-slider-thumb,
+    .apple-volume-slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #fa243c;
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      transition: transform 0.15s ease;
+    }
+    .apple-scrubber:hover::-webkit-slider-thumb,
+    .apple-volume-slider:hover::-webkit-slider-thumb {
+      transform: scale(1.3);
     }
 
     /* ============================================================
@@ -491,71 +515,68 @@
 
   <div id="app" :class="{ 'monet-enabled': enableMonet }" class="relative z-10 flex flex-col md:flex-row min-h-screen w-full">
 
-    <!-- DESKTOP SIDESTAGE RAIL -->
-    <aside class="hidden md:flex flex-col w-64 shrink-0 h-screen sticky top-0 bg-zinc-950/70 backdrop-blur-2xl border-r border-white/5 p-4 justify-between select-none z-30 overflow-y-auto overflow-x-hidden">
-      <!-- Top Branding: Logo Only -->
-      <div class="flex flex-col gap-4">
-        <div class="flex items-center justify-center py-2 px-1">
-          <img src="/assets/branding/app_icon.png" alt="TuneFree" class="w-12 h-12 rounded-2xl shadow-xl shadow-blue-500/20 object-cover ring-1 ring-white/10 hover:scale-105 transition-transform duration-300 cursor-pointer" @click="activeTab = 'explore'" title="TuneFree Next">
+    <!-- APPLE MUSIC OFFICIAL SIDEBAR -->
+    <aside class="hidden md:flex flex-col w-60 shrink-0 h-screen sticky top-0 bg-white/95 dark:bg-zinc-950/90 backdrop-blur-2xl border-r border-zinc-200/80 dark:border-white/10 p-5 justify-between select-none z-30 overflow-y-auto">
+      <div class="flex flex-col gap-5">
+        <!-- Apple Music Logo -->
+        <div class="flex items-center gap-1.5 px-2 py-1 text-zinc-900 dark:text-white cursor-pointer select-none" @click="activeTab = 'explore'">
+          <i class="fa-brands fa-apple text-2xl text-zinc-900 dark:text-white"></i>
+          <span class="font-bold text-xl tracking-tight text-zinc-900 dark:text-white">Music</span>
         </div>
 
-        <!-- Navigation Menu -->
-        <nav class="flex flex-col gap-1.5 text-sm font-medium">
-          <!-- 探索发现 -->
-          <button 
-            type="button"
-            @click="activeTab = 'explore'"
-            :class="activeTab === 'explore' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5 font-semibold' : 'text-zinc-200 hover:text-white hover:bg-white/[0.04] border-transparent'"
-            class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl border transition-all text-left">
-            <i class="fa-solid fa-compass w-5 text-center text-base" :class="activeTab === 'explore' ? 'text-blue-400' : 'text-zinc-400'"></i>
-            <span>探索发现</span>
-          </button>
-
-          <!-- 聚合搜索 -->
+        <!-- Navigation Menu (Apple Music Modern Sidebar) -->
+        <nav class="flex flex-col gap-1 text-sm font-medium">
+          <!-- 搜索 -->
           <button 
             type="button"
             @click="activeTab = 'search'"
-            :class="activeTab === 'search' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5 font-semibold' : 'text-zinc-200 hover:text-white hover:bg-white/[0.04] border-transparent'"
-            class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl border transition-all text-left">
-            <i class="fa-solid fa-magnifying-glass w-5 text-center text-base" :class="activeTab === 'search' ? 'text-blue-400' : 'text-zinc-400'"></i>
-            <span>聚合搜索</span>
+            :class="activeTab === 'search' ? 'bg-zinc-200/90 dark:bg-white/15 text-zinc-900 dark:text-white font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5'"
+            class="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left">
+            <i class="fa-solid fa-magnifying-glass w-5 text-center text-sm" :class="activeTab === 'search' ? 'text-red-500' : 'text-zinc-400'"></i>
+            <span>搜索</span>
+          </button>
+
+          <!-- 主页 -->
+          <button 
+            type="button"
+            @click="activeTab = 'explore'"
+            :class="activeTab === 'explore' ? 'bg-zinc-200/90 dark:bg-white/15 text-zinc-900 dark:text-white font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5'"
+            class="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left">
+            <i class="fa-solid fa-house w-5 text-center text-sm" :class="activeTab === 'explore' ? 'text-red-500' : 'text-zinc-400'"></i>
+            <span>主页</span>
+          </button>
+
+          <!-- 新发现 (类别与榜单) -->
+          <button 
+            type="button"
+            @click="activeTab = 'explore'"
+            class="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5">
+            <i class="fa-solid fa-border-all w-5 text-center text-sm text-zinc-400"></i>
+            <span>新发现</span>
           </button>
 
           <!-- 我的乐库 -->
           <button 
             type="button"
             @click="activeTab = 'library'"
-            :class="activeTab === 'library' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5 font-semibold' : 'text-zinc-200 hover:text-white hover:bg-white/[0.04] border-transparent'"
-            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl border transition-all text-left">
+            :class="activeTab === 'library' ? 'bg-zinc-200/90 dark:bg-white/15 text-zinc-900 dark:text-white font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5'"
+            class="w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all text-left">
             <div class="flex items-center gap-3">
-              <i class="fa-solid fa-heart w-5 text-center text-base" :class="activeTab === 'library' ? 'text-rose-500' : 'text-zinc-400'"></i>
+              <i class="fa-solid fa-heart w-5 text-center text-sm" :class="activeTab === 'library' ? 'text-rose-500' : 'text-zinc-400'"></i>
               <span>我的乐库</span>
             </div>
-            <span v-if="favoriteTracks.length" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/20 font-bold">
+            <span v-if="favoriteTracks.length" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-500 font-bold">
               {{ favoriteTracks.length }}
             </span>
-          </button>
-
-          <!-- 个人中心 -->
-          <button 
-            type="button"
-            @click="activeTab = 'account'"
-            :class="activeTab === 'account' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5 font-semibold' : 'text-zinc-200 hover:text-white hover:bg-white/[0.04] border-transparent'"
-            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl border transition-all text-left">
-            <div class="flex items-center gap-3">
-              <i class="fa-solid fa-user w-5 text-center text-base" :class="activeTab === 'account' ? 'text-blue-400' : 'text-zinc-400'"></i>
-              <span>个人中心</span>
-            </div>
-            <span v-if="!user" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
           </button>
 
           <!-- VIP 订阅 -->
           <button 
             type="button"
             @click="activeTab = 'products'"
-            :class="activeTab === 'products' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5 font-semibold' : 'text-zinc-200 hover:text-white hover:bg-white/[0.04] border-transparent'"
-            class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl border transition-all text-left">
-            <i class="fa-solid fa-gem w-5 text-center text-base" :class="activeTab === 'products' ? 'text-amber-400' : 'text-zinc-400'"></i>
+            :class="activeTab === 'products' ? 'bg-zinc-200/90 dark:bg-white/15 text-zinc-900 dark:text-white font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5'"
+            class="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left">
+            <i class="fa-solid fa-gem w-5 text-center text-sm" :class="activeTab === 'products' ? 'text-amber-500' : 'text-zinc-400'"></i>
             <span>VIP 订阅</span>
           </button>
 
@@ -563,72 +584,37 @@
           <button 
             type="button"
             @click="activeTab = 'settings'"
-            :class="activeTab === 'settings' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5 font-semibold' : 'text-zinc-200 hover:text-white hover:bg-white/[0.04] border-transparent'"
-            class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl border transition-all text-left">
-            <i class="fa-solid fa-gear w-5 text-center text-base" :class="activeTab === 'settings' ? 'text-blue-400' : 'text-zinc-400'"></i>
+            :class="activeTab === 'settings' ? 'bg-zinc-200/90 dark:bg-white/15 text-zinc-900 dark:text-white font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5'"
+            class="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left">
+            <i class="fa-solid fa-gear w-5 text-center text-sm" :class="activeTab === 'settings' ? 'text-red-500' : 'text-zinc-400'"></i>
             <span>系统设置</span>
-          </button>
-
-          <!-- API 日志 -->
-          <button 
-            type="button"
-            @click="activeTab = 'logs'"
-            :class="activeTab === 'logs' ? 'bg-blue-600/15 text-blue-400 border-white/10 shadow-lg shadow-blue-500/5 font-semibold' : 'text-zinc-200 hover:text-white hover:bg-white/[0.04] border-transparent'"
-            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl border transition-all text-left">
-            <div class="flex items-center gap-3">
-              <i class="fa-solid fa-terminal w-5 text-center text-base" :class="activeTab === 'logs' ? 'text-cyan-400' : 'text-zinc-400'"></i>
-              <span>API 日志</span>
-            </div>
-            <span v-if="logs.length" class="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-bold">
-              {{ logs.length }}
-            </span>
           </button>
         </nav>
       </div>
 
-      <!-- Bottom User Profile Card on Sidebar -->
-      <div class="pt-4 border-t border-white/5">
-        <div v-if="user" class="p-3 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-between">
-          <div class="flex items-center gap-2.5 min-w-0">
-            <div class="w-8 h-8 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-xs ring-1 ring-blue-500/30 shrink-0">
-              {{ user.displayName ? user.displayName.slice(0, 1) : 'U' }}
-            </div>
-            <div class="min-w-0">
-              <div class="text-xs font-semibold text-zinc-200 truncate flex items-center gap-1">
-                <span>{{ user.displayName }}</span>
-                <img v-if="isMember" src="/assets/profile/vip_diamond.png" alt="VIP" class="w-3.5 h-3.5 shrink-0">
-              </div>
-              <div class="text-[10px] text-emerald-400 truncate">{{ getMembershipText() }}</div>
-            </div>
-          </div>
-          <div class="flex items-center gap-1 shrink-0">
-            <button 
-              @click="setThemeMode(themeMode === 'dark' ? 'light' : (themeMode === 'light' ? 'auto' : 'dark'))" 
-              :title="`当前主题: ${themeMode === 'auto' ? '跟随系统' : (themeMode === 'dark' ? '深色' : '浅色')} (点击切换)`" 
-              class="text-zinc-400 hover:text-amber-400 p-1.5 transition text-xs">
-              <i class="fa-solid" :class="{ 'fa-moon text-indigo-400': themeMode === 'dark', 'fa-sun text-amber-500': themeMode === 'light', 'fa-circle-half-stroke text-blue-400': themeMode === 'auto' }"></i>
-            </button>
-            <button @click="syncLibrary" title="云端双向同步" :disabled="syncing" class="text-zinc-400 hover:text-blue-400 p-1.5 transition text-xs">
-              <i class="fa-solid fa-cloud-arrow-up" :class="{ 'animate-spin': syncing }"></i>
-            </button>
-            <button @click="logout" title="退出登录" class="text-zinc-500 hover:text-red-400 p-1.5 transition text-xs">
-              <i class="fa-solid fa-arrow-right-from-bracket"></i>
-            </button>
-          </div>
-        </div>
-        <div v-else class="flex items-center gap-2">
-          <button @click="activeTab = 'account'" class="flex-1 py-2.5 px-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
-            <i class="fa-solid fa-user"></i>
-            <span>登录 / 注册</span>
-          </button>
+      <!-- Bottom User & App Action -->
+      <div class="pt-4 flex flex-col gap-3">
+        <div class="flex items-center justify-between px-1">
+          <a href="https://music.apple.com" target="_blank" class="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1 transition">
+            <span>在“音乐”中打开</span>
+            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+          </a>
           <button 
             type="button"
             @click="setThemeMode(themeMode === 'dark' ? 'light' : (themeMode === 'light' ? 'auto' : 'dark'))" 
-            :title="`当前主题: ${themeMode === 'auto' ? '跟随系统' : (themeMode === 'dark' ? '深色' : '浅色')} (点击切换)`" 
-            class="p-2.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-zinc-300 transition text-xs">
+            :title="`当前主题: ${themeMode === 'auto' ? '跟随系统' : (themeMode === 'dark' ? '深色' : '浅色')}`" 
+            class="w-7 h-7 rounded-full bg-zinc-100 dark:bg-white/10 flex items-center justify-center text-xs text-zinc-700 dark:text-zinc-300 hover:scale-105 transition">
             <i class="fa-solid" :class="{ 'fa-moon text-indigo-400': themeMode === 'dark', 'fa-sun text-amber-500': themeMode === 'light', 'fa-circle-half-stroke text-blue-400': themeMode === 'auto' }"></i>
           </button>
         </div>
+        
+        <!-- User Pill Button (Apple style: Black capsule button) -->
+        <button 
+          @click="activeTab = 'account'" 
+          class="w-full py-2.5 px-4 rounded-full bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 font-semibold text-xs shadow-md transition flex items-center justify-center gap-2 active:scale-95">
+          <i class="fa-solid fa-user text-xs"></i>
+          <span>{{ user ? user.displayName : '登录' }}</span>
+        </button>
       </div>
     </aside>
 
@@ -659,11 +645,62 @@
         </div>
       </header>
 
+      <!-- Apple Music Centered Top Search Bar -->
+      <div class="sticky top-0 z-20 pt-3.5 pb-2 px-4 sm:px-8 bg-inherit backdrop-blur-xl">
+        <div class="max-w-xl mx-auto relative flex items-center">
+          <i class="fa-solid fa-magnifying-glass absolute left-4 text-zinc-400 text-sm pointer-events-none"></i>
+          <input 
+            type="text"
+            v-model="keyword"
+            @focus="onTopSearchFocus"
+            @keydown.enter="handleSearchSubmit"
+            :placeholder="currentPlaceholder || '搜索艺人、歌曲、歌词与专辑...'"
+            class="w-full pl-11 pr-24 py-2.5 bg-zinc-100 hover:bg-zinc-200/70 focus:bg-white dark:bg-zinc-800/80 dark:hover:bg-zinc-800 dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-sm rounded-full outline-none border border-transparent focus:border-red-500/50 shadow-sm transition-all placeholder:text-zinc-400">
+          <div class="absolute right-2 flex items-center gap-1.5">
+            <button v-if="keyword" @click="clearSearch" class="w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-300 flex items-center justify-center text-xs hover:scale-105 transition">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+            <button @click="handleSearchSubmit" class="px-3.5 py-1 rounded-full bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition shadow-sm active:scale-95">
+              搜索
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- MAIN CONTAINER -->
       <div class="max-w-6xl w-full mx-auto p-3 sm:p-4 md:p-8 flex-1 flex flex-col min-w-0 overflow-x-hidden">
 
         <!-- TAB 0: 探索发现 (Explore) -->
         <main v-show="activeTab === 'explore'" class="flex-1 flex flex-col gap-8">
+          
+          <!-- Apple Music Category Tiles (类别浏览) -->
+          <section class="flex flex-col gap-3.5">
+            <div class="flex items-center justify-between">
+              <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+                <span>类别浏览</span>
+              </h2>
+              <span class="text-xs text-zinc-400">畅选海量热门流派与精选榜单</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+              <div 
+                v-for="cat in appleCategories" 
+                :key="cat.name"
+                @click="selectAppleCategory(cat)"
+                class="relative h-28 sm:h-32 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:shadow-xl shadow-sm select-none group bg-gradient-to-br"
+                :class="cat.bg">
+                <div class="flex items-center justify-between z-10">
+                  <span class="text-[10px] font-bold text-white/80 uppercase tracking-widest">Apple Music</span>
+                  <i class="fa-solid fa-play text-white/0 group-hover:text-white/95 transition-all text-xs"></i>
+                </div>
+                <div class="z-10 font-bold text-sm sm:text-base text-white tracking-tight leading-tight">
+                  {{ cat.name }}
+                </div>
+                <!-- Radial glow light pattern -->
+                <div class="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-white/15 blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>
+              </div>
+            </div>
+          </section>
           <!-- Hero Banner / Daily Mix -->
           <div class="relative overflow-hidden rounded-3xl p-6 md:p-8 bg-gradient-to-r from-blue-900/40 via-indigo-900/30 to-zinc-900/40 border border-white/10 shadow-2xl backdrop-blur-xl">
             <div class="relative z-10 max-w-xl">
@@ -2677,98 +2714,145 @@
       </div> <!-- End of max-w-6xl container -->
     </div> <!-- End of RIGHT MAIN CONTENT WORKSPACE -->
 
-    <!-- Floating Audio Player Bar (Liquid Glass Dock) -->
-    <footer v-if="currentTrack" class="fixed bottom-14 md:bottom-0 md:left-64 left-0 right-0 bg-zinc-950/90 backdrop-blur-2xl border-t border-white/10 p-2.5 md:p-3 z-30 shadow-2xl transition-all duration-300">
-      <div class="max-w-5xl mx-auto flex items-center justify-between gap-2.5 md:gap-4">
-        <!-- Track Info (Click to open full-screen visualizer & lyrics) -->
-        <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 cursor-pointer group" @click="showVisualizer = true" title="点击展开全屏动效与歌词">
-          <!-- Album Cover Thumbnail with vinyl groove reflection -->
-          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center shrink-0 shadow-lg relative overflow-hidden group-hover:border-blue-500/50 transition duration-300">
-            <img :src="currentTrack.cover || '/assets/branding/app_icon.png'" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-            <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-              <i class="fa-solid fa-expand text-white text-xs"></i>
-            </div>
-          </div>
-          <div class="min-w-0 flex-1">
-            <div class="text-xs sm:text-sm font-semibold text-zinc-100 truncate group-hover:text-blue-400 transition">{{ currentTrack.title }}</div>
-            <div class="text-[11px] sm:text-xs text-zinc-400 truncate">{{ currentTrack.artist }}</div>
-            <div class="flex items-center gap-2 mt-0.5">
-              <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-blue-900/40 text-blue-300 border border-blue-700/40 shrink-0">
-                {{ currentTrack.actualQuality || currentTrack.quality || '标准' }}
-              </span>
-              <!-- Hi-Res Mark -->
-              <img v-if="isHiResQuality" src="/assets/player/lossless_mark.png" alt="Hi-Res" class="h-3 sm:h-3.5 object-contain">
-              <!-- Audio Wave Indicator -->
-              <img v-if="isPlaying" src="/assets/player/quality_wave_1.png" alt="Playing" class="h-2.5 sm:h-3 animate-pulse">
-            </div>
-          </div>
-        </div>
+    <!-- Apple Music Floating Pill Player Dock (最新现代版悬浮胶囊播放岛) -->
+    <div 
+      class="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-[94%] sm:w-[88%] md:w-[760px] lg:w-[860px] select-none transition-all duration-300">
+      
+      <!-- Invisible native audio element for continuous robust playback -->
+      <audio 
+        ref="audioPlayer" 
+        :src="currentTrack ? currentTrack.playUrl : ''" 
+        autoplay
+        @play="onAudioPlay"
+        @pause="onAudioPause"
+        @timeupdate="onAudioTimeUpdate"
+        @ended="playNextTrack"
+        class="hidden"></audio>
 
-        <!-- Audio Player Native Element (Visible on Desktop, Hidden on Mobile) -->
-        <div class="hidden md:block flex-1 w-full max-w-lg">
-          <audio 
-            ref="audioPlayer" 
-            :src="currentTrack.playUrl" 
-            controls 
-            autoplay
-            @play="onAudioPlay"
-            @pause="onAudioPause"
-            @timeupdate="onAudioTimeUpdate"
-            class="w-full h-9 rounded-lg filter invert brightness-90"></audio>
-        </div>
-
-        <!-- Hidden audio for mobile if container is hidden -->
-        <audio 
-          v-if="!$el?.querySelector?.('.hidden.md\\:block audio')"
-          ref="mobileAudioRef"
-          class="hidden"></audio>
-
-        <!-- Controls & Actions -->
-        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <!-- Mobile Play/Pause Button -->
+      <!-- Frosted Glass Capsule Dock Container -->
+      <div 
+        class="apple-player-dock flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 rounded-full backdrop-blur-3xl bg-white/85 dark:bg-zinc-900/85 border border-black/[0.08] dark:border-white/15 shadow-[0_12px_36px_rgba(0,0,0,0.16)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.65)]">
+        
+        <!-- Left Section: Playback Controls (Apple Music style) -->
+        <div class="flex items-center gap-1 sm:gap-2 shrink-0">
           <button 
             type="button"
-            @click.stop="togglePlayPause"
-            class="md:hidden w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center shadow transition active:scale-95">
-            <i :class="isPlaying ? 'fa-solid fa-pause text-xs' : 'fa-solid fa-play text-xs ml-0.5'"></i>
+            @click="playPrevTrack"
+            title="上一首"
+            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition active:scale-90">
+            <i class="fa-solid fa-backward-step text-xs sm:text-sm"></i>
+          </button>
+          
+          <button 
+            type="button"
+            @click="togglePlayPause"
+            :title="isPlaying ? '暂停' : '播放'"
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center shadow-md transition active:scale-90">
+            <i :class="isPlaying ? 'fa-solid fa-pause text-xs sm:text-sm' : 'fa-solid fa-play text-xs sm:text-sm ml-0.5'"></i>
           </button>
 
-          <!-- Favorite button on player bar -->
           <button 
+            type="button"
+            @click="playNextTrack"
+            title="下一首"
+            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition active:scale-90">
+            <i class="fa-solid fa-forward-step text-xs sm:text-sm"></i>
+          </button>
+        </div>
+
+        <!-- Center Section: Track Island / Apple Icon -->
+        <div class="flex-1 min-w-0 mx-2 sm:mx-4 flex items-center justify-center">
+          <!-- When a track is active -->
+          <div v-if="currentTrack" class="w-full flex items-center gap-2 sm:gap-3 min-w-0">
+            <!-- Cover art with lyrics click -->
+            <div 
+              @click="showVisualizer = true"
+              title="点击打开全屏流光歌词"
+              class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-zinc-800 shrink-0 overflow-hidden shadow-sm border border-black/5 dark:border-white/10 cursor-pointer hover:scale-105 transition-transform relative group">
+              <img :src="currentTrack.cover || '/assets/branding/app_icon.png'" class="w-full h-full object-cover">
+              <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                <i class="fa-solid fa-quote-right text-white text-[10px]"></i>
+              </div>
+            </div>
+
+            <!-- Title & Scrubber Column -->
+            <div class="min-w-0 flex-1 flex flex-col justify-center">
+              <div class="flex items-center justify-between gap-2 min-w-0">
+                <div class="flex items-center gap-1.5 min-w-0 truncate">
+                  <span class="font-bold text-xs sm:text-sm text-zinc-900 dark:text-white truncate">{{ currentTrack.title }}</span>
+                  <span class="text-[11px] text-zinc-500 dark:text-zinc-400 truncate hidden sm:inline">- {{ currentTrack.artist }}</span>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                  <span class="text-[9px] font-mono px-1 py-0.2 rounded bg-red-500/10 text-red-600 dark:text-red-400 font-bold border border-red-500/20">
+                    {{ isHiResQuality ? 'Hi-Res' : (currentTrack.actualQuality || 'Lossless') }}
+                  </span>
+                  <span class="text-[10px] font-mono text-zinc-400 dark:text-zinc-500 hidden sm:inline">
+                    {{ formatDuration(playbackTime) }} / {{ formatDuration(playbackDuration) }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Sleek Apple Progress Slider -->
+              <div class="relative w-full flex items-center mt-1">
+                <input 
+                  type="range" 
+                  min="0" 
+                  :max="playbackDuration || 100" 
+                  step="0.5"
+                  :value="playbackTime"
+                  @mousedown="isScrubbing = true"
+                  @input="onSeekInput"
+                  @change="onSeekChange"
+                  class="apple-scrubber w-full h-1 bg-zinc-200 dark:bg-zinc-700/80 rounded-full appearance-none cursor-pointer outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- When idle (No track playing) -->
+          <div v-else class="flex items-center gap-2 py-1 text-zinc-400 dark:text-zinc-500">
+            <i class="fa-brands fa-apple text-lg"></i>
+            <span class="text-xs font-medium">Apple Music · 就绪</span>
+          </div>
+        </div>
+
+        <!-- Right Section: Tools (Lyrics, Favorite, Volume) -->
+        <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+          <!-- Lyrics Toggle Button -->
+          <button 
+            type="button"
+            @click="showVisualizer = !showVisualizer"
+            :title="showVisualizer ? '关闭歌词' : '开启全屏流光歌词'"
+            :class="showVisualizer ? 'text-red-500 bg-red-500/10' : 'text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10'"
+            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition active:scale-90">
+            <i class="fa-solid fa-quote-right text-xs"></i>
+          </button>
+
+          <!-- Favorite Button -->
+          <button 
+            v-if="currentTrack"
             type="button"
             @click.stop="toggleFavorite(currentTrack)"
-            class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center transition border border-white/10 shadow-sm"
-            :class="isFavorite(currentTrack) ? 'text-rose-500 bg-rose-500/10 hover:bg-rose-500/20' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'"
-            :title="isFavorite(currentTrack) ? '已收藏' : '添加收藏'">
-            <i class="fa-solid fa-heart text-xs" :class="isFavorite(currentTrack) ? 'text-rose-500' : 'text-zinc-400'"></i>
+            :title="isFavorite(currentTrack) ? '已收藏' : '添加到喜欢'"
+            :class="isFavorite(currentTrack) ? 'text-rose-500' : 'text-zinc-400 hover:text-rose-400'"
+            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 transition active:scale-90">
+            <i class="fa-solid fa-heart text-xs"></i>
           </button>
 
-          <!-- Visualizer Button (Desktop) -->
-          <button 
-            type="button"
-            @click="showVisualizer = true"
-            class="hidden sm:flex px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-200 text-xs font-medium transition items-center gap-1.5 border border-white/10 shadow-sm"
-            title="沉浸式原版动效与歌词">
-            <i class="fa-solid fa-wand-magic-sparkles text-blue-400"></i>
-            <span>视效歌词</span>
-          </button>
-
-          <!-- Download Button (Desktop) -->
-          <button 
-            type="button"
-            @click="downloadTrack(currentTrack)" 
-            class="hidden sm:flex px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition items-center gap-1.5 shadow-sm">
-            <i class="fa-solid fa-download"></i>
-            <span>下载音频</span>
-          </button>
-
-          <!-- Close Player Button -->
-          <button type="button" @click.stop="currentTrack = null" class="text-zinc-500 hover:text-zinc-300 text-sm p-1 ml-0.5">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
+          <!-- Volume Slider (Desktop) -->
+          <div class="hidden sm:flex items-center gap-1.5 pl-1">
+            <i class="fa-solid fa-volume-high text-xs text-zinc-400 dark:text-zinc-500"></i>
+            <input 
+              type="range" 
+              min="0" 
+              max="1" 
+              step="0.01" 
+              :value="volume" 
+              @input="setVolume($event.target.value)"
+              class="apple-volume-slider w-16 h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full appearance-none cursor-pointer outline-none">
+          </div>
         </div>
       </div>
-    </footer>
+    </div>
 
     <!-- Fullscreen Immersive Visualizer Modal -->
     <div 
@@ -3181,6 +3265,108 @@
           localStorage.setItem('tunefree_lyric_color', color);
         }
 
+        // Apple Music Categories Data (25 Modern Editorial Tiles)
+        const appleCategories = [
+          { name: '国语流行', bg: 'from-[#e11d48] to-[#be123c]', query: '国语流行' },
+          { name: 'K-Pop', bg: 'from-[#f472b6] to-[#db2777]', query: 'K-Pop' },
+          { name: '国际流行', bg: 'from-[#ec4899] to-[#be185d]', query: '欧美流行' },
+          { name: '粤语流行', bg: 'from-[#b91c1c] to-[#881337]', query: '粤语流行' },
+          { name: '嘻哈/说唱', bg: 'from-[#2563eb] to-[#1d4ed8]', query: '说唱' },
+          { name: 'Apple Music 独家', bg: 'from-[#f43f5e] to-[#e11d48]', query: '热歌' },
+          { name: 'C-Pop', bg: 'from-[#fb7185] to-[#f43f5e]', query: '华语' },
+          { name: 'R&B', bg: 'from-[#7c3aed] to-[#6d28d9]', query: 'R&B' },
+          { name: '睡觉 / 减压', bg: 'from-[#818cf8] to-[#6366f1]', query: '助眠' },
+          { name: '瞩目之星', bg: 'from-[#dc2626] to-[#991b1b]', query: '新歌' },
+          { name: '工作时间', bg: 'from-[#059669] to-[#047857]', query: '轻音乐' },
+          { name: '古典音乐', bg: 'from-[#7e22ce] to-[#581c87]', query: '古典' },
+          { name: '减压纯音', bg: 'from-[#0d9488] to-[#0f766e]', query: '纯音乐' },
+          { name: '空间音频', bg: 'from-[#e11d48] to-[#9f1239]', query: 'Hi-Res' },
+          { name: '今日热门', bg: 'from-[#d97706] to-[#b45309]', query: '热歌' },
+          { name: '运动健身', bg: 'from-[#65a30d] to-[#4d7c0f]', query: '健身' },
+          { name: 'DJ 混音精选', bg: 'from-[#10b981] to-[#059669]', query: 'DJ' },
+          { name: '电子音乐', bg: 'from-[#047857] to-[#065f46]', query: '电音' },
+          { name: '另类音乐', bg: 'from-[#ca8a04] to-[#a16207]', query: '摇滚' },
+          { name: 'J-Pop', bg: 'from-[#f43f5e] to-[#be123c]', query: 'J-Pop' },
+          { name: '日本动漫音乐', bg: 'from-[#6366f1] to-[#4338ca]', query: 'ACG' },
+          { name: '民谣吉他', bg: 'from-[#14b8a6] to-[#0d9488]', query: '民谣' },
+          { name: '爵士乐', bg: 'from-[#0284c7] to-[#0369a1]', query: '爵士' },
+          { name: '影视原声', bg: 'from-[#4f46e5] to-[#3730a3]', query: '原声带' },
+          { name: '官方排行榜', bg: 'from-[#eab308] to-[#ca8a04]', query: '排行榜' }
+        ];
+
+        function selectAppleCategory(cat) {
+          keyword.value = cat.query;
+          activeTab.value = 'search';
+          handleSearch();
+        }
+
+        const playbackTime = ref(0);
+        const playbackDuration = ref(0);
+        const isScrubbing = ref(false);
+        const volume = ref(parseFloat(localStorage.getItem('tunefree_volume') || '0.85'));
+
+        function setVolume(v) {
+          volume.value = parseFloat(v);
+          if (audioPlayer.value) {
+            audioPlayer.value.volume = volume.value;
+          }
+          localStorage.setItem('tunefree_volume', volume.value);
+        }
+
+        function onSeekInput(e) {
+          playbackTime.value = parseFloat(e.target.value);
+        }
+
+        function onSeekChange(e) {
+          if (audioPlayer.value) {
+            audioPlayer.value.currentTime = parseFloat(e.target.value);
+          }
+          isScrubbing.value = false;
+        }
+
+        function formatDuration(sec) {
+          if (!sec || isNaN(sec)) return '0:00';
+          const m = Math.floor(sec / 60);
+          const s = Math.floor(sec % 60);
+          return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        function playNextTrack() {
+          const list = (currentPlaylistTracks.value && currentPlaylistTracks.value.length) ? currentPlaylistTracks.value : (songList.value || []);
+          if (!list.length) return;
+          const curIdx = list.findIndex(s => s.id === currentTrack.value?.id);
+          if (curIdx >= 0 && curIdx < list.length - 1) {
+            parseAndPlay(list[curIdx + 1]);
+          } else {
+            parseAndPlay(list[0]);
+          }
+        }
+
+        function playPrevTrack() {
+          const list = (currentPlaylistTracks.value && currentPlaylistTracks.value.length) ? currentPlaylistTracks.value : (songList.value || []);
+          if (!list.length) return;
+          const curIdx = list.findIndex(s => s.id === currentTrack.value?.id);
+          if (curIdx > 0) {
+            parseAndPlay(list[curIdx - 1]);
+          } else {
+            parseAndPlay(list[list.length - 1]);
+          }
+        }
+
+        function handleSearchSubmit() {
+          if (!keyword.value.trim() && currentPlaceholder.value) {
+            keyword.value = currentPlaceholder.value;
+          }
+          activeTab.value = 'search';
+          handleSearch();
+        }
+
+        function onTopSearchFocus() {
+          if (!hasSearched.value) {
+            activeTab.value = 'search';
+          }
+        }
+
         function rgbToHsl(r, g, b) {
           r /= 255; g /= 255; b /= 255;
           const max = Math.max(r, g, b), min = Math.min(r, g, b);
@@ -3393,7 +3579,12 @@
         }
 
         function onAudioTimeUpdate() {
-          if (!audioPlayer.value || !parsedLyrics.value.length) return;
+          if (!audioPlayer.value) return;
+          if (!isScrubbing.value) {
+            playbackTime.value = audioPlayer.value.currentTime || 0;
+          }
+          playbackDuration.value = audioPlayer.value.duration || 0;
+          if (!parsedLyrics.value.length) return;
           const curTime = audioPlayer.value.currentTime;
           let idx = -1;
           for (let i = 0; i < parsedLyrics.value.length; i++) {
@@ -3455,6 +3646,9 @@
 
         function onAudioPlay() {
           isPlaying.value = true;
+          if (audioPlayer.value) {
+            audioPlayer.value.volume = volume.value;
+          }
         }
 
         function onAudioPause() {
@@ -4888,6 +5082,20 @@
           lyricHighlightColor,
           lyricColorPresets,
           setLyricHighlightColor,
+          appleCategories,
+          selectAppleCategory,
+          playbackTime,
+          playbackDuration,
+          isScrubbing,
+          volume,
+          setVolume,
+          onSeekInput,
+          onSeekChange,
+          formatDuration,
+          playNextTrack,
+          playPrevTrack,
+          handleSearchSubmit,
+          onTopSearchFocus,
           activeTab,
           searchSource,
           showMobileSearchSourceDropdown,
