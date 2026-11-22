@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "round": "20261122-mobile-and-source-polish",
+  "phase": "after",
+  "capturedAt": "2026-11-22T15:19:17.495Z",
+  "kind": "working-tree-diff-relative-to-recorded-HEAD",
+  "head": "0116bfc8c16c2e4ed108cb88041b68b9b039e5f3",
+  "branch": "main",
+  "status": "## main...origin/main\n M public/index.html\n?? AGENTS.md\n?? HANDOFF.md\n?? docs/\n?? scripts/snapshot-handoff.mjs",
+  "explanation": "Includes staged/unstaged tracked changes and non-ignored untracked files. Compare before/after with the activity log to identify this round. Artifacts are excluded.",
+  "skippedSensitivePaths": [],
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 1288,
+      "sha256": "50f9ee1e909353640d63139720b33218aec32ced8b0532e25ad10f25404a49b1"
+    },
+    {
+      "path": "HANDOFF.md",
+      "bytes": 8085,
+      "sha256": "16b6b34131849f5057b259ca5717ef0fe55320fb01f58fe6d9d4ebb4e8449982"
+    },
+    {
+      "path": "docs/agent-activity.md",
+      "bytes": 8051,
+      "sha256": "840a4e81fcc0c8530992e2cac5678cb58eb12fdeaadeb94643566f24545b19c4"
+    },
+    {
+      "path": "docs/agent-switching.md",
+      "bytes": 2490,
+      "sha256": "c3c6920fbc2d1ec93c7fc4f8dc9678e13a22fb55e22c5f4a396e47a562dfb84b"
+    },
+    {
+      "path": "public/index.html",
+      "bytes": 257822,
+      "sha256": "91ddd35b7f33ec2ff5bf67cec974438bf2097abbf3953ae32a3b9a2233d46f3b"
+    },
+    {
+      "path": "scripts/snapshot-handoff.mjs",
+      "bytes": 4496,
+      "sha256": "ceca1d6755f1e3a1717ce5b15edbc0431fe834621fc76ecaf40a7493faa3d1cf"
+    }
+  ]
+}

@@ -1,0 +1,279 @@
+diff --git a/AGENTS.md b/AGENTS.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..7e6b36d9240ec91e977bece112b97fd9bb6157b6
+--- /dev/null
++++ b/AGENTS.md
+@@ -0,0 +1,8 @@
++# Project working agreement
++
++- Start by reading `HANDOFF.md`, its latest entry in `docs/agent-activity.md`, and the referenced patches. Verify current Git status and recent commits before editing.
++- Before each work round, choose a unique round ID and run `node scripts/snapshot-handoff.mjs <round-id> before`.
++- Keep changes focused on the user's TuneFree requirements and preserve existing features. For Vue/UI changes, check browser errors and desktop, narrow desktop and mobile viewports when feasible; distinguish static checks from visual acceptance.
++- At the end of every round, append to `docs/agent-activity.md`: the user's request, engineering reasons, ordered operations, exact files/symbols and before/after behavior, commands with actual results including failures, initial/final Git state, and remaining tasks. Preserve earlier entries.
++- Update `HANDOFF.md` as the current-state index, then run `node scripts/snapshot-handoff.mjs <round-id> after`. Patches are relative to the recorded HEAD; use before/after snapshots and the activity log to separate pre-existing work from this round.
++- Respect existing user authorization. Report commits, pushes, deployments and checks only after they actually succeed. Keep credentials and private account data out of handoff records.
+diff --git a/HANDOFF.md b/HANDOFF.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..653cc4fd5e9be06b4169f4919a3e3db6b46b2d6a
+--- /dev/null
++++ b/HANDOFF.md
+@@ -0,0 +1,76 @@
++# TuneFree Next Web 会话接力
++
++这份文件是 Codex 与 Antigravity 共用的项目接力记录。接力时先读本文件，再查看代码和 Git 当前状态；仓库现状优先于旧对话中的描述。
++
++## 本轮完整接力
++
++- [逐步操作记录](docs/agent-activity.md#20261121-codex-takeover)包含用户要求、每项工程操作、文件变化、命令与结果，以及下一步。
++- [本轮完整文件差异](docs/handoffs/20261121-codex-takeover/after.patch)和[文件清单及哈希](docs/handoffs/20261121-codex-takeover/after.json)。起点是已核实的干净工作区，见[起点记录](docs/handoffs/20261121-codex-takeover/before.json)。
++- [原 Antigravity 三次修复的 Git 原始补丁](docs/handoffs/antigravity-historical/historical-fixes.patch)覆盖白屏、搜索框居中和顶栏白线。
++
++## 当前项目
++
++- 仓库：`C:\Users\hookc\.gemini\antigravity\scratch\tunefree-web`
++- 远端：`https://github.com/HookCola/tunefree-next-web`，分支 `main`
++- 前端：`public/index.html`（Vue 3 单页，状态、模板与 CSS 均在同一文件）
++- 本地服务：`node server.mjs`，默认 `http://localhost:7101`（支持 `PORT` 环境变量）
++- 最近已核对提交：`0116bfc`。开始编辑前请重新执行 `git status --short --branch` 和 `git log -3 --oneline`。
++- 原 Antigravity 会话：`Analyze TuneFree Agent Skill`，ID `99ed1cd5-9067-43d7-aae5-d37f5eb8ef5e`。旧标题不能完整反映后来的音乐网页任务。
++- 切换操作与可直接复制的提示语见 [docs/agent-switching.md](docs/agent-switching.md)。
++
++## 必须保留的用户偏好
++
++- 全站只留顶部一个搜索框。进入搜索页时音源选择胶囊平滑展开，退出时收起；保留用户认可的切换动效。
++- 侧栏只保留 Logo 及搜索、主页、我的乐库、系统设置；不重复展示新发现、会员订阅入口或版本宣传。不要擅自把 TuneFree 的标题/文案改成 Apple Music。
++- 播放栏固定在底部并占满宽度。右上角放主题切换和头像，点击头像进入用户页。
++- 会员订阅在用户页面只显示一份；API 日志从系统设置进入。
++- 默认歌词高亮文字为白色，设置可改文字颜色并有预览；不要把改歌词文字误做成改歌词背景。
++- 保留跟随系统、浅色、深色主题及全局莫奈取色；浅色需有可读对比度，避免纯白/灰色块堆叠。
++- 热搜/榜单需根据音源取实际数据，未搜索时展示，搜索后隐藏；不重复堆叠热搜区块。
++- 网页基于 TuneFreeNext V4 API，借鉴部分客户端功能但独立开发。保留现有播放、下载、乐库、云端同步功能。
++
++## 上一段对话要解决的界面要求
++
++用户希望接着调整音乐播放器网页：
++
++1. 顶部主搜索框在可用主内容区内精确水平居中；搜索页展开音源选择胶囊时，两者组成的整体仍居中，不与右上角主题按钮、头像重叠。
++2. 去掉用户指出的顶栏底部白色细线；保留其他页面/播放器合理的分隔线。
++3. 保持顶部音源胶囊滑出、页面切换和现有播放器/会员/歌词/主题功能，不要无关重做。
++4. 先在桌面与手机宽度验证实际布局，再报告结果。上一会话曾出现 Vue 渲染异常，任何 Vue 修改后须先检查控制台错误和首屏渲染。
++
++## 已确认的代码事实
++
++- `0116bfc` 在 `public/index.html` 调整 unified top search bar：移除它的底边框、设置搜索组合居中，并把主题/头像控件绝对定位到右侧。此前报告说已推送，但本次仍要以当前 Git 状态和远端为准。
++- `754f18f` 将未定义的 `playbackQueue.length` 替换为已定义的 `favoriteTracks.length`，相关按钮导航到乐库。此修改解决渲染报错；不要误称队列抽屉现已存在。
++- 用户特别在意重复搜索框、主区对齐、右侧工具遮挡、浅色主题字色和意外改动。改动尽量收窄并保留现有行为。
++- 小心检查主内容区与整个 viewport 的中心语义：有侧边栏时，两者不是同一中心。桌面窄宽度也要检查搜索胶囊和右上角按钮是否碰撞。静态审阅还发现统一顶栏同时带 `sticky` 与 `relative` 类，需要用浏览器确定实际位置行为；手机端另有独立 sticky header。
++- 项目目前没有单独前端打包/测试脚本。`node server.mjs` 可本机启动；Node 可对各内联脚本提取后运行 `node --check`，也可检查服务端 JS。不能把静态检查当作浏览器视觉验收。
++
++## 建议验收
++
++- 在浏览器开发者工具看 console/page errors；确认 Vue app 挂载且首页不是空白。
++- 桌面宽度至少 1280px 和 1024/1100px；比较搜索框/搜索源组合中心相对主内容区中心的位置，并检查与主题/头像无重叠。
++- 点击搜索导航，等待源选择胶囊展开，再检查整体中心和焦点输入；切回首页检查收起动画。
++- 手机宽度约 390px：核对顶部搜索、导航和底部播放器，滚动后确认两个 sticky header 不互相覆盖。
++- 切换浅/深色；确认用户提到的底线已消失且其他分隔线仍正常。检查控制台的运行时异常。
++- 若可以运行本机服务，复用现有端口前先只读检查端口/进程，避免启动重复服务；不要擅自终止既有进程。
++
++## 继续工作方式
++
++1. 读取本文件及 `README.md`。
++2. 确认 `git status`、HEAD、Node 版本、可用浏览器和 localhost 服务状态；保留任何现有未提交改动。
++3. 先复现并量测布局，再做最小修改；有截图/尺寸时按实际区域校准，不凭感觉宣称完成。
++4. 修完运行静态检查和真实浏览器视口验收；提交、推送和发布按用户在当前会话中的授权执行，结果须经过实际确认。
++5. 每轮结束追加 `docs/agent-activity.md`，记录操作顺序、具体文件变化、验证和待办。更新本索引，再运行 `node scripts/snapshot-handoff.mjs <轮次ID> after` 保存完整差异。新一轮开始编辑前先用同一命令的 `before` 参数记录起点。
++
++## 最近验证（2026-11-21）
++
++- 接力开始前只读核实：仓库 HEAD 与本地 `origin/main` 引用都是 `0116bfc`，工作区干净。这不等于本次联网核验了 GitHub。
++- 本轮新增接力文档、完整差异及导出脚本，详见逐步记录。应用代码未改动，HEAD 保持 `0116bfc`。
++- 已确认本机 Chrome 可用，Node v22.22.0/npm 可用。各内联脚本及主要服务/Worker 脚本语法检查通过。
++- `localhost:7101` 探测超时。随后用端口 `17101` 短暂启动本轮测试服务，首页和图标样式均返回 HTTP 200，HTML 包含搜索输入与 Vue 挂载调用。检查完毕已停止测试进程。
++- 宽视口视觉验收尚未进行；主区居中、窄桌面工具碰撞、移动端 sticky header 覆盖均需浏览器检查。
++- 当前由 Codex 接力：历史已整理，等待用户下一项具体调整；没有把静态推测的问题擅自当作新的功能需求。
++
++本轮启动状态：本地服务已于 20261122-start-local-server 启动，PID 32252，http://localhost:7101 首页及图标 CSS 均 HTTP 200。完整操作见 docs/agent-activity.md 的 20261122-start-local-server 记录，快照见 docs/handoffs/20261122-start-local-server/。应用代码未改。
++
+diff --git a/docs/agent-activity.md b/docs/agent-activity.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..42bc28795e2deebfc8527445185b844432c333a8
+--- /dev/null
++++ b/docs/agent-activity.md
+@@ -0,0 +1,62 @@
++# TuneFree 操作与修改记录
++
++每轮在末尾追加工程操作、文件差异、命令结果和待办。`HANDOFF.md` 指向最新一轮。
++
++## 原 Antigravity 对话的最后三次修复
++
++根据已保存对话 `99ed1cd5-9067-43d7-aae5-d37f5eb8ef5e` 与实际 Git 提交回溯。以下浏览器行为在本轮尚未复测。[原始提交补丁](handoffs/antigravity-historical/historical-fixes.patch)
++
++| 提交 | 用户遇到的问题 | 实际改动 |
++| --- | --- | --- |
++| `7322115` | 刷新后白屏 | 前置 `user` 等状态声明，移除 `v-cloak` 强制隐藏。 |
++| `754f18f` | 页面先闪一下再变成纯背景 | 把无定义的 `playbackQueue.length` 替换为 `favoriteTracks.length`。底栏按钮跳到乐库。 |
++| `0116bfc` | 搜索框偏左，顶栏底部有白线 | 在 `public/index.html` 设置搜索组合在主内容区居中，主题和头像按钮绝对定位至右侧，移除统一顶栏 `border-b`。 |
++
++## 20261121-codex-takeover
++
++用户要求接着 TuneFree 对话，并把 Codex 每轮的完整操作步骤和具体修改交给 Antigravity。
++
++起点为 `main` 上的 `0116bfc8c16c2e4ed108cb88041b68b9b039e5f3`。当时工作区干净，本地 `origin/main` 指向同一提交。首轮起点记录依据编辑前执行的 `git status` 回建。[起点记录](handoffs/20261121-codex-takeover/before.json)
++
++### 操作顺序
++
++1. 只读查询 Antigravity 的会话索引和最近消息，定位标题 `Analyze TuneFree Agent Skill`。从当时的工具调用定位 `C:\Users\hookc\.gemini\antigravity\scratch\tunefree-web`，确认它与当前 Math 工作区是两个项目。
++2. 在原仓库执行 `git status --short --branch`、`git log -4 --oneline`、`git show 0116bfc -- public/index.html`，成功核对版本、修改文件和旧修复。查看 `package.json` 与 `README.md`，确认入口为 `public/index.html` 和 `node server.mjs`。
++3. 检查顶栏、音源胶囊、`favoriteTracks` 和 Vue 初始化。此前的三次修复确实已进入代码。窄桌面按钮碰撞和手机滚动时两个 sticky header 的行为仍需实测。
++4. 核对本机 Antigravity 扩展清单，确认可从 `Antigravity: Search / Pick Conversation` 恢复原会话，再用 `Add to Antigravity Chat` 附上接力文件。
++5. 在仓库新增初版 `HANDOFF.md`、`AGENTS.md` 和 `docs/agent-switching.md`，整理用户已定下的布局、动画、主题、歌词、会员与乐库要求。
++6. 检查 Vue 内联脚本和服务端脚本语法。探测 `localhost:7101` 超时，于是启动端口 `17101` 的临时服务验证 HTTP 输出，再结束该测试子进程。
++7. 按用户澄清，把摘要扩展为这份逐步日志、历史原始补丁与每轮完整文件快照。给项目指令和切换步骤增加编辑前后导出、记录实际验证与保留历史的要求。
++
++### 具体文件修改
++
++| 文件 | 修改情况及原因 |
++| --- | --- |
++| `AGENTS.md` | 新增。指导接手方读索引、逐步日志与补丁，并在每轮开始和结束保存快照。 |
++| `HANDOFF.md` | 新增。汇总工作基线、用户已经定下的界面偏好、待验收项，链接最新证据。 |
++| `docs/agent-switching.md` | 新增。写明在 VS Code 打开旧 Antigravity 会话、附上记录和换回 Codex 的步骤，提供接力提示语。 |
++| `docs/agent-activity.md` | 新增。逐项保存这次实际操作、修改原因、命令结果和未完成工作。 |
++| `scripts/snapshot-handoff.mjs` | 新增。导出相对 HEAD 的 tracked 和非忽略 untracked 差异、文件哈希、Git 状态。HEAD 变化时另存两个提交之间的差异。 |
++| `docs/handoffs/` | 新增。保存原 Antigravity 修复及这轮 before/after 的差异和清单。生成的证据不收入它自己的差异。 |
++
++本轮代码差异仅涉及接力文件，应用行为仍以 `0116bfc` 为基线。[完整文件差异](handoffs/20261121-codex-takeover/after.patch)
++
++### 实际验证
++
++- `git status --short --branch`、`git log -4 --oneline`、`git show 0116bfc -- public/index.html` 均退出 0。仓库在开始编辑时干净。
++- `node --version` 输出 `v22.22.0`。提取三个非空 HTML 内联脚本后运行 `node --check`，以及检查 `server.mjs`、`src/worker.js`、`public/_worker.js` 和 `scripts/build_icons.cjs`，均通过。
++- `localhost:7101` 请求超时，未观察到该端口的监听。以 `PORT=17101` 启动 `node server.mjs` 后，`/` 和 `/assets/css/icons.css` 均返回 HTTP 200，HTML 包含 `top-search-input` 和 `.mount('#app')`。测试子进程已结束。
++- `node --check scripts/snapshot-handoff.mjs` 通过。在独立临时 Git 仓库实测 before/after，覆盖已有未提交改动、期间提交、编辑和删除、中文文件名、二进制文件、排除接力产物和测试凭证文件。`git apply --check --reverse` 通过，重复轮次和无效 ID 按预期拒绝。
++- 浏览器布局、登录和音频播放尚未复测。下一次验收应量测 1280px、1024/1100px、390px 的搜索组合中心与按钮碰撞，并检查移动端滚动及 Vue 控制台错误。
++
++接手方先读[文件差异](handoffs/20261121-codex-takeover/after.patch)与[清单](handoffs/20261121-codex-takeover/after.json)，再对照当前 Git 状态。继续用户下一项具体调整，或先验收上轮界面。
++
++
++## 20261122-start-local-server
++
++用户要求启动本地 TuneFree 网页。首个启动请求因自动审批上游服务错误未执行；复查端口无响应后，经审批入口重试。编辑前已保存本轮 before 快照，保留原有未提交接力文件。
++
++执行步骤：以隐藏窗口后台运行 Node，工作目录为原 TuneFree 仓库，进程内 PORT=7101；等待启动后请求首页与图标样式。
++
++结果：PID 32252，首页 HTTP 200，包含顶部搜索输入，图标 CSS HTTP 200。地址 http://localhost:7101 。服务保留运行供用户查看。未修改应用代码、未提交或推送；浏览器布局、音频和登录仍未验收。
++
+diff --git a/docs/agent-switching.md b/docs/agent-switching.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..3f3258e50c931480b44ee03d228649ae2e97720f
+--- /dev/null
++++ b/docs/agent-switching.md
+@@ -0,0 +1,33 @@
++# Codex 与 Antigravity 双向接力
++
++两边共用真实项目目录：`C:\Users\hookc\.gemini\antigravity\scratch\tunefree-web`。
++
++每轮具体操作写入 `docs/agent-activity.md`，完整文件差异保存在 `docs/handoffs/`，`HANDOFF.md` 是最新状态的入口。接手方先看操作记录和补丁，就能知道每个文件为什么改、怎么改、验证到哪一步。
++
++## 每轮必须留下的内容
++
++1. 编辑前选唯一轮次 ID，运行 `node scripts/snapshot-handoff.mjs <轮次ID> before`，记录初始 HEAD、工作区和完整差异。
++2. 结束前追加逐步日志：用户要求、原因、按顺序的操作、文件/符号、修改前后行为、实际命令和结果、失败与未完成项。
++3. 更新 `HANDOFF.md` 指向最新记录，运行 `node scripts/snapshot-handoff.mjs <轮次ID> after`，保存完整工作区差异及文件哈希。如果 HEAD 变了，同一目录还会保存两次 HEAD 之间的 `committed.patch`。已有轮次会保留。
++4. 原本已有未提交改动时，对照 before/after 的 HEAD、差异和操作日志区分本轮工作，不能把全部 dirty changes 都说成刚修改的。补丁目录排除自身，避免递归。
++
++`AGENTS.md` 已写入上述每轮执行要求。脚本不提交、不暂存、不推送，也不修改聊天数据库。文档与补丁描述可审阅的工程操作和代码变化。
++
++## 换回原 Antigravity 会话
++
++1. 在 VS Code 中打开上述项目目录，等当前助手结束编辑。
++2. `Ctrl+Shift+P` → `Antigravity: Search / Pick Conversation` → 搜索 `Analyze TuneFree Agent Skill`。
++3. 右键 `HANDOFF.md` → `Add to Antigravity Chat`。
++4. 发送下面这句话：
++
++   > 按 HANDOFF.md 接力：先读最新逐步操作记录、before/after 补丁和 manifest，再检查当前 git 状态。承接剩余任务，保留已有改动；每轮结束继续记录完整操作步骤、具体文件差异和验证结果。
++
++原会话 ID：`99ed1cd5-9067-43d7-aae5-d37f5eb8ef5e`。两个菜单命令已由本机扩展 v1.13.0 的 package.json 核对。
++
++## 换回 Codex
++
++在相同 TuneFree 目录继续或新开任务，发送上面的接力提示语。如果仍在 Math 的旧聊天里，先明确给出 TuneFree 绝对路径。
++
++## 本轮交接
++
++完整记录：[agent-activity.md](agent-activity.md)。本轮建立详细接力方式，应用代码未改；临时 HTTP 检查通过，实际浏览器布局仍待验收。换电脑时将记录、补丁和所需代码一起同步。
+diff --git a/scripts/snapshot-handoff.mjs b/scripts/snapshot-handoff.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..2852c8a68573d165c0ba983dba1c89f3ba3940ce
+--- /dev/null
++++ b/scripts/snapshot-handoff.mjs
+@@ -0,0 +1,70 @@
++import { spawnSync } from 'node:child_process';
++import { mkdirSync, writeFileSync, existsSync, readFileSync, lstatSync } from 'node:fs';
++import { fileURLToPath } from 'node:url';
++import { dirname, resolve } from 'node:path';
++import { createHash } from 'node:crypto';
++
++const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
++const [round, phase] = process.argv.slice(2);
++if (!round || !/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,80}$/.test(round) || !['before', 'after'].includes(phase)) {
++  console.error('Usage: node scripts/snapshot-handoff.mjs <unique-round-id> <before|after>');
++  process.exit(1);
++}
++function git(args, accepted = [0], encoding = 'utf8') {
++  const result = spawnSync('git', ['--no-pager', ...args], {
++    cwd: repo, encoding, maxBuffer: 64 * 1024 * 1024, windowsHide: true,
++  });
++  if (result.error) throw result.error;
++  if (!accepted.includes(result.status)) throw new Error(`git ${args[0]} failed (${result.status}): ${result.stderr}`);
++  return result.stdout;
++}
++const output = resolve(repo, 'docs/handoffs', round);
++const metadataFile = resolve(output, `${phase}.json`);
++const patchFile = resolve(output, `${phase}.patch`);
++const committedFile = resolve(output, 'committed.patch');
++if (existsSync(metadataFile) || existsSync(patchFile) || (phase === 'after' && existsSync(committedFile))) {
++  throw new Error('Snapshot exists. Choose a new round ID.');
++}
++const beforeFile = resolve(output, 'before.json');
++if (phase === 'after' && !existsSync(beforeFile)) throw new Error('Capture before first.');
++
++const artifact = path => path.replaceAll('\\', '/').startsWith('docs/handoffs/');
++const sensitive = path => /(^|\/)(?:\.env(?:\..*)?|credentials(?:\..*)?|.*\.(?:pem|key|p12|pfx))$/i.test(path.replaceAll('\\', '/'));
++const scope = ['.', ':(exclude)docs/handoffs/**', ':(exclude)**/.env', ':(exclude)**/.env.*',
++  ':(exclude)**/credentials', ':(exclude)**/credentials.*', ':(exclude)**/*.pem',
++  ':(exclude)**/*.key', ':(exclude)**/*.p12', ':(exclude)**/*.pfx'];
++const otherFiles = git(['ls-files', '--others', '--exclude-standard', '-z']).split('\0').filter(Boolean);
++const skippedSensitivePaths = otherFiles.filter(path => !artifact(path) && sensitive(path));
++const untracked = otherFiles.filter(path => !artifact(path) && !sensitive(path));
++const head = git(['rev-parse', 'HEAD']).trim();
++const diffOptions = ['--no-ext-diff', '--no-textconv', '--binary', '--full-index'];
++const patches = [git(['diff', ...diffOptions, head, '--', ...scope], [0], null)];
++for (const path of untracked) {
++  if (!lstatSync(resolve(repo, path)).isFile()) throw new Error(`Cannot capture non-regular file: ${path}`);
++  patches.push(git(['diff', '--no-index', ...diffOptions, '--', '/dev/null', path], [0, 1], null));
++}
++const beforeHead = phase === 'after' ? JSON.parse(readFileSync(beforeFile, 'utf8')).head : head;
++if (!/^[a-f0-9]{40,64}$/.test(beforeHead)) throw new Error('Invalid HEAD in before manifest.');
++const committed = beforeHead === head ? null : git(['diff', ...diffOptions, beforeHead, head, '--', ...scope], [0], null);
++const changed = git(['diff', '--name-only', '-z', head, '--', ...scope]).split('\0').filter(Boolean);
++const manifest = {
++  schema: 1, round, phase, capturedAt: new Date().toISOString(),
++  kind: 'working-tree-diff-relative-to-recorded-HEAD',
++  head, branch: git(['branch', '--show-current']).trim(),
++  status: git(['status', '--short', '--branch', '--', ...scope]).trim(),
++  explanation: 'Includes staged/unstaged tracked changes and non-ignored untracked files. Compare before/after with the activity log to identify this round. Artifacts are excluded.',
++  skippedSensitivePaths,
++  ...(committed && { committed: { from: beforeHead, to: head, patch: 'committed.patch' } }),
++  files: [...new Set([...changed, ...untracked])].sort().map(path => {
++    const file = resolve(repo, path);
++    if (!existsSync(file)) return { path, deleted: true };
++    if (!lstatSync(file).isFile()) return { path, regularFile: false };
++    const data = readFileSync(file);
++    return { path, bytes: data.length, sha256: createHash('sha256').update(data).digest('hex') };
++  }),
++};
++mkdirSync(output, { recursive: true });
++writeFileSync(patchFile, Buffer.concat(patches), { flag: 'wx' });
++if (committed) writeFileSync(committedFile, committed, { flag: 'wx' });
++writeFileSync(metadataFile, JSON.stringify(manifest, null, 2) + '\n', { encoding: 'utf8', flag: 'wx' });
++console.log(JSON.stringify({ round, phase, files: manifest.files.length, patch: patchFile, manifest: metadataFile }));

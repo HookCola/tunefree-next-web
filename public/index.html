@@ -632,7 +632,7 @@
     </aside>
 
     <!-- RIGHT MAIN CONTENT WORKSPACE (桌面端独立视口滚动，彻底解耦侧边栏联动) -->
-    <div class="flex-1 flex flex-col min-w-0 md:h-screen md:overflow-y-auto pb-28 md:pb-24">
+    <div class="flex-1 flex flex-col min-w-0 md:h-screen md:overflow-y-auto pb-36 md:pb-24">
       
       <!-- MOBILE TOP HEADER (md:hidden) -->
       <header class="md:hidden flex items-center justify-between px-4 py-3 bg-zinc-950/80 backdrop-blur-2xl border-b border-white/5 sticky top-0 z-30">
@@ -667,37 +667,54 @@
       <div class="sticky top-0 z-30 pt-3.5 pb-2.5 px-3 sm:px-8 bg-inherit backdrop-blur-xl relative flex items-center justify-center">
         
         <!-- Center: 唯一主搜索框与平滑展开音源胶囊 (正中水平对齐) -->
-        <div class="w-full max-w-2xl flex items-center justify-center gap-2 sm:gap-2.5 transition-all duration-300 min-w-0 md:px-16 lg:px-0">
+        <div class="w-full max-w-[480px] sm:max-w-lg xl:max-w-2xl flex items-center justify-center gap-2 sm:gap-2.5 transition-all duration-300 min-w-0 md:px-6 xl:px-0">
           
           <!-- 音源切换胶囊 (点击侧栏搜索或处于搜索页时平滑从左侧滑出) -->
           <transition name="source-capsule">
-            <div v-show="activeTab === 'search'" class="flex items-center gap-1 bg-zinc-200/90 dark:bg-zinc-800/90 p-1 rounded-full shrink-0 shadow-sm border border-zinc-300/50 dark:border-white/10 overflow-hidden">
+            <div v-show="activeTab === 'search'" class="flex items-center gap-1 sm:gap-1.5 bg-zinc-200/90 dark:bg-zinc-800/90 p-1 rounded-full shrink-0 shadow-sm border border-zinc-300/50 dark:border-white/10 overflow-hidden">
+              <!-- QQ (绿点 + 统一格式) -->
               <button 
                 type="button"
                 @click="onSearchSourceChange('qq')"
-                :class="searchSource === 'qq' ? 'bg-emerald-500 text-white font-medium shadow' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
-                class="px-2.5 sm:px-3 py-1 rounded-full text-xs transition-all flex items-center gap-1.5 whitespace-nowrap active:scale-95"
-                title="绿源 (QQ 音乐)">
-                <i class="fa-solid fa-music text-[11px]"></i>
-                <span class="hidden sm:inline">绿源</span><span>(QQ)</span>
+                :class="searchSource === 'qq' 
+                  ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white font-semibold shadow-sm' 
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
+                class="px-2.5 sm:px-3 py-1 rounded-full text-xs transition-all flex items-center gap-1.5 whitespace-nowrap active:scale-95 border border-transparent"
+                :style="searchSource === 'qq' ? 'border-color: rgba(16, 185, 129, 0.4);' : ''"
+                title="QQ 音乐">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                <span>QQ</span>
+                <i v-if="searchSource === 'qq'" class="fa-solid fa-check text-[9px] text-emerald-500 ml-0.5"></i>
               </button>
+
+              <!-- 网易 (红点 + 统一格式) -->
               <button 
                 type="button"
                 @click="onSearchSourceChange('wy')"
-                :class="searchSource === 'wy' ? 'bg-red-500 text-white font-medium shadow' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
-                class="px-2.5 sm:px-3 py-1 rounded-full text-xs transition-all flex items-center gap-1.5 whitespace-nowrap active:scale-95"
-                title="红源 (网易云音乐)">
-                <i class="fa-brands fa-cloudsmith text-[11px]"></i>
-                <span class="hidden sm:inline">红源</span><span>(网易)</span>
+                :class="searchSource === 'wy' 
+                  ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white font-semibold shadow-sm' 
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
+                class="px-2.5 sm:px-3 py-1 rounded-full text-xs transition-all flex items-center gap-1.5 whitespace-nowrap active:scale-95 border border-transparent"
+                :style="searchSource === 'wy' ? 'border-color: rgba(239, 68, 68, 0.4);' : ''"
+                title="网易云音乐">
+                <span class="w-2 h-2 rounded-full bg-red-500 shrink-0"></span>
+                <span>网易</span>
+                <i v-if="searchSource === 'wy'" class="fa-solid fa-check text-[9px] text-red-500 ml-0.5"></i>
               </button>
+
+              <!-- 酷我 (橙点 + 统一格式) -->
               <button 
                 type="button"
                 @click="onSearchSourceChange('kw')"
-                :class="searchSource === 'kw' ? 'bg-amber-500 text-white font-medium shadow' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
-                class="px-2.5 sm:px-3 py-1 rounded-full text-xs transition-all flex items-center gap-1.5 whitespace-nowrap active:scale-95"
-                title="橙源 (酷我音乐)">
-                <i class="fa-solid fa-bolt text-[11px]"></i>
-                <span class="hidden sm:inline">橙源</span><span>(酷我)</span>
+                :class="searchSource === 'kw' 
+                  ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white font-semibold shadow-sm' 
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
+                class="px-2.5 sm:px-3 py-1 rounded-full text-xs transition-all flex items-center gap-1.5 whitespace-nowrap active:scale-95 border border-transparent"
+                :style="searchSource === 'kw' ? 'border-color: rgba(245, 158, 11, 0.4);' : ''"
+                title="酷我音乐">
+                <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+                <span>酷我</span>
+                <i v-if="searchSource === 'kw'" class="fa-solid fa-check text-[9px] text-amber-500 ml-0.5"></i>
               </button>
             </div>
           </transition>
@@ -764,34 +781,6 @@
         <!-- TAB 0: 探索发现 (Explore) -->
         <main v-show="activeTab === 'explore'"  class="apple-page-enter flex-1 flex flex-col gap-8">
           
-          <!-- Category Tiles (类别浏览) -->
-          <section class="flex flex-col gap-3.5">
-            <div class="flex items-center justify-between">
-              <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
-                <span>类别浏览</span>
-              </h2>
-              <span class="text-xs text-zinc-400">畅选海量热门流派与精选榜单</span>
-            </div>
-
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-              <div 
-                v-for="cat in appleCategories" 
-                :key="cat.name"
-                @click="selectAppleCategory(cat)"
-                class="relative h-28 sm:h-32 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:shadow-xl shadow-sm select-none group bg-gradient-to-br"
-                :class="cat.bg">
-                <div class="flex items-center justify-between z-10">
-                  <span class="text-[10px] font-bold text-white/80 uppercase tracking-widest">精选专区</span>
-                  <i class="fa-solid fa-play text-white/0 group-hover:text-white/95 transition-all text-xs"></i>
-                </div>
-                <div class="z-10 font-bold text-sm sm:text-base text-white tracking-tight leading-tight">
-                  {{ cat.name }}
-                </div>
-                <!-- Radial glow light pattern -->
-                <div class="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-white/15 blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>
-              </div>
-            </div>
-          </section>
           <!-- Hero Banner / Daily Mix -->
           <div class="relative overflow-hidden rounded-3xl p-6 md:p-8 bg-gradient-to-r from-blue-900/40 via-indigo-900/30 to-zinc-900/40 border border-white/10 shadow-2xl backdrop-blur-xl">
             <div class="relative z-10 max-w-xl">
@@ -888,6 +877,35 @@
               </div>
             </div>
           </section>
+
+          <!-- Category Tiles (类别浏览 - 移至最底部，并删掉每个框里的精选专区/精选推荐文字) -->
+          <section class="flex flex-col gap-3.5">
+            <div class="flex items-center justify-between">
+              <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+                <span>类别浏览</span>
+              </h2>
+              <span class="text-xs text-zinc-400">畅选海量热门流派与精选榜单</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+              <div 
+                v-for="cat in appleCategories" 
+                :key="cat.name"
+                @click="selectAppleCategory(cat)"
+                class="relative h-24 sm:h-28 rounded-2xl p-3.5 flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:shadow-xl shadow-sm select-none group bg-gradient-to-br"
+                :class="cat.bg">
+                <div class="flex items-center justify-end z-10">
+                  <i class="fa-solid fa-play text-white/0 group-hover:text-white/95 transition-all text-xs"></i>
+                </div>
+                <div class="z-10 font-bold text-sm sm:text-base text-white tracking-tight leading-tight">
+                  {{ cat.name }}
+                </div>
+                <!-- Radial glow light pattern -->
+                <div class="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-white/15 blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>
+              </div>
+            </div>
+          </section>
+        </main>
         </main>
 
         <!-- TAB 1: 音乐搜索与解析 -->
@@ -2645,10 +2663,15 @@
       </div> <!-- End of max-w-6xl container -->
     </div> <!-- End of RIGHT MAIN CONTENT WORKSPACE -->
 
-    <!-- FULL-WIDTH FIXED BOTTOM PLAYER BAR (固定底部全占，流媒体通栏布局) -->
+    <!-- FULL-WIDTH FIXED BOTTOM PLAYER BAR (固定底部全占，移动端避开底部导航) -->
     <div 
-      class="fixed bottom-0 left-0 right-0 z-40 w-full h-20 select-none bg-white/95 dark:bg-zinc-950/95 backdrop-blur-2xl border-t border-zinc-200/80 dark:border-white/10 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-8px_32px_rgba(0,0,0,0.6)] flex items-center px-3 sm:px-6 lg:px-8">
+      class="fixed bottom-[60px] md:bottom-0 left-0 right-0 z-40 w-full h-16 md:h-20 select-none bg-white/95 dark:bg-zinc-950/95 backdrop-blur-2xl border-t border-zinc-200/80 dark:border-white/10 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-8px_32px_rgba(0,0,0,0.6)] flex items-center px-3 sm:px-6 lg:px-8">
       
+      <!-- Slim Mini Player Progress Scrubber (Mobile Only) -->
+      <div class="md:hidden absolute top-0 left-0 right-0 h-0.5 bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+        <div class="h-full bg-red-500 transition-all duration-300" :style="{ width: (playbackDuration ? (playbackTime / playbackDuration * 100) : 0) + '%' }"></div>
+      </div>
+
       <!-- Invisible native audio element for continuous robust playback -->
       <audio 
         ref="audioPlayer" 
@@ -2660,16 +2683,16 @@
         @ended="playNextTrack"
         class="hidden"></audio>
 
-      <div class="w-full flex items-center justify-between gap-3 sm:gap-6">
+      <div class="w-full flex items-center justify-between gap-2 sm:gap-6">
 
         <!-- 1. Left: Track Info & Favorite (左侧歌曲封面与信息) -->
-        <div class="flex items-center gap-2.5 sm:gap-3 w-1/4 min-w-[140px] sm:min-w-[200px] max-w-[280px]">
+        <div class="flex items-center gap-2 sm:gap-3 flex-1 sm:w-1/4 min-w-0 sm:min-w-[200px] max-w-[280px]">
           <template v-if="currentTrack">
             <!-- Cover Art with Lyrics Click -->
             <div 
               @click="showVisualizer = true"
               title="点击打开全屏流光歌词"
-              class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-zinc-800 shrink-0 overflow-hidden shadow-sm border border-black/5 dark:border-white/10 cursor-pointer hover:scale-105 transition-transform relative group">
+              class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-zinc-800 shrink-0 overflow-hidden shadow-sm border border-black/5 dark:border-white/10 cursor-pointer hover:scale-105 transition-transform relative group">
               <img :src="currentTrack.cover || '/assets/branding/app_icon.png'" class="w-full h-full object-cover">
               <div class="absolute inset-0 bg-black/35 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
                 <i class="fa-solid fa-quote-right text-white text-xs"></i>
@@ -2696,16 +2719,16 @@
               type="button"
               @click="toggleFavorite(currentTrack)"
               :title="isFavorite(currentTrack) ? '取消收藏' : '加入收藏'"
-              class="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-rose-500 transition active:scale-90 shrink-0">
-              <i class="fa-solid fa-heart text-sm" :class="isFavorite(currentTrack) ? 'text-rose-500' : 'text-zinc-400 hover:text-rose-500'"></i>
+              class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-rose-500 transition active:scale-90 shrink-0">
+              <i class="fa-solid fa-heart text-xs sm:text-sm" :class="isFavorite(currentTrack) ? 'text-rose-500' : 'text-zinc-400 hover:text-rose-500'"></i>
             </button>
           </template>
 
           <!-- Idle State (无播放时) -->
           <template v-else>
-            <div class="flex items-center gap-2.5 text-zinc-400 dark:text-zinc-500">
-              <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/5 flex items-center justify-center">
-                <i class="fa-solid fa-music text-red-500 text-sm"></i>
+            <div class="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 min-w-0">
+              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-zinc-100 dark:bg-white/5 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-music text-red-500 text-xs sm:text-sm"></i>
               </div>
               <div class="text-xs font-medium truncate">TuneFree · 随心听</div>
             </div>
@@ -2713,15 +2736,15 @@
         </div>
 
         <!-- 2. Center: Playback Controls & Scrubber (中间控制器与进度条) -->
-        <div class="flex-1 max-w-2xl flex flex-col items-center justify-center gap-1 min-w-0">
+        <div class="flex items-center justify-end sm:justify-center sm:flex-1 max-w-2xl gap-2 sm:gap-6 min-w-0">
           <!-- Button Controls -->
-          <div class="flex items-center gap-3 sm:gap-6">
-            <!-- 播放模式切换 -->
+          <div class="flex items-center gap-2 sm:gap-6 shrink-0">
+            <!-- 播放模式切换 (桌面端显示) -->
             <button 
               type="button"
               @click="togglePlayMode"
               :title="`当前模式: ${playMode === 'random' ? '随机播放' : (playMode === 'single' ? '单曲循环' : '列表循环')}`"
-              class="w-7 h-7 rounded-full flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition active:scale-90">
+              class="hidden sm:flex w-7 h-7 rounded-full items-center justify-center text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition active:scale-90">
               <i class="fa-solid text-xs" :class="{
                 'fa-shuffle text-red-500': playMode === 'random',
                 'fa-repeat text-red-500': playMode === 'single',
@@ -2729,12 +2752,12 @@
               }"></i>
             </button>
 
-            <!-- 上一首 -->
+            <!-- 上一首 (桌面端显示) -->
             <button 
               type="button"
               @click="playPrevTrack"
               title="上一首"
-              class="w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition active:scale-90">
+              class="hidden sm:flex w-8 h-8 rounded-full items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition active:scale-90">
               <i class="fa-solid fa-backward-step text-sm"></i>
             </button>
             
@@ -2743,7 +2766,7 @@
               type="button"
               @click="togglePlayPause"
               :title="isPlaying ? '暂停' : '播放'"
-              class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-md shadow-red-500/25 transition active:scale-95">
+              class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-md shadow-red-500/25 transition active:scale-95 shrink-0">
               <i :class="isPlaying ? 'fa-solid fa-pause text-sm' : 'fa-solid fa-play text-sm ml-0.5'"></i>
             </button>
 
@@ -2752,7 +2775,7 @@
               type="button"
               @click="playNextTrack"
               title="下一首"
-              class="w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition active:scale-90">
+              class="w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition active:scale-90 shrink-0">
               <i class="fa-solid fa-forward-step text-sm"></i>
             </button>
 
@@ -2761,14 +2784,14 @@
               type="button"
               @click="showVisualizer = !showVisualizer"
               title="全屏流光歌词"
-              class="w-7 h-7 rounded-full flex items-center justify-center transition active:scale-90"
+              class="w-8 h-8 rounded-full flex items-center justify-center transition active:scale-90 shrink-0"
               :class="showVisualizer ? 'text-red-500' : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white'">
               <i class="fa-solid fa-quote-right text-xs"></i>
             </button>
           </div>
 
-          <!-- Progress Slider & Timestamps -->
-          <div class="w-full flex items-center gap-2.5 text-[10px] font-mono text-zinc-400 dark:text-zinc-500">
+          <!-- Progress Slider & Timestamps (桌面端显示) -->
+          <div class="hidden md:flex w-full items-center gap-2.5 text-[10px] font-mono text-zinc-400 dark:text-zinc-500">
             <span class="w-8 text-right shrink-0">{{ formatDuration(playbackTime) }}</span>
             <div class="relative flex-1 flex items-center">
               <input 
@@ -2787,7 +2810,7 @@
         </div>
 
         <!-- 3. Right: Queue Drawer & Volume Slider (右侧列表与音量) -->
-        <div class="flex items-center justify-end gap-2.5 sm:gap-3 w-1/4 min-w-[110px] sm:min-w-[180px] max-w-[260px]">
+        <div class="hidden sm:flex items-center justify-end gap-2.5 sm:gap-3 w-1/4 min-w-[110px] sm:min-w-[180px] max-w-[260px]">
           <!-- 乐库快捷跳转按钮 -->
           <button 
             type="button"
@@ -3044,7 +3067,7 @@
     </div>
 
     <!-- MOBILE BOTTOM NAVIGATION (md:hidden) -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-zinc-950/90 backdrop-blur-2xl border-t border-white/10 flex items-center justify-around py-2 px-2 select-none">
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 h-[60px] bg-zinc-950/90 backdrop-blur-2xl border-t border-white/10 flex items-center justify-around px-2 select-none">
       <button type="button" @click="activeTab = 'explore'" :class="activeTab === 'explore' ? 'text-blue-400 font-bold' : 'text-zinc-500'" class="flex flex-col items-center gap-1 text-[10px] py-1">
         <i class="fa-solid fa-compass text-base"></i>
         <span>探索</span>
