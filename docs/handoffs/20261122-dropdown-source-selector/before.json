@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "round": "20261122-dropdown-source-selector",
+  "phase": "before",
+  "capturedAt": "2026-11-22T15:26:26.945Z",
+  "kind": "working-tree-diff-relative-to-recorded-HEAD",
+  "head": "e44e508ba97af57fb5bb24034f17d5b9926910e3",
+  "branch": "main",
+  "status": "## main...origin/main\n M HANDOFF.md\n M docs/agent-activity.md",
+  "explanation": "Includes staged/unstaged tracked changes and non-ignored untracked files. Compare before/after with the activity log to identify this round. Artifacts are excluded.",
+  "skippedSensitivePaths": [],
+  "files": []
+}

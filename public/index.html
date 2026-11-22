@@ -669,53 +669,70 @@
         <!-- Center: 唯一主搜索框与平滑展开音源胶囊 (正中水平对齐) -->
         <div class="w-full max-w-[480px] sm:max-w-lg xl:max-w-2xl flex items-center justify-center gap-2 sm:gap-2.5 transition-all duration-300 min-w-0 md:px-6 xl:px-0">
           
-          <!-- 音源切换胶囊 (点击侧栏搜索或处于搜索页时平滑从左侧滑出) -->
+          <!-- 音源切换下拉复选框 (点击展开浮动下拉菜单，极大节省手机与桌面端宽度，保证搜索框宽敞舒适) -->
           <transition name="source-capsule">
-            <div v-show="activeTab === 'search'" class="flex items-center gap-1 sm:gap-1.5 bg-zinc-200/90 dark:bg-zinc-800/90 p-1 rounded-full shrink-0 shadow-sm border border-zinc-300/50 dark:border-white/10 overflow-hidden">
-              <!-- QQ (绿点 + 统一格式) -->
+            <div v-show="activeTab === 'search'" id="top-search-source-picker" class="relative shrink-0">
+              <!-- 下拉触发器按钮 (显示当前选中的圆点 + 名称 + 箭头) -->
               <button 
                 type="button"
-                @click="onSearchSourceChange('qq')"
-                :class="searchSource === 'qq' 
-                  ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white font-semibold shadow-sm' 
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
-                class="px-2.5 sm:px-3 py-1 rounded-full text-xs transition-all flex items-center gap-1.5 whitespace-nowrap active:scale-95 border border-transparent"
-                :style="searchSource === 'qq' ? 'border-color: rgba(16, 185, 129, 0.4);' : ''"
-                title="QQ 音乐">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                <span>QQ</span>
-                <i v-if="searchSource === 'qq'" class="fa-solid fa-check text-[9px] text-emerald-500 ml-0.5"></i>
+                @click.stop="showSearchSourceDropdown = !showSearchSourceDropdown"
+                class="px-2.5 sm:px-3 py-2 rounded-full text-xs font-medium bg-zinc-100 hover:bg-zinc-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 text-zinc-800 dark:text-zinc-100 border border-zinc-300/60 dark:border-white/10 shadow-sm transition-all flex items-center gap-1.5 active:scale-95 whitespace-nowrap"
+                :title="`当前音源: ${searchSource === 'qq' ? 'QQ 音乐' : (searchSource === 'wy' ? '网易云音乐' : '酷我音乐')} (点击下拉切换)`">
+                <!-- 动态颜色圆点 -->
+                <span class="w-2 h-2 rounded-full shrink-0" :class="{
+                  'bg-emerald-500': searchSource === 'qq',
+                  'bg-red-500': searchSource === 'wy',
+                  'bg-amber-500': searchSource === 'kw'
+                }"></span>
+                <span class="font-semibold">{{ searchSource === 'qq' ? 'QQ' : (searchSource === 'wy' ? '网易' : '酷我') }}</span>
+                <i class="fa-solid fa-chevron-down text-[9px] text-zinc-400 transition-transform duration-200" :class="{ 'rotate-180': showSearchSourceDropdown }"></i>
               </button>
 
-              <!-- 网易 (红点 + 统一格式) -->
-              <button 
-                type="button"
-                @click="onSearchSourceChange('wy')"
-                :class="searchSource === 'wy' 
-                  ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white font-semibold shadow-sm' 
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
-                class="px-2.5 sm:px-3 py-1 rounded-full text-xs transition-all flex items-center gap-1.5 whitespace-nowrap active:scale-95 border border-transparent"
-                :style="searchSource === 'wy' ? 'border-color: rgba(239, 68, 68, 0.4);' : ''"
-                title="网易云音乐">
-                <span class="w-2 h-2 rounded-full bg-red-500 shrink-0"></span>
-                <span>网易</span>
-                <i v-if="searchSource === 'wy'" class="fa-solid fa-check text-[9px] text-red-500 ml-0.5"></i>
-              </button>
+              <!-- 悬浮下拉菜单 (包含 3 个音源选项与勾选状态) -->
+              <transition name="source-capsule">
+                <div 
+                  v-show="showSearchSourceDropdown" 
+                  class="absolute top-full mt-2 left-0 z-50 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl border border-zinc-200/80 dark:border-white/10 rounded-2xl p-1.5 shadow-2xl min-w-[130px] flex flex-col gap-1 select-none">
+                  <!-- QQ 音乐 -->
+                  <button 
+                    type="button"
+                    @click="onSearchSourceChange('qq'); showSearchSourceDropdown = false"
+                    :class="searchSource === 'qq' ? 'bg-zinc-100 dark:bg-white/10 font-bold text-zinc-900 dark:text-white' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/5'"
+                    class="flex items-center justify-between px-3 py-2 rounded-xl text-xs transition active:scale-95 text-left">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                      <span>QQ 音乐</span>
+                    </div>
+                    <i v-if="searchSource === 'qq'" class="fa-solid fa-check text-[10px] text-emerald-500 ml-1.5"></i>
+                  </button>
 
-              <!-- 酷我 (橙点 + 统一格式) -->
-              <button 
-                type="button"
-                @click="onSearchSourceChange('kw')"
-                :class="searchSource === 'kw' 
-                  ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white font-semibold shadow-sm' 
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
-                class="px-2.5 sm:px-3 py-1 rounded-full text-xs transition-all flex items-center gap-1.5 whitespace-nowrap active:scale-95 border border-transparent"
-                :style="searchSource === 'kw' ? 'border-color: rgba(245, 158, 11, 0.4);' : ''"
-                title="酷我音乐">
-                <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
-                <span>酷我</span>
-                <i v-if="searchSource === 'kw'" class="fa-solid fa-check text-[9px] text-amber-500 ml-0.5"></i>
-              </button>
+                  <!-- 网易云音乐 -->
+                  <button 
+                    type="button"
+                    @click="onSearchSourceChange('wy'); showSearchSourceDropdown = false"
+                    :class="searchSource === 'wy' ? 'bg-zinc-100 dark:bg-white/10 font-bold text-zinc-900 dark:text-white' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/5'"
+                    class="flex items-center justify-between px-3 py-2 rounded-xl text-xs transition active:scale-95 text-left">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-red-500 shrink-0"></span>
+                      <span>网易云</span>
+                    </div>
+                    <i v-if="searchSource === 'wy'" class="fa-solid fa-check text-[10px] text-red-500 ml-1.5"></i>
+                  </button>
+
+                  <!-- 酷我音乐 -->
+                  <button 
+                    type="button"
+                    @click="onSearchSourceChange('kw'); showSearchSourceDropdown = false"
+                    :class="searchSource === 'kw' ? 'bg-zinc-100 dark:bg-white/10 font-bold text-zinc-900 dark:text-white' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/5'"
+                    class="flex items-center justify-between px-3 py-2 rounded-xl text-xs transition active:scale-95 text-left">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+                      <span>酷我音乐</span>
+                    </div>
+                    <i v-if="searchSource === 'kw'" class="fa-solid fa-check text-[10px] text-amber-500 ml-1.5"></i>
+                  </button>
+                </div>
+              </transition>
             </div>
           </transition>
 
@@ -3452,6 +3469,7 @@
         const showActionSheet = ref(false);
         const showMobileLibraryTabDropdown = ref(false);
         const showMobileSearchSourceDropdown = ref(false);
+        const showSearchSourceDropdown = ref(false);
         const favoriteTracks = ref([]);
         const customPlaylists = ref([]);
         const followedPlaylists = ref([]);
@@ -3911,7 +3929,8 @@
 
           // Global click outside listener to collapse custom mobile dropdowns
           document.addEventListener('click', (e) => {
-            if (!e.target.closest('#mobile-search-source-picker')) {
+            if (!e.target.closest('#top-search-source-picker') && !e.target.closest('#mobile-search-source-picker')) {
+              showSearchSourceDropdown.value = false;
               showMobileSearchSourceDropdown.value = false;
             }
             if (!e.target.closest('#mobile-library-tab-picker')) {
@@ -5101,6 +5120,7 @@
           activeTab,
           searchSource,
           showMobileSearchSourceDropdown,
+          showSearchSourceDropdown,
           keyword,
           hasSearched,
           hotKeywords,
