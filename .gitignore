@@ -5,3 +5,9 @@ node_modules/
 .env.local
 
 latest_bootstrap_response.json
+
+# Agent Handoff Files (local only)
+HANDOFF.md
+AGENTS.md
+docs/
+scripts/snapshot-handoff.mjs
